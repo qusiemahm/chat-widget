@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website - With Tharwah Chat</title>
+    <style>
+        /* Your website styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- ====================================== -->
+    <!-- YOUR WEBSITE CONTENT GOES HERE        -->
+    <!-- ====================================== -->
+    
+    <h1>Welcome to My Website</h1>
+    <p>This is my website content...</p>
+    
+    
+    <!-- ====================================== -->
+    <!-- THARWAH CHAT WIDGET                   -->
+    <!-- Copy these lines to ANY website!      -->
+    <!-- ====================================== -->
+    
+    <!-- Step 1: Configure Widget -->
+    <script>
+      window.tharwahChatConfig = {
+        // REQUIRED: Your backend API
+        apiEndpoint: 'http://localhost:8000/api',
+        apiKey: 'org_d2e06bbb.1hzazsqKSgpPsGB_W1q_SZwRA2rnqtE9L49HU-J2fHg',
+        botId: 5,
+        
+        // OPTIONAL: Features
+        showSuggestions: true,
+        suggestionsLimit: 6,
+        
+        // OPTIONAL: UI Customization
+        title: 'Chat with us',
+        welcomeMessage: '👋 Hi! How can I help you today?',
+        primaryColor: '#667eea',
+        secondaryColor: '#764ba2',
+        buttonIcon: '💬',
+        position: 'bottom-right',
+        
+        // OPTIONAL: Behavior
+        autoOpen: false,
+        debug: true
+      };
+    </script>
+    
+    <!-- Step 2: Load Widget File -->
+    <script src="./TharwahChat-V1.js"></script>
+    
+    <!-- ====================================== -->
+    <!-- DONE! Widget will appear on your site -->
+    <!-- ====================================== -->
+    
+</body>
+</html>

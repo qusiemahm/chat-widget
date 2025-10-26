@@ -1,0 +1,230 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                                                                   ║
+║   🌐 USE WIDGET ON ANY WEBSITE                                   ║
+║                                                                   ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+✅ YES - Works on ANY website!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 QUICK INTEGRATION (3 Steps)
+
+1. Copy file:        tharwah-widgets/dist/TharwahChat-V1.js
+2. Add config:       <script>window.tharwahChatConfig = {...}</script>
+3. Load widget:      <script src="./TharwahChat-V1.js"></script>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EXAMPLE 1: Static HTML Website
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Website</title>
+</head>
+<body>
+    
+    <h1>Welcome!</h1>
+    <p>My content here...</p>
+    
+    <!-- ADD WIDGET -->
+    <script>
+      window.tharwahChatConfig = {
+        apiEndpoint: 'http://localhost:8000/api',
+        apiKey: 'org_d2e06bbb.1hzazsq...',
+        botId: 5,
+        showSuggestions: true,
+      };
+    </script>
+    <script src="./TharwahChat-V1.js"></script>
+    
+</body>
+</html>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EXAMPLE 2: React App (in index.html)
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React App</title>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- ADD WIDGET -->
+    <script>
+      window.tharwahChatConfig = {
+        apiEndpoint: 'http://localhost:8000/api',
+        apiKey: 'org_d2e06bbb.1hzazsq...',
+        botId: 5,
+        showSuggestions: true,
+      };
+    </script>
+    <script src="/widgets/TharwahChat-V1.js"></script>
+    
+    <!-- React app loads -->
+    <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EXAMPLE 3: WordPress (footer.php)
+
+<!-- Add before </body> in footer.php -->
+
+<script>
+  window.tharwahChatConfig = {
+    apiEndpoint: 'https://api.yoursite.com/api',
+    apiKey: 'org_d2e06bbb.1hzazsq...',
+    botId: 5,
+    showSuggestions: true,
+    title: 'Customer Support',
+  };
+</script>
+<script src="<?php echo get_template_directory_uri(); ?>/js/TharwahChat-V1.js"></script>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EXAMPLE 4: Shopify (theme.liquid)
+
+<!-- Add before </body> in theme.liquid -->
+
+<script>
+  window.tharwahChatConfig = {
+    apiEndpoint: 'https://api.yourshop.com/api',
+    apiKey: 'org_d2e06bbb.1hzazsq...',
+    botId: 5,
+    showSuggestions: true,
+    title: 'Shop Assistant',
+    primaryColor: '#10b981',
+  };
+</script>
+<script src="{{ 'TharwahChat-V1.js' | asset_url }}"></script>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EXAMPLE 5: Next.js (_document.js)
+
+// pages/_document.js
+
+import { Html, Head, Main, NextScript } from 'next/document'
+
+export default function Document() {
+  return (
+    <Html>
+      <Head />
+      <body>
+        <Main />
+        <NextScript />
+        
+        {/* ADD WIDGET */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            window.tharwahChatConfig = {
+              apiEndpoint: 'http://localhost:8000/api',
+              apiKey: 'org_d2e06bbb.1hzazsq...',
+              botId: 5,
+              showSuggestions: true,
+            };
+          `
+        }} />
+        <script src="/widgets/TharwahChat-V1.js"></script>
+      </body>
+    </Html>
+  )
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️ CONFIGURATION OPTIONS
+
+┌───────────────────────────────────────────────────────────────┐
+│ REQUIRED                                                      │
+├───────────────────────────────────────────────────────────────┤
+│ apiEndpoint: 'http://localhost:8000/api'                     │
+│ apiKey: 'org_xxx.yyy'                                         │
+│ botId: 5                                                      │
+└───────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────┐
+│ OPTIONAL                                                      │
+├───────────────────────────────────────────────────────────────┤
+│ showSuggestions: true                                         │
+│ suggestionsLimit: 6                                           │
+│ title: 'Chat with us'                                         │
+│ welcomeMessage: '👋 Hi! How can I help?'                     │
+│ primaryColor: '#667eea'                                       │
+│ secondaryColor: '#764ba2'                                     │
+│ buttonIcon: '💬'                                             │
+│ position: 'bottom-right'                                      │
+│ autoOpen: false                                               │
+│ debug: false                                                  │
+└───────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ WORKS ON
+
+• Static HTML          • React             • Vue.js
+• Angular              • Next.js           • Nuxt.js
+• WordPress            • Shopify           • Wix
+• Squarespace          • Webflow           • Gatsby
+• ANY website with HTML!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 PRODUCTION CHECKLIST
+
+For production websites:
+
+1. Update API endpoint:
+   apiEndpoint: 'https://your-production-api.com/api'
+
+2. Use production API key:
+   apiKey: 'prod_your_production_key'
+
+3. Disable debug:
+   debug: false
+
+4. Configure CORS in backend:
+   CORS_ALLOWED_ORIGINS=https://yourwebsite.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 FILE LOCATION
+
+Put TharwahChat-V1.js anywhere on your site:
+
+your-website/
+├── js/TharwahChat-V1.js               → <script src="js/...">
+├── assets/TharwahChat-V1.js           → <script src="assets/...">
+├── public/widgets/TharwahChat-V1.js   → <script src="public/widgets/...">
+└── cdn/TharwahChat-V1.js              → <script src="cdn/...">
+
+Just update the src path to match!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 SUMMARY
+
+Question: Can I use widget on any site?
+Answer:  ✅ YES! Add scripts to index.html
+
+Steps:
+1. Copy TharwahChat-V1.js
+2. Add config script
+3. Add widget script
+4. Done!
+
+Works on ANY website! 🚀
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+See: USE-ON-ANY-SITE.md for complete guide
+See: COPY-PASTE-INTEGRATION.html for template
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

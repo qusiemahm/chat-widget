@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tharwah Widget with Suggestions - Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 40px 0;
+            padding: 30px;
+            background: #f7fafc;
+            border-radius: 12px;
+        }
+
+        .feature-list h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .feature-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 12px 0;
+            color: #4a5568;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .cta {
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .cta h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .cta p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .status {
+            margin-top: 30px;
+            padding: 20px;
+            background: #edf2f7;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #cbd5e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+        }
+
+        .status-value {
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Tharwah Widget Test</h1>
+        <p class="subtitle">Widget with Smart Suggestions</p>
+
+        <div class="feature-list">
+            <h2>✨ Features:</h2>
+            <ul>
+                <li>Welcome Screen with Suggestions</li>
+                <li>AI-Powered Agent Routing</li>
+                <li>Product Recommendations</li>
+                <li>Quick Reply Buttons</li>
+                <li>Click Tracking & Analytics</li>
+                <li>Beautiful Product Cards</li>
+            </ul>
+        </div>
+
+        <div class="cta">
+            <h3>👇 Try the Widget!</h3>
+            <p>Click the chat button in the bottom-right corner to see suggestions in action. Try clicking different suggestions and see how the AI responds!</p>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="status-label">Backend:</span>
+                <span class="status-value" id="backend-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Suggestions:</span>
+                <span class="status-value" id="suggestions-status">Loading...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Widget:</span>
+                <span class="status-value" id="widget-status">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tharwah Chat Widget Configuration -->
+    <script>
+      window.tharwahChatConfig = {
+        // Backend API
+        apiEndpoint: 'http://localhost:8000/api',
+        apiKey: 'org_d2e06bbb.1hzazsqKSgpPsGB_W1q_SZwRA2rnqtE9L49HU-J2fHg',
+        botId: 5,
+        
+        // UI
+        title: 'Tharwah Support',
+        welcomeMessage: '👋 Hi! How can I help you today?',
+        subtitle: 'Choose a topic below',
+        primaryColor: '#667eea',
+        secondaryColor: '#764ba2',
+        buttonIcon: '💬',
+        
+        // Suggestions
+        showSuggestions: true,
+        suggestionsLimit: 6,
+        
+        // Behavior
+        autoOpen: false,
+        autoOpenDelay: 3000,
+        
+        // Debug
+        debug: true
+      };
+
+      // Check backend status
+      fetch('http://localhost:8000/api/widget/suggestions/welcome/?bot_id=5&limit=6', {
+        headers: {
+          'Authorization': 'Bearer org_d2e06bbb.1hzazsqKSgpPsGB_W1q_SZwRA2rnqtE9L49HU-J2fHg'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('backend-status').textContent = '✓ Connected';
+        document.getElementById('backend-status').style.color = '#10b981';
+        
+        document.getElementById('suggestions-status').textContent = `✓ ${data.count || 0} loaded`;
+        document.getElementById('suggestions-status').style.color = '#10b981';
+      })
+      .catch(error => {
+        document.getElementById('backend-status').textContent = '✗ Connection failed';
+        document.getElementById('backend-status').style.color = '#ef4444';
+        
+        document.getElementById('suggestions-status').textContent = '✗ Failed to load';
+        document.getElementById('suggestions-status').style.color = '#ef4444';
+        
+        console.error('Backend connection error:', error);
+      });
+
+      // Check widget loaded
+      setTimeout(() => {
+        if (window.tharwahChatWidget) {
+          document.getElementById('widget-status').textContent = '✓ Loaded';
+          document.getElementById('widget-status').style.color = '#10b981';
+        } else {
+          document.getElementById('widget-status').textContent = '✗ Not loaded';
+          document.getElementById('widget-status').style.color = '#ef4444';
+        }
+      }, 1000);
+    </script>
+
+    <!-- Load Widget -->
+    <script src="./dist/TharwahChat-V1.js"></script>
+</body>
+</html>

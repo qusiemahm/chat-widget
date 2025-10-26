@@ -1,0 +1,41 @@
+<!-- ========================================= -->
+<!-- THARWAH CHAT WIDGET - Copy/Paste This   -->
+<!-- Add before closing </body> tag          -->
+<!-- ========================================= -->
+
+<!-- Step 1: Configure Widget -->
+<script>
+  window.tharwahChatConfig = {
+    // ========== REQUIRED SETTINGS ==========
+    apiEndpoint: 'http://localhost:8000/api',  // Change for production
+    apiKey: 'org_d2e06bbb.1hzazsqKSgpPsGB_W1q_SZwRA2rnqtE9L49HU-J2fHg',  // Your API key
+    botId: 5,  // Your bot ID
+    
+    // ========== SUGGESTIONS ==========
+    showSuggestions: true,
+    suggestionsLimit: 6,
+    
+    // ========== UI CUSTOMIZATION ==========
+    title: 'Chat with us',
+    subtitle: 'We reply instantly',
+    welcomeMessage: '👋 Hi! How can I help you today?',
+    buttonIcon: '💬',
+    position: 'bottom-right',  // or 'bottom-left'
+    
+    // ========== COLORS ==========
+    primaryColor: '#667eea',
+    secondaryColor: '#764ba2',
+    
+    // ========== BEHAVIOR ==========
+    autoOpen: false,
+    autoOpenDelay: 3000,
+    debug: true,  // Set to false in production
+  };
+</script>
+
+<!-- Step 2: Load Widget -->
+<script src="/widgets/TharwahChat-V1.js"></script>
+
+<!-- ========================================= -->
+<!-- DONE! Widget will appear on your site    -->
+<!-- ========================================= -->

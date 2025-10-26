@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tharwah Widget - CDN Integration Examples</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 { color: #2563eb; }
+        h2 { color: #1e40af; margin-top: 40px; }
+        pre {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border-left: 4px solid #2563eb;
+        }
+        code {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .status {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .status.warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+        .status.success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+        }
+        .option {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #bfdbfe;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Tharwah Widget CDN Integration</h1>
+    
+    <div class="status warning">
+        <strong>⚠️ Current Status:</strong> Widget is functional but NOT yet on public CDN (jsDelivr, unpkg).<br>
+        Files need to be committed, tagged, and pushed to a public GitHub repository.
+    </div>
+
+    <h2>📋 Current Setup Requirements</h2>
+    
+    <div class="option">
+        <h3>Option 1: Self-Hosted (Available Now)</h3>
+        <p>Host the widget files on your own server or use Django static files.</p>
+        
+        <pre><code>&lt;!-- Upload files to your web server --&gt;
+&lt;script&gt;
+  window.tharwahChatConfig = {
+    apiEndpoint: 'https://your-api.com',
+    apiKey: 'your-api-key',
+    botId: 1,
+    welcomeMessage: '👋 Hi! How can I help you?'
+  };
+&lt;/script&gt;
+&lt;script src="https://yourdomain.com/static/widgets/TharwahChat-V1.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="option">
+        <h3>Option 2: jsDelivr (After GitHub Setup)</h3>
+        <p>Free CDN for GitHub projects. Requires public GitHub repository.</p>
+        
+        <pre><code>&lt;!-- After pushing to GitHub and creating tags --&gt;
+&lt;script&gt;
+  window.tharwahChatConfig = {
+    apiEndpoint: 'https://your-api.com',
+    apiKey: 'your-api-key',
+    botId: 1
+  };
+&lt;/script&gt;
+
+&lt;!-- Latest version (auto-updates) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/username/chatbot-widget@latest/dist/TharwahChat-V1.js"&gt;&lt;/script&gt;
+
+&lt;!-- Or specific version (recommended for production) --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/username/chatbot-widget@1.0.0/dist/TharwahChat-V1.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="option">
+        <h3>Option 3: NPM + unpkg (After Publishing)</h3>
+        <p>Publish to npm registry and use unpkg or jsDelivr's npm support.</p>
+        
+        <pre><code>&lt;!-- After npm publish --&gt;
+&lt;script&gt;
+  window.tharwahChatConfig = {
+    apiEndpoint: 'https://your-api.com',
+    apiKey: 'your-api-key',
+    botId: 1
+  };
+&lt;/script&gt;
+
+&lt;!-- unpkg --&gt;
+&lt;script src="https://unpkg.com/@tharwah/chat-widget@1.0.0/dist/TharwahChat-V1.js"&gt;&lt;/script&gt;
+
+&lt;!-- or jsDelivr npm --&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/@tharwah/chat-widget@1.0.0/dist/TharwahChat-V1.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <h2>🎯 Complete Integration Example</h2>
+    
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;My Website&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Welcome to My Website&lt;/h1&gt;
+    &lt;p&gt;Your content here...&lt;/p&gt;
+
+    &lt;!-- Tharwah Chat Widget Integration --&gt;
+    &lt;script&gt;
+      // Configure the widget BEFORE loading the script
+      window.tharwahChatConfig = {
+        // REQUIRED
+        apiEndpoint: 'https://api.yourdomain.com',
+        apiKey: 'your-api-key-here',
+        
+        // Optional customization
+        botId: 1,
+        welcomeMessage: '👋 Hi! How can I help you today?',
+        title: 'Chat with us',
+        subtitle: 'We reply instantly',
+        position: 'bottom-right',
+        
+        // Behavior
+        autoOpen: false,
+        autoOpenDelay: 5000,
+        
+        // Features
+        showSuggestions: true,
+        suggestionsLimit: 6,
+        
+        // Debug
+        debug: false
+      };
+    &lt;/script&gt;
+    
+    &lt;!-- Load the widget (choose one method) --&gt;
+    
+    &lt;!-- Method 1: Self-hosted --&gt;
+    &lt;script src="https://yourdomain.com/static/widgets/TharwahChat-V1.js"&gt;&lt;/script&gt;
+    
+    &lt;!-- Method 2: jsDelivr (when available) --&gt;
+    &lt;!-- &lt;script src="https://cdn.jsdelivr.net/gh/username/chatbot-widget@1.0.0/dist/TharwahChat-V1.js"&gt;&lt;/script&gt; --&gt;
+    
+    &lt;!-- Method 3: unpkg (when published to npm) --&gt;
+    &lt;!-- &lt;script src="https://unpkg.com/@tharwah/chat-widget@1.0.0/dist/TharwahChat-V1.js"&gt;&lt;/script&gt; --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+    <h2>🔧 Widget API (Programmatic Control)</h2>
+    
+    <pre><code>&lt;script&gt;
+// Wait for widget to load
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Open chat programmatically
+  window.tharwahChatWidget.open();
+  
+  // Close chat
+  window.tharwahChatWidget.close();
+  
+  // Toggle chat
+  window.tharwahChatWidget.toggle();
+  
+  // Send a message programmatically
+  window.tharwahChatWidget.sendMessageProgrammatically('Hello!');
+  
+  // Destroy widget
+  window.tharwahChatWidget.destroy();
+  
+});
+&lt;/script&gt;</code></pre>
+
+    <h2>✅ Steps to Enable CDN Deployment</h2>
+    
+    <div class="status warning">
+        <strong>For jsDelivr/unpkg:</strong>
+        <ol style="margin: 10px 0 0 20px;">
+            <li>Commit the <code>dist/</code> folder to git</li>
+            <li>Create and push a version tag (e.g., <code>git tag v1.0.0</code>)</li>
+            <li>Push to a <strong>public GitHub repository</strong></li>
+            <li>Wait 12-24 hours for jsDelivr to index it</li>
+            <li>Test the CDN URL</li>
+        </ol>
+    </div>
+
+    <h2>📦 File Sizes</h2>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <thead>
+            <tr style="background: #f3f4f6; text-align: left;">
+                <th style="padding: 10px; border: 1px solid #e5e7eb;">File</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb;">Size</th>
+                <th style="padding: 10px; border: 1px solid #e5e7eb;">Gzipped (est.)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">TharwahChat-V1.js</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">~42 KB</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">~12 KB</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">TharwahTracker-V2.js</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">~44 KB</td>
+                <td style="padding: 10px; border: 1px solid #e5e7eb;">~13 KB</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>🔒 Security Best Practices</h2>
+    
+    <ul>
+        <li><strong>API Keys:</strong> Use widget-specific API keys with limited scopes</li>
+        <li><strong>Rate Limiting:</strong> Implement on backend to prevent abuse</li>
+        <li><strong>CORS:</strong> Configure allowed origins (don't use wildcard in production)</li>
+        <li><strong>SRI:</strong> Use Subresource Integrity hashes for CDN files</li>
+    </ul>
+
+    <pre><code>&lt;!-- With SRI hash for security --&gt;
+&lt;script 
+  src="https://cdn.jsdelivr.net/gh/username/chatbot-widget@1.0.0/dist/TharwahChat-V1.js"
+  integrity="sha384-YOUR_HASH_HERE"
+  crossorigin="anonymous"
+&gt;&lt;/script&gt;</code></pre>
+
+    <h2>🧪 Testing</h2>
+    
+    <p>Before deploying to production:</p>
+    <ol>
+        <li>Test on localhost</li>
+        <li>Test on staging domain</li>
+        <li>Check browser console for errors</li>
+        <li>Verify API calls are working</li>
+        <li>Test on mobile devices</li>
+        <li>Check CORS headers</li>
+    </ol>
+
+    <div class="status success" style="margin-top: 40px;">
+        <strong>✅ Ready to Use:</strong> The widget is fully functional! Choose self-hosting for immediate use, 
+        or follow the GitHub/npm steps above for public CDN deployment.
+    </div>
+
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #e5e7eb;">
+    
+    <p style="text-align: center; color: #6b7280;">
+        <strong>Tharwah Chat Widget v1.0.0</strong><br>
+        For support, contact your development team.
+    </p>
+</body>
+</html>

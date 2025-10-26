@@ -1,0 +1,38 @@
+{
+  "name": "@tharwah/chat-widget",
+  "version": "1.0.0",
+  "description": "Embeddable AI chatbot widget with analytics tracking for any website",
+  "main": "dist/TharwahChat-V1.js",
+  "files": [
+    "dist/",
+    "examples/",
+    "docs/",
+    "README.md"
+  ],
+  "scripts": {
+    "minify": "terser dist/TharwahChat-V1.js -o dist/TharwahChat-V1.min.js -c -m && terser dist/TharwahTracker-V2.js -o dist/TharwahTracker-V2.min.js -c -m"
+  },
+  "keywords": [
+    "chatbot",
+    "widget",
+    "ai",
+    "chat",
+    "customer-support",
+    "analytics",
+    "tracking",
+    "embeddable"
+  ],
+  "author": "Tharwah",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@git.softylus.com:tharwah/chatbot-widget.git"
+  },
+  "homepage": "https://git.softylus.com/tharwah/chatbot-widget",
+  "bugs": {
+    "url": "https://git.softylus.com/tharwah/chatbot-widget/issues"
+  },
+  "devDependencies": {
+    "terser": "^5.30.0"
+  }
+}
