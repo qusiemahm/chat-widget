@@ -1227,22 +1227,140 @@
       const styles = document.createElement('style');
       styles.id = 'tharwah-popover-styles';
       styles.textContent = `
+        /* Popover Container */
         .tharwah-popover {
-          position: fixed;
-          z-index: 999998;
-          max-width: 400px;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+          position: fixed !important;
+          bottom: 100px !important;
+          right: 30px !important;
+          z-index: 999998 !important;
+          max-width: 380px !important;
+          width: auto !important;
           opacity: 0;
-          transform: translateY(10px);
-          transition: all 0.3s ease;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          transform: translateY(20px) scale(0.95);
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
         
         .tharwah-popover-visible {
-          opacity: 1;
-          transform: translateY(0);
+          opacity: 1 !important;
+          transform: translateY(0) scale(1) !important;
+        }
+        
+        /* Popover Card */
+        .tharwah-popover-card {
+          background: white !important;
+          border-radius: 16px !important;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+          overflow: hidden !important;
+          position: relative !important;
+          border-left: 4px solid #667eea !important;
+        }
+        
+        /* Close Button */
+        .tharwah-popover-close {
+          position: absolute !important;
+          top: 16px !important;
+          right: 16px !important;
+          background: rgba(0, 0, 0, 0.05) !important;
+          border: none !important;
+          width: 28px !important;
+          height: 28px !important;
+          border-radius: 50% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          transition: all 0.2s !important;
+          color: #6b7280 !important;
+          z-index: 10 !important;
+          padding: 0 !important;
+        }
+        
+        .tharwah-popover-close:hover {
+          background: rgba(0, 0, 0, 0.1) !important;
+          color: #374151 !important;
+          transform: scale(1.1) !important;
+        }
+        
+        .tharwah-popover-close svg {
+          width: 14px !important;
+          height: 14px !important;
+        }
+        
+        /* Content Area */
+        .tharwah-popover-content-modern {
+          padding: 24px !important;
+          padding-right: 50px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 16px !important;
+        }
+        
+        /* Icon Wrapper */
+        .tharwah-popover-icon-wrapper {
+          width: 40px !important;
+          height: 40px !important;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          border-radius: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-shrink: 0 !important;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+        }
+        
+        .tharwah-popover-icon-wrapper svg {
+          width: 20px !important;
+          height: 20px !important;
+          color: white !important;
+          stroke: white !important;
+        }
+        
+        /* Text Content */
+        .tharwah-popover-text-content {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 12px !important;
+        }
+        
+        .tharwah-popover-title-modern {
+          margin: 0 !important;
+          font-size: 18px !important;
+          font-weight: 600 !important;
+          color: #1a202c !important;
+          line-height: 1.4 !important;
+        }
+        
+        .tharwah-popover-description {
+          margin: 0 !important;
+          font-size: 14px !important;
+          line-height: 1.6 !important;
+          color: #6b7280 !important;
+        }
+        
+        /* CTA Button */
+        .tharwah-popover-cta {
+          width: 100% !important;
+          padding: 12px 24px !important;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          color: white !important;
+          border: none !important;
+          border-radius: 10px !important;
+          font-size: 15px !important;
+          font-weight: 600 !important;
+          cursor: pointer !important;
+          transition: all 0.3s !important;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
+          text-align: center !important;
+        }
+        
+        .tharwah-popover-cta:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+        }
+        
+        .tharwah-popover-cta:active {
+          transform: translateY(0) !important;
         }
         
         /* Positioning - Above chat button */
@@ -1375,13 +1493,31 @@
           border-left: 4px solid #f56565;
         }
         
-        /* Mobile responsive */
+        /* Mobile Responsive */
         @media (max-width: 640px) {
           .tharwah-popover {
-            max-width: calc(100% - 40px);
-            left: 20px !important;
-            right: 20px !important;
-            bottom: 20px !important;
+            bottom: 80px !important;
+            right: 15px !important;
+            left: 15px !important;
+            max-width: none !important;
+          }
+          
+          .tharwah-popover-content-modern {
+            padding: 20px !important;
+            padding-right: 45px !important;
+          }
+          
+          .tharwah-popover-icon-wrapper {
+            width: 36px !important;
+            height: 36px !important;
+          }
+          
+          .tharwah-popover-title-modern {
+            font-size: 16px !important;
+          }
+          
+          .tharwah-popover-description {
+            font-size: 13px !important;
           }
         }
       `;
