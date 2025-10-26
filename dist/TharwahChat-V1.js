@@ -494,25 +494,27 @@
         const imageAlt = product.image_alt || name;
         const productLink = product.product_link || product.enroll_link || product.external_link || product.link || null;
         const price = product.metadata?.price || product.price || null;
+        const originalPrice = product.metadata?.original_price || product.original_price || null;
         const currency = product.metadata?.currency || product.currency || 'SAR';
         const rating = product.metadata?.rating || product.rating || null;
         const reviewCount = product.metadata?.enrollments || product.enrollments || null;
         
         // Format price
         const priceFormatted = price ? `${currency} ${price.toLocaleString()}` : '';
+        const originalPriceFormatted = originalPrice ? `${currency} ${originalPrice.toLocaleString()}` : '';
         const monthlyPrice = price ? Math.round(price / 12).toLocaleString() : '';
         
         return `
           <div style="
             background: white;
             border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: box-shadow 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
             flex-shrink: 0;
             width: 180px;
-          " onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)'">
+          " onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
             <!-- Image -->
             <div style="position: relative;">
               ${imageUrl ? 
@@ -524,7 +526,7 @@
             <!-- Content -->
             <div style="padding: 8px;">
               <!-- Title with audio button -->
-              <div style="display: flex; align-items: start; justify-content: space-between; gap: 6px; margin-bottom: 6px;">
+              <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
                 <h4 style="
                   font-size: 12px;
                   font-weight: 600;
@@ -535,7 +537,7 @@
                   -webkit-line-clamp: 2;
                   -webkit-box-orient: vertical;
                   overflow: hidden;
-                  min-height: 32px;
+                  height: 32px;
                   flex: 1;
                 ">${this.escapeHtml(name)}</h4>
                 <button style="
@@ -550,7 +552,9 @@
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                " onmouseover="this.style.background='#dbeafe'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#eff6ff'; this.style.transform='scale(1)'" onclick="alert('Audio description feature coming soon!')" aria-label="Listen to description">
+                  width: 24px;
+                  height: 24px;
+                " onmouseover="this.style.background='#dbeafe'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#eff6ff'; this.style.transform='scale(1)'" onclick="alert('Audio description feature coming soon!')" aria-label="Listen to description" title="Listen to description">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
                     <path d="M16 9a5 5 0 0 1 0 6"></path>
@@ -571,12 +575,13 @@
               ` : ''}
               
               <!-- Pricing -->
-              <div style="border-top: 1px solid #e5e7eb; padding-top: 6px; margin-bottom: 8px;">
-                ${priceFormatted ? `
-                  <div style="font-size: 14px; font-weight: 700; color: #2563eb; margin-bottom: 2px;">${this.escapeHtml(priceFormatted)}</div>
-                  ${monthlyPrice ? `<div style="font-size: 9px; color: #16a34a; font-weight: 500; margin-top: 2px;">${currency} ${monthlyPrice}/mo</div>` : ''}
-                ` : ''}
-              </div>
+              ${priceFormatted ? `
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 4px; margin-bottom: 8px;">
+                  <div style="font-size: 14px; font-weight: 700; color: #2563eb; line-height: 1.2; margin-bottom: 2px;">${this.escapeHtml(priceFormatted)}</div>
+                  ${originalPriceFormatted ? `<div style="font-size: 9px; color: #9ca3af; text-decoration: line-through; line-height: 1;">${this.escapeHtml(originalPriceFormatted)}</div>` : ''}
+                  ${monthlyPrice ? `<div style="font-size: 9px; color: #16a34a; font-weight: 500; margin-top: 2px; line-height: 1;">${currency} ${monthlyPrice}/mo</div>` : ''}
+                </div>
+              ` : ''}
               
               <!-- Enroll Button -->
               ${productLink ? `
@@ -594,6 +599,7 @@
                   font-weight: 600;
                   transition: background 0.2s;
                   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                  line-height: 1.5;
                 " onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
                   Enroll Now
                 </a>
@@ -919,7 +925,6 @@
           border-radius: 16px;
           max-width: 85%;
           word-wrap: break-word;
-          white-space: pre-line;
           font-size: 14px;
           line-height: 1.6;
         }
@@ -1120,6 +1125,9 @@
       this.elements.button.textContent = '×';
       this.elements.input.focus();
 
+      // Hide popover when chat opens
+      this.hidePopover();
+
       this.trackEvent('chat_opened');
       this.log('Chat opened');
     }
@@ -1132,6 +1140,15 @@
 
       this.trackEvent('chat_closed');
       this.log('Chat closed');
+    }
+
+    hidePopover() {
+      // Hide any visible popover when chat opens
+      const popover = document.getElementById('tharwah-popover');
+      if (popover) {
+        popover.style.display = 'none';
+        this.log('Popover hidden because chat is open');
+      }
     }
 
     addMessage(content, sender = 'bot') {

@@ -1067,22 +1067,10 @@
     }
 
     showPopover(popover, suggestion) {
-      // Don't show popover if chat is open
-      if (this.isChatOpen()) {
-        this.log('Popover not shown - chat is currently open');
-        return;
-      }
-
       // Apply delay if configured
       const delay = popover.delay_seconds * 1000;
       
       setTimeout(() => {
-        // Check again after delay in case chat was opened while waiting
-        if (this.isChatOpen()) {
-          this.log('Popover cancelled - chat opened during delay');
-          return;
-        }
-
         this.renderPopover(popover, suggestion);
         this.popoverState.currentPopover = popover;
         this.popoverState.shown.add(popover.id);
@@ -1102,12 +1090,6 @@
       }, delay);
     }
 
-    isChatOpen() {
-      // Check if TharwahChat widget is open
-      const chatWindow = document.getElementById('tharwah-chat-window');
-      return chatWindow && chatWindow.classList.contains('active');
-    }
-
     renderPopover(popover, suggestion) {
       // Create popover container
       const container = document.createElement('div');
@@ -1115,7 +1097,7 @@
       container.className = 'tharwah-popover';
       container.dataset.popoverId = popover.id;
       
-      // Build modern horizontal popover HTML
+      // Build modern card-based popover HTML
       container.innerHTML = `
         <div class="tharwah-popover-card">
           <!-- Close button -->
@@ -1126,20 +1108,20 @@
             </svg>
           </button>
           
-          <!-- Horizontal Content Layout -->
-          <div class="tharwah-popover-horizontal">
-            <!-- Icon on Left -->
+          <!-- Content -->
+          <div class="tharwah-popover-content-modern">
+            <!-- Icon -->
             <div class="tharwah-popover-icon-wrapper">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                <circle cx="12" cy="8" r="6"></circle>
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               </svg>
             </div>
             
-            <!-- Text Content on Right -->
+            <!-- Text Content -->
             <div class="tharwah-popover-text-content">
+              <h3 class="tharwah-popover-title-modern">${this.escapeHtml(popover.title)}</h3>
               <p class="tharwah-popover-description">${popover.content}</p>
-              <button class="tharwah-popover-cta">Start Chat</button>
+              <button class="tharwah-popover-cta">Start chat</button>
             </div>
           </div>
         </div>
@@ -1267,116 +1249,118 @@
         /* Popover Card */
         .tharwah-popover-card {
           background: white !important;
-          border-radius: 12px !important;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
-          border: 0 !important;
+          border-radius: 16px !important;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+          overflow: hidden !important;
           position: relative !important;
+          border-left: 4px solid #667eea !important;
         }
         
         /* Close Button */
         .tharwah-popover-close {
           position: absolute !important;
-          top: 8px !important;
-          right: 8px !important;
-          background: transparent !important;
+          top: 16px !important;
+          right: 16px !important;
+          background: rgba(0, 0, 0, 0.05) !important;
           border: none !important;
-          width: 24px !important;
-          height: 24px !important;
+          width: 28px !important;
+          height: 28px !important;
+          border-radius: 50% !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           cursor: pointer !important;
           transition: all 0.2s !important;
-          color: #9ca3af !important;
+          color: #6b7280 !important;
           z-index: 10 !important;
           padding: 0 !important;
         }
         
         .tharwah-popover-close:hover {
-          color: #6b7280 !important;
+          background: rgba(0, 0, 0, 0.1) !important;
+          color: #374151 !important;
+          transform: scale(1.1) !important;
         }
         
         .tharwah-popover-close svg {
-          width: 16px !important;
-          height: 16px !important;
+          width: 14px !important;
+          height: 14px !important;
         }
         
-        /* Horizontal Content Layout */
-        .tharwah-popover-horizontal {
-          padding: 16px !important;
-          padding-right: 40px !important;
+        /* Content Area */
+        .tharwah-popover-content-modern {
+          padding: 24px !important;
+          padding-right: 50px !important;
           display: flex !important;
-          align-items: flex-start !important;
-          gap: 12px !important;
+          flex-direction: column !important;
+          gap: 16px !important;
         }
         
-        /* Icon Wrapper - Green color scheme */
+        /* Icon Wrapper */
         .tharwah-popover-icon-wrapper {
-          width: 32px !important;
-          height: 32px !important;
-          background: #d1fae5 !important;
-          color: #059669 !important;
-          border-radius: 8px !important;
+          width: 40px !important;
+          height: 40px !important;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+          border-radius: 12px !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
           flex-shrink: 0 !important;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
         }
         
         .tharwah-popover-icon-wrapper svg {
-          width: 16px !important;
-          height: 16px !important;
-          stroke: #059669 !important;
+          width: 20px !important;
+          height: 20px !important;
+          color: white !important;
+          stroke: white !important;
         }
         
         /* Text Content */
         .tharwah-popover-text-content {
-          flex: 1 !important;
           display: flex !important;
           flex-direction: column !important;
-          gap: 4px !important;
+          gap: 12px !important;
         }
         
-        .tharwah-popover-title {
+        .tharwah-popover-title-modern {
           margin: 0 !important;
-          margin-bottom: 4px !important;
-          font-size: 14px !important;
+          font-size: 18px !important;
           font-weight: 600 !important;
-          color: #111827 !important;
-          line-height: 1.3 !important;
+          color: #1a202c !important;
+          line-height: 1.4 !important;
         }
         
         .tharwah-popover-description {
           margin: 0 !important;
-          margin-bottom: 12px !important;
-          font-size: 12px !important;
-          line-height: 1.5 !important;
+          font-size: 14px !important;
+          line-height: 1.6 !important;
           color: #6b7280 !important;
         }
         
-        /* CTA Button - Green color scheme */
+        /* CTA Button */
         .tharwah-popover-cta {
           width: 100% !important;
-          padding: 8px 12px !important;
-          background: #059669 !important;
+          padding: 12px 24px !important;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
           color: white !important;
           border: none !important;
-          border-radius: 6px !important;
-          font-size: 12px !important;
-          font-weight: 500 !important;
+          border-radius: 10px !important;
+          font-size: 15px !important;
+          font-weight: 600 !important;
           cursor: pointer !important;
-          transition: all 0.2s !important;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+          transition: all 0.3s !important;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
           text-align: center !important;
-          height: 32px !important;
         }
         
         .tharwah-popover-cta:hover {
-          background: #047857 !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
         }
         
         .tharwah-popover-cta:active {
-          transform: scale(0.98) !important;
+          transform: translateY(0) !important;
         }
         
         /* Positioning - Above chat button */
