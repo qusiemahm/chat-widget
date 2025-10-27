@@ -77,9 +77,14 @@
 
       // Show welcome screen or normal message
       setTimeout(() => {
-        if (this.showingWelcome && this.suggestions.length > 0) {
+        // Check if user already provided email and accepted terms
+        const userEmail = sessionStorage.getItem('tharwah_user_email');
+        const termsAccepted = sessionStorage.getItem('tharwah_terms_accepted');
+
+        if (this.showingWelcome && this.suggestions.length > 0 && !(userEmail && termsAccepted)) {
           this.showWelcomeScreen();
         } else {
+          this.showingWelcome = false;
           this.addMessage(this.config.welcomeMessage, 'bot');
         }
       }, 500);
@@ -227,16 +232,281 @@
     async handleWelcomeSuggestionClick(suggestionId, actionText) {
       this.log('Welcome suggestion clicked:', suggestionId, actionText);
 
+      // Check if user already provided email
+      const userEmail = sessionStorage.getItem('tharwah_user_email');
+      const termsAccepted = sessionStorage.getItem('tharwah_terms_accepted');
+
+      if (userEmail && termsAccepted) {
+        // User already registered, proceed normally
+        await this.proceedAfterEmailCapture(suggestionId, actionText);
+      } else {
+        // Show email capture screen
+        this.showEmailCaptureScreen(suggestionId, actionText);
+      }
+      
+    }
+
+    showEmailCaptureScreen(suggestionId, actionText) {
       // Remove welcome screen
       const welcomeScreen = document.getElementById('tharwah-welcome-screen');
       if (welcomeScreen) {
         welcomeScreen.remove();
       }
 
+      // Create email capture screen
+      const emailScreen = document.createElement('div');
+      emailScreen.id = 'tharwah-email-screen';
+      emailScreen.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+        padding: 24px;
+      `;
+
+      emailScreen.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+          <h2 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">Chat with Tharwah Academy</h2>
+          <button
+            onclick="window.tharwahChatWidget.closeEmailScreen()"
+            style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.6;">
+              To get started, please share your email address:
+            </p>
+          </div>
+
+          <form id="tharwah-email-form" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <input
+                type="email"
+                id="tharwah-email-input"
+                placeholder="your@email.com"
+                required
+                style="
+                  width: 100%;
+                  padding: 12px 16px;
+                  border: 2px solid #e5e7eb;
+                  border-radius: 8px;
+                  font-size: 14px;
+                  outline: none;
+                  transition: border-color 0.2s;
+                "
+                onfocus="this.style.borderColor='#2563eb'"
+                onblur="this.style.borderColor='#e5e7eb'"
+                oninput="window.tharwahChatWidget.validateEmailForm()"
+              />
+            </div>
+
+            <label style="display: flex; align-items: start; gap: 8px; cursor: pointer;">
+              <input
+                type="checkbox"
+                id="tharwah-terms-checkbox"
+                required
+                style="
+                  width: 18px;
+                  height: 18px;
+                  margin-top: 2px;
+                  cursor: pointer;
+                  accent-color: #2563eb;
+                  flex-shrink: 0;
+                "
+                onchange="window.tharwahChatWidget.validateEmailForm()"
+              />
+              <span style="font-size: 12px; color: #6b7280; line-height: 1.5;">
+                I agree to Tharwah Academy's Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              id="tharwah-submit-button"
+              disabled
+              style="
+                width: 100%;
+                padding: 14px;
+                background: #d1d5db;
+                color: #9ca3af;
+                border: none;
+                border-radius: 8px;
+                font-size: 15px;
+                font-weight: 600;
+                cursor: not-allowed;
+                transition: all 0.2s;
+                box-shadow: none;
+              "
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+      `;
+
+      this.elements.window.appendChild(emailScreen);
+
+      // Attach form submit handler
+      const form = document.getElementById('tharwah-email-form');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleEmailSubmit(suggestionId, actionText);
+      });
+    }
+
+    async handleEmailSubmit(suggestionId, actionText) {
+      const emailInput = document.getElementById('tharwah-email-input');
+      const termsCheckbox = document.getElementById('tharwah-terms-checkbox');
+
+      const email = emailInput.value.trim();
+      const termsAccepted = termsCheckbox.checked;
+
+      if (!email) {
+        alert('Please enter your email address');
+        return;
+      }
+
+      if (!termsAccepted) {
+        alert('Please accept the Terms & Conditions');
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+
+      // Create conversation first if it doesn't exist
+      if (!this.conversationId) {
+        this.log('Creating conversation before email capture...');
+        try {
+          await this.createConversation();
+        } catch (error) {
+          this.log('Error creating conversation:', error);
+          alert('Failed to start conversation. Please try again.');
+          return;
+        }
+      }
+
+      // Update conversation with email and terms acceptance
+      try {
+        this.log('Updating conversation with email:', email);
+
+        const response = await fetch(
+          `${this.config.apiEndpoint}/widget/conversations/${this.conversationId}/`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.config.apiKey}`
+            },
+            body: JSON.stringify({
+              user_email: email,
+              terms_and_conditions_agreed: true
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Failed to update conversation: ${response.status} ${JSON.stringify(errorData)}`);
+        }
+
+        const data = await response.json();
+        this.log('Conversation updated successfully:', data);
+
+        // Store email and terms acceptance in session
+        sessionStorage.setItem('tharwah_user_email', email);
+        sessionStorage.setItem('tharwah_terms_accepted', 'true');
+        sessionStorage.setItem('tharwah_email_timestamp', Date.now().toString());
+
+        // Track email capture
+        this.trackEvent('email_captured', {
+          email: email,
+          source: 'welcome_screen',
+          conversation_id: this.conversationId
+        });
+
+        // Remove email screen
+        const emailScreen = document.getElementById('tharwah-email-screen');
+        if (emailScreen) {
+          emailScreen.remove();
+        }
+
+        // Proceed with the suggestion
+        await this.proceedAfterEmailCapture(suggestionId, actionText);
+
+      } catch (error) {
+        this.log('Error updating conversation with email:', error);
+        alert('Failed to save your information. Please try again.');
+      }
+    }
+
+    validateEmailForm() {
+      const emailInput = document.getElementById('tharwah-email-input');
+      const termsCheckbox = document.getElementById('tharwah-terms-checkbox');
+      const submitButton = document.getElementById('tharwah-submit-button');
+
+      if (!emailInput || !termsCheckbox || !submitButton) return;
+
+      const email = emailInput.value.trim();
+      const termsAccepted = termsCheckbox.checked;
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isEmailValid = emailRegex.test(email);
+
+      // Enable submit button only if email is valid and terms are accepted
+      if (isEmailValid && termsAccepted) {
+        submitButton.disabled = false;
+        submitButton.style.background = 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)';
+        submitButton.style.color = 'white';
+        submitButton.style.cursor = 'pointer';
+        submitButton.style.boxShadow = '0 2px 8px rgba(37, 99, 235, 0.3)';
+        submitButton.style.transition = 'all 0.2s';
+        submitButton.setAttribute('onmouseover', 'this.style.transform=\'translateY(-1px)\'; this.style.boxShadow=\'0 4px 12px rgba(37, 99, 235, 0.4)\'');
+        submitButton.setAttribute('onmouseout', 'this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 2px 8px rgba(37, 99, 235, 0.3)\'');
+      } else {
+        submitButton.disabled = true;
+        submitButton.style.background = '#d1d5db';
+        submitButton.style.color = '#9ca3af';
+        submitButton.style.cursor = 'not-allowed';
+        submitButton.style.boxShadow = 'none';
+        submitButton.removeAttribute('onmouseover');
+        submitButton.removeAttribute('onmouseout');
+      }
+    }
+
+    closeEmailScreen() {
+      // Remove email screen
+      const emailScreen = document.getElementById('tharwah-email-screen');
+      if (emailScreen) {
+        emailScreen.remove();
+      }
+
+      // Show welcome screen again
+      this.showWelcomeScreen();
+    }
+
+    async proceedAfterEmailCapture(suggestionId, actionText) {
       // Show chat interface
       this.elements.messages.style.display = '';
       this.elements.inputContainer.style.display = '';
-      
+
       // Hide welcome screen flag
       this.showingWelcome = false;
 
@@ -253,7 +523,8 @@
             body: JSON.stringify({
               session_id: this.getSessionId(),
               page_url: window.location.href,
-              page_title: document.title
+              page_title: document.title,
+              user_email: sessionStorage.getItem('tharwah_user_email')
             })
           }
         );
@@ -358,11 +629,11 @@
 
         const data = await response.json();
         this.conversationId = data.id;
-        
+
         this.log('Conversation created:', this.conversationId);
 
-        localStorage.setItem('tharwah_conversation_id', this.conversationId);
-        localStorage.setItem('tharwah_conversation_created', Date.now().toString());
+        sessionStorage.setItem('tharwah_conversation_id', this.conversationId);
+        sessionStorage.setItem('tharwah_conversation_created', Date.now().toString());
 
         return data;
 
@@ -373,14 +644,14 @@
     }
 
     getSessionId() {
-      let sessionId = localStorage.getItem('tharwah_session_id');
-      
+      let sessionId = sessionStorage.getItem('tharwah_session_id');
+
       if (!sessionId) {
         sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('tharwah_session_id', sessionId);
+        sessionStorage.setItem('tharwah_session_id', sessionId);
         this.log('Generated new session ID:', sessionId);
       }
-      
+
       return sessionId;
     }
 
@@ -1010,6 +1281,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
+          width: 40px;
         }
 
         .tharwah-chat-send:hover {
