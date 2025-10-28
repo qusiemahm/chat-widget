@@ -50,7 +50,17 @@
         popoverApiKey: config.popoverApiKey || null,
         popoverCheckInterval: config.popoverCheckInterval || 30000, // 30 seconds
         popoverMinDelay: config.popoverMinDelay || 10000, // Wait 10s before first check
-        popoverMaxPerSession: config.popoverMaxPerSession || 3
+        popoverMaxPerSession: config.popoverMaxPerSession || 3,
+        popoverUseFastEndpoint: config.popoverUseFastEndpoint !== false, // Use fast rule-based endpoint by default
+        
+        // Immediate popover triggering
+        immediatePopoverEvents: config.immediatePopoverEvents || [
+          'exit_intent',
+          'rage_click',
+          'form_abandon',
+          'form_start',
+          'scroll_depth'
+        ]
       };
 
       // Should we track this user?
@@ -505,6 +515,9 @@
       const form = event.target;
       this.state.formSubmissions++;
       
+      // Mark form as submitted to prevent abandon tracking
+      this.throttledEvents.add(`form_submit_${form.id || 'default'}`);
+      
       this.track('form_submit', {
         formId: form.id,
         formName: form.name,
@@ -543,6 +556,25 @@
           fieldType: target.type,
           filled: !!target.value
         });
+        
+        // Track form abandonment if user filled fields but hasn't submitted
+        if (target.form && !this.throttledEvents.has(`form_abandon_${target.form.id || 'default'}`)) {
+          setTimeout(() => {
+            // Check if form was submitted
+            if (!this.throttledEvents.has(`form_submit_${target.form.id || 'default'}`)) {
+              this.throttledEvents.add(`form_abandon_${target.form.id || 'default'}`);
+              this.track('form_abandon', {
+                formId: target.form.id,
+                formName: target.form.name,
+                formAction: target.form.action,
+                fieldsFilled: Array.from(target.form.elements).filter(el => 
+                  this.isFormField(el) && el.value
+                ).length,
+                totalFields: target.form.elements.length
+              });
+            }
+          }, 5000); // Track as abandoned after 5 seconds of inactivity
+        }
       }
     }
 
@@ -794,6 +826,32 @@
 
       // Emit custom event for external listeners
       this.emit('track', event);
+      
+      // Check if this event should trigger immediate popover request
+      if (this.config.immediatePopoverEvents.includes(eventName)) {
+        this.log('Event is in immediate trigger list:', eventName);
+        
+        if (!this.config.enablePopovers) {
+          this.log('⚠️ Popover system is disabled. Set enablePopovers: true');
+          return;
+        }
+        
+        if (!this.config.popoverApiKey) {
+          this.log('⚠️ No popover API key configured. Please set popoverApiKey');
+          return;
+        }
+        
+        this.log('✅ Event triggers immediate popover check:', eventName);
+        
+        // Flush tracking data immediately to ensure backend has latest data
+        this.flush();
+        
+        // Request popover suggestion immediately
+        setTimeout(() => {
+          this.log('⚡ Requesting popover for event:', eventName);
+          this.checkForPopover();
+        }, 100); // Small delay to ensure flush completes
+      }
     }
 
     // ============================================
@@ -1014,22 +1072,34 @@
     }
 
     async checkForPopover() {
+      this.log('🔍 checkForPopover() called');
+      
       // Don't check if max popovers reached
       if (this.popoverState.count >= this.config.popoverMaxPerSession) {
-        this.log('Max popovers reached for session');
+        this.log('❌ Max popovers reached for session:', this.popoverState.count, '/', this.config.popoverMaxPerSession);
         return;
       }
 
       // Don't check if a popover is currently shown
       if (this.popoverState.currentPopover) {
-        this.log('Popover already displayed');
+        this.log('❌ Popover already displayed:', this.popoverState.currentPopover.title);
         return;
       }
 
       try {
-        // Construct popover endpoint: http://localhost:8000/api/track/ -> http://localhost:8000/api/suggest-popover/
+        // Construct popover endpoint
+        // Fast endpoint: http://localhost:8000/api/track/suggest-popover-fast/
+        // AI endpoint: http://localhost:8000/api/track/suggest-popover/
         const baseUrl = this.config.apiEndpoint.replace(/\/track\/?$/, '');
-        const apiEndpoint = baseUrl + '/suggest-popover/';
+        const endpoint = this.config.popoverUseFastEndpoint ? 'suggest-popover-fast/' : 'suggest-popover/';
+        const apiEndpoint = baseUrl + '/' + endpoint;
+        
+        this.log('📡 Requesting popover from:', apiEndpoint);
+        this.log('📦 Request data:', {
+          session_id: this.sessionId,
+          current_page: window.location.pathname,
+          language_code: navigator.language.split('-')[0] || 'en'
+        });
         
         const response = await fetch(apiEndpoint, {
           method: 'POST',
@@ -1039,30 +1109,39 @@
           },
           body: JSON.stringify({
             session_id: this.sessionId,
-            current_page: window.location.pathname
+            current_page: window.location.pathname,
+            language_code: navigator.language.split('-')[0] || 'en'
           })
         });
 
         const data = await response.json();
         
+        this.log('📥 Popover response:', data);
+        
         if (data.success && data.popover_suggestion && data.popover_suggestion.suggested) {
           const popover = data.popover_suggestion.popover;
+          
+          this.log('✅ Popover suggested:', popover.title, 'Score:', data.popover_suggestion.score);
           
           // Check if already shown this session
           if (this.popoverState.shown.has(popover.id)) {
             if (popover.show_once_per_session) {
-              this.log('Popover already shown this session:', popover.id);
+              this.log('⚠️ Popover already shown this session:', popover.id);
               return;
             }
           }
           
           // Show the popover
           this.showPopover(popover, data.popover_suggestion);
-          
-          this.log('Popover suggested:', popover.title, 'Score:', data.popover_suggestion.score);
+        } else {
+          this.log('ℹ️ No popover suggested for current context');
+          if (data.popover_suggestion) {
+            this.log('Reason:', data.popover_suggestion.reasons || 'No reasons provided');
+          }
         }
       } catch (error) {
-        this.log('Error checking for popover:', error);
+        this.log('❌ Error checking for popover:', error);
+        this.log('Error details:', error.message, error.stack);
       }
     }
 
