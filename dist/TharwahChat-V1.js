@@ -241,12 +241,17 @@
         await this.proceedAfterEmailCapture(suggestionId, actionText);
       } else {
         // Show email capture screen
-        this.showEmailCaptureScreen(suggestionId, actionText);
+        this.showEmailCaptureScreen({
+          type: 'suggestion',
+          source: 'suggestion_click',
+          suggestionId: suggestionId,
+          actionText: actionText
+        });
       }
       
     }
 
-    showEmailCaptureScreen(suggestionId, actionText) {
+    showEmailCaptureScreen(callbackData = {}) {
       // Remove welcome screen
       const welcomeScreen = document.getElementById('tharwah-welcome-screen');
       if (welcomeScreen) {
@@ -358,15 +363,18 @@
 
       this.elements.window.appendChild(emailScreen);
 
+      // Store callback data for later use
+      this.emailCaptureCallback = callbackData;
+
       // Attach form submit handler
       const form = document.getElementById('tharwah-email-form');
       form.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.handleEmailSubmit(suggestionId, actionText);
+        this.handleEmailSubmit();
       });
     }
 
-    async handleEmailSubmit(suggestionId, actionText) {
+    async handleEmailSubmit() {
       const emailInput = document.getElementById('tharwah-email-input');
       const termsCheckbox = document.getElementById('tharwah-terms-checkbox');
 
@@ -437,7 +445,7 @@
         // Track email capture
         this.trackEvent('email_captured', {
           email: email,
-          source: 'welcome_screen',
+          source: this.emailCaptureCallback?.source || 'welcome_screen',
           conversation_id: this.conversationId
         });
 
@@ -447,8 +455,12 @@
           emailScreen.remove();
         }
 
-        // Proceed with the suggestion
-        await this.proceedAfterEmailCapture(suggestionId, actionText);
+        // Execute callback based on the stored data
+        if (this.emailCaptureCallback?.type === 'suggestion' && this.emailCaptureCallback?.suggestionId && this.emailCaptureCallback?.actionText) {
+          await this.proceedAfterEmailCapture(this.emailCaptureCallback.suggestionId, this.emailCaptureCallback.actionText);
+        } else if (this.emailCaptureCallback?.type === 'startConversation') {
+          await this.proceedToNormalChat();
+        }
 
       } catch (error) {
         this.log('Error updating conversation with email:', error);
@@ -537,9 +549,27 @@
       await this.sendMessage();
     }
 
-    startConversation() {
+    async startConversation() {
       this.log('Starting conversation from welcome screen');
-      
+
+      // Check if user already provided email and accepted terms
+      const userEmail = sessionStorage.getItem('tharwah_user_email');
+      const termsAccepted = sessionStorage.getItem('tharwah_terms_accepted');
+
+      if (userEmail && termsAccepted) {
+        // User already registered, proceed normally
+        await this.proceedToNormalChat();
+      } else {
+        // Show email capture screen
+        this.showEmailCaptureScreen({
+          type: 'startConversation',
+          source: 'start_conversation'
+        });
+      }
+    }
+
+    
+    async proceedToNormalChat() {
       // Remove welcome screen
       const welcomeScreen = document.getElementById('tharwah-welcome-screen');
       if (welcomeScreen) {
@@ -549,13 +579,13 @@
       // Show chat interface
       this.elements.messages.style.display = '';
       this.elements.inputContainer.style.display = '';
-      
+
       // Hide welcome screen flag
       this.showingWelcome = false;
 
       // Add welcome message
       this.addMessage(this.config.welcomeMessage, 'bot');
-      
+
       // Focus on input
       this.elements.input.focus();
     }
