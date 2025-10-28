@@ -48,6 +48,7 @@
         // AI-Powered Popovers
         enablePopovers: config.enablePopovers !== false,
         popoverApiKey: config.popoverApiKey || null,
+        popoverEnablePeriodicChecks: config.popoverEnablePeriodicChecks !== false, // Enable periodic background checks
         popoverCheckInterval: config.popoverCheckInterval || 30000, // 30 seconds
         popoverMinDelay: config.popoverMinDelay || 10000, // Wait 10s before first check
         popoverMaxPerSession: config.popoverMaxPerSession || 3,
@@ -849,7 +850,7 @@
         // Request popover suggestion immediately
         setTimeout(() => {
           this.log('⚡ Requesting popover for event:', eventName);
-          this.checkForPopover();
+          this.checkForPopover('event:' + eventName);
         }, 100); // Small delay to ensure flush completes
       }
     }
@@ -1058,21 +1059,26 @@
     // ============================================
 
     startPopoverSystem() {
+      if (!this.config.popoverEnablePeriodicChecks) {
+        this.log('⏸️ Periodic popover checks disabled. Only event-based checks will run.');
+        return;
+      }
+      
       // Wait before first check (give user time to interact)
       setTimeout(() => {
-        this.checkForPopover();
+        this.checkForPopover('periodic');
         
         // Set up periodic checks
         this.popoverState.checkTimer = setInterval(() => {
-          this.checkForPopover();
+          this.checkForPopover('periodic');
         }, this.config.popoverCheckInterval);
         
-        this.log('Popover system started');
+        this.log('🔄 Popover system started with periodic checks every', this.config.popoverCheckInterval / 1000, 'seconds');
       }, this.config.popoverMinDelay);
     }
 
-    async checkForPopover() {
-      this.log('🔍 checkForPopover() called');
+    async checkForPopover(trigger = 'manual') {
+      this.log(`🔍 checkForPopover() called [trigger: ${trigger}]`);
       
       // Don't check if max popovers reached
       if (this.popoverState.count >= this.config.popoverMaxPerSession) {

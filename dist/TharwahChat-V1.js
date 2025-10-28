@@ -1465,8 +1465,13 @@
 
       const messageDiv = document.createElement('div');
       messageDiv.className = `tharwah-chat-message ${sender}`;
+      
+      // Use formatMessage for bot messages to support markdown and line breaks
+      // Keep escapeHtml for user messages for safety
+      const formattedContent = sender === 'bot' ? this.formatMessage(content) : this.escapeHtml(content);
+      
       messageDiv.innerHTML = `
-        <div class="tharwah-chat-message-content">${this.escapeHtml(content)}</div>
+        <div class="tharwah-chat-message-content">${formattedContent}</div>
       `;
 
       this.elements.messages.appendChild(messageDiv);
@@ -1525,6 +1530,31 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    formatMessage(text) {
+      // First escape HTML to prevent XSS
+      let formatted = this.escapeHtml(text);
+      
+      // Convert **bold** to <strong>
+      formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      
+      // Convert line breaks to <br> tags
+      formatted = formatted.replace(/\n/g, '<br>');
+      
+      // Convert numbered lists (1. Item) to proper format with spacing
+      formatted = formatted.replace(/^(\d+)\.\s+/gm, '<br><strong>$1.</strong> ');
+      
+      // Convert bullet points (- Item) to proper format
+      formatted = formatted.replace(/^-\s+/gm, '<br>• ');
+      
+      // Clean up multiple consecutive <br> tags (max 2)
+      formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
+      
+      // Remove leading <br> if present
+      formatted = formatted.replace(/^<br>/, '');
+      
+      return formatted;
     }
 
     log(...args) {
