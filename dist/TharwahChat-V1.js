@@ -232,23 +232,9 @@
     async handleWelcomeSuggestionClick(suggestionId, actionText) {
       this.log('Welcome suggestion clicked:', suggestionId, actionText);
 
-      // Check if user already provided email
-      const userEmail = sessionStorage.getItem('tharwah_user_email');
-      const termsAccepted = sessionStorage.getItem('tharwah_terms_accepted');
+      // Proceed directly (no email capture on suggestions)
+      await this.proceedAfterEmailCapture(suggestionId, actionText);
 
-      if (userEmail && termsAccepted) {
-        // User already registered, proceed normally
-        await this.proceedAfterEmailCapture(suggestionId, actionText);
-      } else {
-        // Show email capture screen
-        this.showEmailCaptureScreen({
-          type: 'suggestion',
-          source: 'suggestion_click',
-          suggestionId: suggestionId,
-          actionText: actionText
-        });
-      }
-      
     }
 
     showEmailCaptureScreen(callbackData = {}) {
@@ -460,6 +446,10 @@
           await this.proceedAfterEmailCapture(this.emailCaptureCallback.suggestionId, this.emailCaptureCallback.actionText);
         } else if (this.emailCaptureCallback?.type === 'startConversation') {
           await this.proceedToNormalChat();
+        } else if (this.emailCaptureCallback?.type === 'sendMessage' && this.emailCaptureCallback?.message) {
+          // Send the message that was originally typed
+          this.elements.input.value = this.emailCaptureCallback.message;
+          await this.sendMessage();
         }
 
       } catch (error) {
@@ -508,6 +498,7 @@
       const emailScreen = document.getElementById('tharwah-email-screen');
       if (emailScreen) {
         emailScreen.remove();
+        this.elements.input.value = '';
       }
 
       // Show welcome screen again
@@ -552,20 +543,8 @@
     async startConversation() {
       this.log('Starting conversation from welcome screen');
 
-      // Check if user already provided email and accepted terms
-      const userEmail = sessionStorage.getItem('tharwah_user_email');
-      const termsAccepted = sessionStorage.getItem('tharwah_terms_accepted');
-
-      if (userEmail && termsAccepted) {
-        // User already registered, proceed normally
-        await this.proceedToNormalChat();
-      } else {
-        // Show email capture screen
-        this.showEmailCaptureScreen({
-          type: 'startConversation',
-          source: 'start_conversation'
-        });
-      }
+      // Proceed directly (no email capture on start conversation)
+      await this.proceedToNormalChat();
     }
 
     
@@ -692,6 +671,20 @@
     async sendMessage() {
       const message = this.elements.input.value.trim();
       if (!message) return;
+
+      // Check if user has provided email and accepted terms
+      const userEmail = sessionStorage.getItem('tharwah_user_email');
+      const termsAccepted = sessionStorage.getItem('tharwah_terms_accepted');
+
+      if (!userEmail || !termsAccepted) {
+        // Show email capture screen before sending message
+        this.showEmailCaptureScreen({
+          type: 'sendMessage',
+          source: 'first_message',
+          message: message
+        });
+        return;
+      }
 
       this.elements.input.value = '';
       this.addMessage(message, 'user');
