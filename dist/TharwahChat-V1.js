@@ -787,11 +787,16 @@
     }
 
     showProducts(products) {
+      // Get base URL for images (remove /api/ from apiEndpoint)
+      const baseUrl = this.config.apiEndpoint.replace(/\/api\/?$/, '');
+      
       // Create horizontal scrollable container for products
       const productsHtml = products.map(product => {
         // Extract values from API response structure
         const name = product.name || '';
         const imageUrl = product.image_url || product.image || null;
+        // Build full image URL
+        const fullImageUrl = imageUrl ? `${baseUrl}${imageUrl}` : null;
         const imageAlt = product.image_alt || name;
         const productLink = product.product_link || product.enroll_link || product.external_link || product.link || null;
         const price = product.metadata?.price || product.price || null;
@@ -818,8 +823,8 @@
           " onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
             <!-- Image -->
             <div style="position: relative;">
-              ${imageUrl ? 
-                `<img src="${imageUrl}" alt="${this.escapeHtml(imageAlt)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);\\' />';" />` :
+              ${fullImageUrl ? 
+                `<img src="${fullImageUrl}" alt="${this.escapeHtml(imageAlt)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);\\' />';" />` :
                 `<div style="width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);"></div>`
               }
             </div>
