@@ -1097,7 +1097,7 @@
         // Fast endpoint: http://localhost:8000/api/track/suggest-popover-fast/
         // AI endpoint: http://localhost:8000/api/track/suggest-popover/
         const baseUrl = this.config.apiEndpoint.replace(/\/track\/?$/, '');
-        const endpoint = this.config.popoverUseFastEndpoint ? 'suggest-popover-fast/' : 'suggest-popover/';
+        const endpoint = this.config.popoverUseFastEndpoint ? 'suggest-popover/' : 'suggest-popover/';
         const apiEndpoint = baseUrl + '/' + endpoint;
         
         this.log('📡 Requesting popover from:', apiEndpoint);
