@@ -934,7 +934,7 @@
       `;
       
       this.elements.messages.appendChild(messageDiv);
-      this.scrollToBottom();
+      // Don't auto-scroll for products - let user scroll to see them
     }
 
     showQuickReplies(quickReplies) {
@@ -1018,7 +1018,7 @@
       `;
       
       this.elements.messages.appendChild(messageDiv);
-      this.scrollToBottom();
+      // Don't auto-scroll for quick replies - let user scroll to see them
     }
 
     handleQuickReply(replyText, replyId) {
@@ -1480,7 +1480,13 @@
       `;
 
       this.elements.messages.appendChild(messageDiv);
-      this.scrollToBottom();
+      
+      // Smart scrolling: User messages scroll to bottom, bot messages scroll to show the start
+      if (sender === 'user') {
+        this.scrollToBottom();
+      } else {
+        this.scrollToMessage(messageDiv);
+      }
 
       return message;
     }
@@ -1514,6 +1520,19 @@
 
     scrollToBottom() {
       this.elements.messages.scrollTop = this.elements.messages.scrollHeight;
+    }
+
+    scrollToMessage(messageDiv) {
+      // Scroll to show the start of the message (user input + beginning of response visible)
+      // This allows users to manually scroll for long responses
+      const container = this.elements.messages;
+      const messageTop = messageDiv.offsetTop;
+      const containerHeight = container.clientHeight;
+      const messageHeight = messageDiv.offsetHeight;
+      
+      // Scroll to show the message at the top of the visible area
+      // Leave some padding (20px) from the top
+      container.scrollTop = Math.max(0, messageTop - 20);
     }
 
     trackEvent(eventName, data = {}) {
