@@ -841,19 +841,25 @@
         let textQueue = []; // Queue for gradual text display
         let isDisplaying = false; // Flag to prevent concurrent displays
 
-        // Function to gradually display text
+        // Function to gradually display text character-by-character (ChatGPT-like)
         const displayTextGradually = async () => {
           if (isDisplaying) return;
           isDisplaying = true;
           
           while (textQueue.length > 0) {
             const chunk = textQueue.shift();
-            fullText += chunk;
-            this.updateStreamingMessage(messageId, fullText, false);
             
-            // Delay between words (50ms per word for smooth effect)
-            const words = chunk.split(' ');
-            await new Promise(resolve => setTimeout(resolve, 100 * Math.max(1, words.length)));
+            // Display character by character for smooth effect
+            for (let i = 0; i < chunk.length; i++) {
+              fullText += chunk[i];
+              this.updateStreamingMessage(messageId, fullText, false);
+              
+              // Small delay between characters (15ms = smooth like ChatGPT)
+              // Skip delay for spaces to make words appear faster
+              if (chunk[i] !== ' ') {
+                await new Promise(resolve => setTimeout(resolve, 15));
+              }
+            }
           }
           
           isDisplaying = false;
