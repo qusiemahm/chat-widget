@@ -999,11 +999,12 @@
         if (contentDiv) {
           // Add text with or without cursor
           if (isComplete) {
-            // Remove cursor when complete
-            contentDiv.innerHTML = this.escapeHtml(text);
+            // Remove cursor when complete and apply full formatting
+            contentDiv.innerHTML = this.formatMessage(text);
           } else {
             // Add text with cursor while streaming
-            contentDiv.innerHTML = this.escapeHtml(text) + '<span class="streaming-cursor">▋</span>';
+            // Use formatMessage for proper display of bold, lists, etc.
+            contentDiv.innerHTML = this.formatMessage(text) + '<span class="streaming-cursor">▋</span>';
           }
           this.scrollToBottom();
         }
@@ -1603,15 +1604,18 @@
         /* Streaming cursor */
         .streaming-cursor {
           display: inline-block;
-          animation: blink 1s infinite;
+          animation: smoothBlink 1.2s ease-in-out infinite;
           color: ${this.config.primaryColor};
           font-weight: bold;
           margin-left: 2px;
         }
 
-        @keyframes blink {
-          0%, 49% { opacity: 1; }
-          50%, 100% { opacity: 0; }
+        @keyframes smoothBlink {
+          0% { opacity: 1; }
+          25% { opacity: 1; }
+          50% { opacity: 0.3; }
+          75% { opacity: 1; }
+          100% { opacity: 1; }
         }
 
         /* Small spinner for tools */
