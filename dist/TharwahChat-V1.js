@@ -1865,17 +1865,23 @@
       // First escape HTML to prevent XSS
       let formatted = this.escapeHtml(text);
       
-      // Convert **bold** to <strong>
-      formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Convert **bold** to <strong> (more robust - handles any content including special chars)
+      formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       
       // Convert line breaks to <br> tags
       formatted = formatted.replace(/\n/g, '<br>');
       
-      // Convert numbered lists (1. Item) to proper format with spacing
+      // Add line break after colons when followed by content (like "could you tell me a bit more:")
+      // But not for time formats like "12:30" or URLs like "http://"
+      formatted = formatted.replace(/([a-zA-Z\?])\s*:\s*(?=<br>|$)/g, '$1:<br><br>');
+      
+      // Convert numbered lists (1. Item) to proper format
+      // Each number on its own line with the content on the next line
+      formatted = formatted.replace(/^(\d+)\.\s+\*\*(.+?)\*\*/gm, '<br><strong>$1. $2</strong><br>');
       formatted = formatted.replace(/^(\d+)\.\s+/gm, '<br><strong>$1.</strong> ');
       
-      // Convert bullet points (- Item) to proper format
-      formatted = formatted.replace(/^-\s+/gm, '<br>• ');
+      // Convert bullet points (- Item) to proper format with indentation
+      formatted = formatted.replace(/^-\s+/gm, '<br>&nbsp;&nbsp;&nbsp;• ');
       
       // Clean up multiple consecutive <br> tags (max 2)
       formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
