@@ -838,6 +838,26 @@
         let products = [];
         let quickReplies = [];
         let routingInfo = null;
+        let textQueue = []; // Queue for gradual text display
+        let isDisplaying = false; // Flag to prevent concurrent displays
+
+        // Function to gradually display text
+        const displayTextGradually = async () => {
+          if (isDisplaying) return;
+          isDisplaying = true;
+          
+          while (textQueue.length > 0) {
+            const chunk = textQueue.shift();
+            fullText += chunk;
+            this.updateStreamingMessage(messageId, fullText, false);
+            
+            // Delay between words (50ms per word for smooth effect)
+            const words = chunk.split(' ');
+            await new Promise(resolve => setTimeout(resolve, 50 * Math.max(1, words.length)));
+          }
+          
+          isDisplaying = false;
+        };
 
         while (true) {
           const { done, value } = await reader.read();
@@ -862,9 +882,9 @@
                 this.log('Routing to agent:', routingInfo.selected_agent.name);
               }
               else if (eventType === 'text') {
-                // Append text to message
-                fullText += data.content;
-                this.updateStreamingMessage(messageId, fullText);
+                // Add text to queue for gradual display
+                textQueue.push(data.content);
+                displayTextGradually();
               }
               else if (eventType === 'tool_start') {
                 // Show tool indicator
@@ -888,6 +908,17 @@
               }
               else if (eventType === 'done') {
                 this.log('Streaming complete. Message ID:', data.message_id);
+                
+                // Wait for text display to complete
+                while (textQueue.length > 0 || isDisplaying) {
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                
+                // Remove cursor from final message
+                this.updateStreamingMessage(messageId, fullText, true);
+                
+                // Make sure tool indicator is hidden
+                this.hideToolIndicator();
                 
                 // Show products if any
                 if (products.length > 0) {
@@ -915,6 +946,7 @@
         }
         
         this.currentStreamingMessage = null;
+        this.hideToolIndicator();
 
       } catch (error) {
         this.hideToolIndicator();
@@ -954,13 +986,19 @@
       return messageDiv;
     }
 
-    updateStreamingMessage(messageId, text) {
+    updateStreamingMessage(messageId, text, isComplete = false) {
       const messageDiv = document.getElementById(messageId);
       if (messageDiv) {
         const contentDiv = messageDiv.querySelector('.tharwah-chat-message-content');
         if (contentDiv) {
-          // Add text with cursor
-          contentDiv.innerHTML = this.escapeHtml(text) + '<span class="streaming-cursor">▋</span>';
+          // Add text with or without cursor
+          if (isComplete) {
+            // Remove cursor when complete
+            contentDiv.innerHTML = this.escapeHtml(text);
+          } else {
+            // Add text with cursor while streaming
+            contentDiv.innerHTML = this.escapeHtml(text) + '<span class="streaming-cursor">▋</span>';
+          }
           this.scrollToBottom();
         }
       }
