@@ -33,6 +33,7 @@
         autoOpenDelay: config.autoOpenDelay || 3000,
         showSuggestions: config.showSuggestions !== false, // Default: true
         suggestionsLimit: config.suggestionsLimit || 6,
+        enableStreaming: config.enableStreaming || true, // NEW: Enable streaming responses
         ...config
       };
 
@@ -43,8 +44,10 @@
       this.isTyping = false;
       this.isRendered = false;
       this.showingWelcome = true; // Start with welcome screen
+      this.currentStreamingMessage = null; // Track current streaming message
 
       this.log('TharwahChat initialized', this.config);
+      this.log('Streaming enabled:', this.config.enableStreaming);
       
       if (!this.config.apiKey) {
         console.error('[TharwahChat] ERROR: apiKey is required in config!');
@@ -700,9 +703,13 @@
         message_length: message.length
       });
 
-      this.showTyping();
-
-      await this.getResponse(message);
+      // Use streaming or non-streaming based on config
+      if (this.config.enableStreaming) {
+        await this.getResponseStreaming(message);
+      } else {
+        this.showTyping();
+        await this.getResponse(message);
+      }
     }
 
     async getResponse(userMessage) {
@@ -783,6 +790,222 @@
         this.trackEvent('chat_error', {
           error: error.message
         });
+      }
+    }
+
+    async getResponseStreaming(userMessage) {
+      try {
+        // Ensure we have a conversation
+        if (!this.conversationId) {
+          this.log('No conversation ID, creating new conversation...');
+          await this.createConversation();
+        }
+
+        if (!this.config.apiKey) {
+          throw new Error('API key is not configured.');
+        }
+
+        this.log('Sending streaming message to backend:', userMessage);
+        
+        // Create empty bot message for streaming
+        const messageId = 'stream-msg-' + Date.now();
+        this.currentStreamingMessage = this.createEmptyBotMessage(messageId);
+        
+        const response = await fetch(
+          `${this.config.apiEndpoint}/widget/conversations/${this.conversationId}/send-agent-stream/`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.config.apiKey}`
+            },
+            body: JSON.stringify({
+              content: userMessage
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`API Error ${response.status}: ${JSON.stringify(errorData)}`);
+        }
+
+        // Read stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullText = '';
+        let products = [];
+        let quickReplies = [];
+        let routingInfo = null;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) break;
+          
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete lines
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop(); // Keep incomplete line in buffer
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+              const eventType = data.type;
+              
+              this.log('Stream event:', eventType, data);
+              
+              if (eventType === 'routing') {
+                routingInfo = data.routing_info;
+                this.log('Routing to agent:', routingInfo.selected_agent.name);
+              }
+              else if (eventType === 'text') {
+                // Append text to message
+                fullText += data.content;
+                this.updateStreamingMessage(messageId, fullText);
+              }
+              else if (eventType === 'tool_start') {
+                // Show tool indicator
+                this.showToolIndicator(data.tool_name);
+              }
+              else if (eventType === 'tool_executing') {
+                // Update tool indicator
+                this.updateToolIndicator(data.tool_name, 'executing');
+              }
+              else if (eventType === 'tool_complete') {
+                // Hide tool indicator
+                this.hideToolIndicator();
+              }
+              else if (eventType === 'products') {
+                // Store products to show after text
+                products = data.products;
+              }
+              else if (eventType === 'quick_replies') {
+                // Store quick replies to show after text
+                quickReplies = data.quick_replies;
+              }
+              else if (eventType === 'done') {
+                this.log('Streaming complete. Message ID:', data.message_id);
+                
+                // Show products if any
+                if (products.length > 0) {
+                  this.showProducts(products);
+                }
+                
+                // Show quick replies if any
+                if (quickReplies.length > 0) {
+                  this.showQuickReplies(quickReplies);
+                }
+                
+                this.trackEvent('chat_response_received_streaming', {
+                  agent: routingInfo?.selected_agent?.name,
+                  agent_type: routingInfo?.selected_agent?.type,
+                  had_products: products.length > 0,
+                  had_quick_replies: quickReplies.length > 0,
+                  streaming: true
+                });
+              }
+              else if (eventType === 'error') {
+                throw new Error(data.error);
+              }
+            }
+          }
+        }
+        
+        this.currentStreamingMessage = null;
+
+      } catch (error) {
+        this.hideToolIndicator();
+        
+        if (this.currentStreamingMessage) {
+          // Remove the empty streaming message
+          this.currentStreamingMessage.remove();
+          this.currentStreamingMessage = null;
+        }
+        
+        let errorMessage = 'Sorry, I encountered an error. Please try again.';
+        
+        if (error.message.includes('API key')) {
+          errorMessage = 'Configuration error. Please contact support.';
+        }
+        
+        this.addMessage(errorMessage, 'bot');
+        this.log('Error getting streaming response:', error);
+        
+        this.trackEvent('chat_error_streaming', {
+          error: error.message
+        });
+      }
+    }
+
+    createEmptyBotMessage(messageId) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'tharwah-chat-message bot';
+      messageDiv.id = messageId;
+      messageDiv.innerHTML = `
+        <div class="tharwah-chat-message-content">
+          <span class="streaming-cursor">▋</span>
+        </div>
+      `;
+      this.elements.messages.appendChild(messageDiv);
+      this.scrollToBottom();
+      return messageDiv;
+    }
+
+    updateStreamingMessage(messageId, text) {
+      const messageDiv = document.getElementById(messageId);
+      if (messageDiv) {
+        const contentDiv = messageDiv.querySelector('.tharwah-chat-message-content');
+        if (contentDiv) {
+          // Add text with cursor
+          contentDiv.innerHTML = this.escapeHtml(text) + '<span class="streaming-cursor">▋</span>';
+          this.scrollToBottom();
+        }
+      }
+    }
+
+    showToolIndicator(toolName) {
+      // Remove existing indicator if any
+      this.hideToolIndicator();
+      
+      const indicator = document.createElement('div');
+      indicator.className = 'tharwah-chat-message bot tool-indicator';
+      indicator.id = 'tool-indicator';
+      indicator.innerHTML = `
+        <div class="tharwah-chat-message-content" style="background: #eff6ff; border: 1px solid #dbeafe;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="spinner-small"></div>
+            <span style="font-size: 12px; color: #1d4ed8;">Using ${toolName}...</span>
+          </div>
+        </div>
+      `;
+      this.elements.messages.appendChild(indicator);
+      this.scrollToBottom();
+    }
+
+    updateToolIndicator(toolName, status) {
+      const indicator = document.getElementById('tool-indicator');
+      if (indicator) {
+        const contentDiv = indicator.querySelector('.tharwah-chat-message-content');
+        if (contentDiv) {
+          if (status === 'executing') {
+            contentDiv.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="spinner-small"></div>
+                <span style="font-size: 12px; color: #1d4ed8;">⚙️ Executing ${toolName}...</span>
+              </div>
+            `;
+          }
+        }
+      }
+    }
+
+    hideToolIndicator() {
+      const indicator = document.getElementById('tool-indicator');
+      if (indicator) {
+        indicator.remove();
       }
     }
 
@@ -1331,6 +1554,31 @@
         .tharwah-chat-send svg {
           width: 16px;
           height: 16px;
+        }
+
+        /* Streaming cursor */
+        .streaming-cursor {
+          display: inline-block;
+          animation: blink 1s infinite;
+          color: ${this.config.primaryColor};
+          font-weight: bold;
+          margin-left: 2px;
+        }
+
+        @keyframes blink {
+          0%, 49% { opacity: 1; }
+          50%, 100% { opacity: 0; }
+        }
+
+        /* Small spinner for tools */
+        .spinner-small {
+          border: 2px solid #dbeafe;
+          border-top: 2px solid #2563eb;
+          border-radius: 50%;
+          width: 12px;
+          height: 12px;
+          animation: spin 1s linear infinite;
+          display: inline-block;
         }
 
         /* Mobile */
