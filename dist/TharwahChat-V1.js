@@ -1523,16 +1523,29 @@
     }
 
     scrollToMessage(messageDiv) {
-      // Scroll to show the start of the message (user input + beginning of response visible)
+      // Scroll to show the user's input and the beginning of the bot's response
       // This allows users to manually scroll for long responses
       const container = this.elements.messages;
-      const messageTop = messageDiv.offsetTop;
-      const containerHeight = container.clientHeight;
-      const messageHeight = messageDiv.offsetHeight;
       
-      // Scroll to show the message at the top of the visible area
-      // Leave some padding (20px) from the top
-      container.scrollTop = Math.max(0, messageTop - 20);
+      // Find the previous user message (the one right before this bot message)
+      const allMessages = container.querySelectorAll('.tharwah-chat-message');
+      const botMessageIndex = Array.from(allMessages).indexOf(messageDiv);
+      
+      // Look for the user message right before this bot message
+      let targetMessage = messageDiv; // Default to bot message
+      for (let i = botMessageIndex - 1; i >= 0; i--) {
+        if (allMessages[i].classList.contains('user')) {
+          targetMessage = allMessages[i];
+          break;
+        }
+      }
+      
+      // Scroll to show the user's message (or bot message if no user message found)
+      // This ensures the context (user's question) is always visible
+      const targetTop = targetMessage.offsetTop;
+      
+      // Scroll with some padding from the top (40px for better visibility)
+      container.scrollTop = Math.max(0, targetTop - 40);
     }
 
     trackEvent(eventName, data = {}) {
