@@ -853,7 +853,7 @@
             
             // Delay between words (50ms per word for smooth effect)
             const words = chunk.split(' ');
-            await new Promise(resolve => setTimeout(resolve, 50 * Math.max(1, words.length)));
+            await new Promise(resolve => setTimeout(resolve, 100 * Math.max(1, words.length)));
           }
           
           isDisplaying = false;
