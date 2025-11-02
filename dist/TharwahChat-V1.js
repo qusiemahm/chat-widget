@@ -34,6 +34,7 @@
         showSuggestions: config.showSuggestions !== false, // Default: true
         suggestionsLimit: config.suggestionsLimit || 6,
         enableStreaming: config.enableStreaming || true, // NEW: Enable streaming responses
+        language: config.language || this.detectLanguage(), // NEW: Language support (ar/en)
         ...config
       };
 
@@ -61,6 +62,25 @@
         this.render();
       }
       return this;
+    }
+
+    detectLanguage() {
+      // Try to detect language from:
+      // 1. HTML lang attribute
+      // 2. Browser language
+      // 3. Default to 'en'
+      
+      const htmlLang = document.documentElement.lang;
+      if (htmlLang && htmlLang.toLowerCase().startsWith('ar')) {
+        return 'ar';
+      }
+      
+      const browserLang = navigator.language || navigator.userLanguage;
+      if (browserLang && browserLang.toLowerCase().startsWith('ar')) {
+        return 'ar';
+      }
+      
+      return 'en';
     }
 
     async render() {
@@ -110,7 +130,7 @@
     async loadSuggestions() {
       try {
         const response = await fetch(
-          `${this.config.apiEndpoint}/widget/suggestions/welcome/?bot_id=${this.config.botId}&limit=${this.config.suggestionsLimit}`,
+          `${this.config.apiEndpoint}/widget/suggestions/welcome/?bot_id=${this.config.botId}&limit=${this.config.suggestionsLimit}&language=${this.config.language}`,
           {
             method: 'GET',
             headers: {
@@ -126,7 +146,7 @@
         const data = await response.json();
         this.suggestions = data.suggestions || [];
         
-        this.log('Loaded suggestions:', this.suggestions.length);
+        this.log(`Loaded ${this.suggestions.length} suggestions for language: ${this.config.language}`);
       } catch (error) {
         this.log('Error loading suggestions:', error);
         this.suggestions = [];
