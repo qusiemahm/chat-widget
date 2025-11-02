@@ -83,6 +83,97 @@
       return 'en';
     }
 
+    getTranslations() {
+      return {
+        en: {
+          // Welcome screen
+          welcomeTitle: 'Hi there! 👋',
+          welcomeSubtitle: "Let's find what you're looking for",
+          startConversation: 'Start a conversation',
+          startConversationDesc: 'Ask us anything about our programs',
+          
+          // Email capture screen
+          emailScreenTitle: 'Chat with Tharwah Academy',
+          emailScreenSubtitle: 'To get started, please share your email address:',
+          emailPlaceholder: 'your@email.com',
+          termsText: "I agree to Tharwah Academy's Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.",
+          submitButton: 'Submit',
+          
+          // Alert messages
+          alertEnterEmail: 'Please enter your email address',
+          alertAcceptTerms: 'Please accept the Terms & Conditions',
+          alertValidEmail: 'Please enter a valid email address',
+          alertConversationFailed: 'Failed to start conversation. Please try again.',
+          alertSaveFailed: 'Failed to save your information. Please try again.',
+          
+          // Chat input
+          inputPlaceholder: 'Type your message...',
+          
+          // Quick replies
+          quickSuggestionsHeader: 'Quick suggestions',
+          quickSuggestionsFooter: 'Based on your conversation',
+          
+          // Product cards
+          enrollNow: 'Enroll Now',
+          audioFeature: 'Audio description feature coming soon!',
+          
+          // Error messages
+          errorGeneric: 'Sorry, I encountered an error. Please try again.',
+          errorConfig: 'Configuration error. Please contact support.',
+          
+          // Tool indicator
+          toolUsing: 'Using',
+          toolExecuting: 'Executing'
+        },
+        ar: {
+          // Welcome screen
+          welcomeTitle: 'مرحباً! 👋',
+          welcomeSubtitle: 'دعنا نجد ما تبحث عنه',
+          startConversation: 'ابدأ محادثة',
+          startConversationDesc: 'اسألنا أي شيء عن برامجنا',
+          
+          // Email capture screen
+          emailScreenTitle: 'الدردشة مع أكاديمية ثروة',
+          emailScreenSubtitle: 'للبدء، يرجى مشاركة عنوان بريدك الإلكتروني:',
+          emailPlaceholder: 'your@email.com',
+          termsText: 'أوافق على شروط وأحكام أكاديمية ثروة وأقر بأنه ستتم معالجة معلوماتي الشخصية وفقاً للوائح حماية البيانات.',
+          submitButton: 'إرسال',
+          
+          // Alert messages
+          alertEnterEmail: 'يرجى إدخال عنوان بريدك الإلكتروني',
+          alertAcceptTerms: 'يرجى الموافقة على الشروط والأحكام',
+          alertValidEmail: 'يرجى إدخال عنوان بريد إلكتروني صالح',
+          alertConversationFailed: 'فشل بدء المحادثة. يرجى المحاولة مرة أخرى.',
+          alertSaveFailed: 'فشل حفظ معلوماتك. يرجى المحاولة مرة أخرى.',
+          
+          // Chat input
+          inputPlaceholder: 'اكتب رسالتك...',
+          
+          // Quick replies
+          quickSuggestionsHeader: 'اقتراحات سريعة',
+          quickSuggestionsFooter: 'بناءً على محادثتك',
+          
+          // Product cards
+          enrollNow: 'سجل الآن',
+          audioFeature: 'ميزة الوصف الصوتي قريباً!',
+          
+          // Error messages
+          errorGeneric: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.',
+          errorConfig: 'خطأ في الإعدادات. يرجى الاتصال بالدعم.',
+          
+          // Tool indicator
+          toolUsing: 'استخدام',
+          toolExecuting: 'تنفيذ'
+        }
+      };
+    }
+
+    t(key) {
+      const translations = this.getTranslations();
+      const lang = this.config.language || 'en';
+      return translations[lang]?.[key] || translations.en[key] || key;
+    }
+
     async render() {
       if (this.isRendered) {
         this.log('Widget already rendered, skipping...');
@@ -181,8 +272,8 @@
       welcomeScreen.innerHTML = `
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px; overflow-y: auto;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="font-size: 28px; font-weight: 700; color: white; margin: 0 0 8px 0;">Hi there! 👋</h1>
-            <p style="font-size: 16px; color: rgba(255, 255, 255, 0.9); margin: 0;">Let's find what you're looking for</p>
+            <h1 style="font-size: 28px; font-weight: 700; color: white; margin: 0 0 8px 0;">${this.t('welcomeTitle')}</h1>
+            <p style="font-size: 16px; color: rgba(255, 255, 255, 0.9); margin: 0;">${this.t('welcomeSubtitle')}</p>
           </div>
           
           <div style="background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); padding: 12px; margin-bottom: 16px;">
@@ -236,8 +327,8 @@
           >
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <div style="text-align: left; flex: 1;">
-                <h3 style="font-size: 15px; font-weight: 600; color: #1f2937; margin: 0 0 4px 0;">Start a conversation</h3>
-                <p style="font-size: 13px; color: #6b7280; margin: 0;">Ask us anything about our programs</p>
+                <h3 style="font-size: 15px; font-weight: 600; color: #1f2937; margin: 0 0 4px 0;">${this.t('startConversation')}</h3>
+                <p style="font-size: 13px; color: #6b7280; margin: 0;">${this.t('startConversationDesc')}</p>
               </div>
               <div style="background: #2563eb; padding: 10px; border-radius: 50%; transition: background 0.2s;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -299,7 +390,7 @@
 
       emailScreen.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
-          <h2 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">Chat with Tharwah Academy</h2>
+          <h2 style="font-size: 18px; font-weight: 600; color: #111827; margin: 0;">${this.t('emailScreenTitle')}</h2>
           <button
             onclick="window.tharwahChatWidget.closeEmailScreen()"
             style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center;"
@@ -314,7 +405,7 @@
         <div style="flex: 1; display: flex; flex-direction: column;">
           <div style="background: #f9fafb; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
             <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.6;">
-              To get started, please share your email address:
+              ${this.t('emailScreenSubtitle')}
             </p>
           </div>
 
@@ -323,7 +414,7 @@
               <input
                 type="email"
                 id="tharwah-email-input"
-                placeholder="your@email.com"
+                placeholder="${this.t('emailPlaceholder')}"
                 required
                 style="
                   width: 100%;
@@ -356,7 +447,7 @@
                 onchange="window.tharwahChatWidget.validateEmailForm()"
               />
               <span style="font-size: 12px; color: #6b7280; line-height: 1.5;">
-                I agree to Tharwah Academy's Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.
+                ${this.t('termsText')}
               </span>
             </label>
 
@@ -378,7 +469,7 @@
                 box-shadow: none;
               "
             >
-              Submit
+              ${this.t('submitButton')}
             </button>
           </form>
         </div>
@@ -405,19 +496,19 @@
       const termsAccepted = termsCheckbox.checked;
 
       if (!email) {
-        alert('Please enter your email address');
+        alert(this.t('alertEnterEmail'));
         return;
       }
 
       if (!termsAccepted) {
-        alert('Please accept the Terms & Conditions');
+        alert(this.t('alertAcceptTerms'));
         return;
       }
 
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address');
+        alert(this.t('alertValidEmail'));
         return;
       }
 
@@ -428,7 +519,7 @@
           await this.createConversation();
         } catch (error) {
           this.log('Error creating conversation:', error);
-          alert('Failed to start conversation. Please try again.');
+          alert(this.t('alertConversationFailed'));
           return;
         }
       }
@@ -487,7 +578,7 @@
 
       } catch (error) {
         this.log('Error updating conversation with email:', error);
-        alert('Failed to save your information. Please try again.');
+        alert(this.t('alertSaveFailed'));
       }
     }
 
@@ -798,10 +889,10 @@
       } catch (error) {
         this.hideTyping();
         
-        let errorMessage = 'Sorry, I encountered an error. Please try again.';
+        let errorMessage = this.t('errorGeneric');
         
         if (error.message.includes('API key')) {
-          errorMessage = 'Configuration error. Please contact support.';
+          errorMessage = this.t('errorConfig');
         }
         
         this.addMessage(errorMessage, 'bot');
@@ -983,10 +1074,10 @@
           this.currentStreamingMessage = null;
         }
         
-        let errorMessage = 'Sorry, I encountered an error. Please try again.';
+        let errorMessage = this.t('errorGeneric');
         
         if (error.message.includes('API key')) {
-          errorMessage = 'Configuration error. Please contact support.';
+          errorMessage = this.t('errorConfig');
         }
         
         this.addMessage(errorMessage, 'bot');
@@ -1042,7 +1133,7 @@
         <div class="tharwah-chat-message-content" style="background: #eff6ff; border: 1px solid #dbeafe;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <div class="spinner-small"></div>
-            <span style="font-size: 12px; color: #1d4ed8;">Using ${toolName}...</span>
+            <span style="font-size: 12px; color: #1d4ed8;">${this.t('toolUsing')} ${toolName}...</span>
           </div>
         </div>
       `;
@@ -1059,7 +1150,7 @@
             contentDiv.innerHTML = `
               <div style="display: flex; align-items: center; gap: 8px;">
                 <div class="spinner-small"></div>
-                <span style="font-size: 12px; color: #1d4ed8;">⚙️ Executing ${toolName}...</span>
+                <span style="font-size: 12px; color: #1d4ed8;">⚙️ ${this.t('toolExecuting')} ${toolName}...</span>
               </div>
             `;
           }
@@ -1153,7 +1244,7 @@
                   justify-content: center;
                   width: 24px;
                   height: 24px;
-                " onmouseover="this.style.background='#dbeafe'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#eff6ff'; this.style.transform='scale(1)'" onclick="alert('Audio description feature coming soon!')" aria-label="Listen to description" title="Listen to description">
+                " onmouseover="this.style.background='#dbeafe'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#eff6ff'; this.style.transform='scale(1)'" onclick="alert(window.tharwahChatWidget.t('audioFeature'))" aria-label="Listen to description" title="Listen to description">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
                     <path d="M16 9a5 5 0 0 1 0 6"></path>
@@ -1200,7 +1291,7 @@
                   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                   line-height: 1.5;
                 " onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-                  Enroll Now
+                  ${this.t('enrollNow')}
                 </a>
               ` : ''}
             </div>
@@ -1294,7 +1385,7 @@
                 <path d="M4 17v2"></path>
                 <path d="M5 18H3"></path>
               </svg>
-              <p style="font-size: 11px; font-weight: 500; color: #374151; margin: 0;">Quick suggestions</p>
+              <p style="font-size: 11px; font-weight: 500; color: #374151; margin: 0;">${this.t('quickSuggestionsHeader')}</p>
             </div>
             
             <!-- Buttons -->
@@ -1304,7 +1395,7 @@
             
             <!-- Footer text -->
             <div style="padding: 0 2px;">
-              <p style="font-size: 9px; color: #6b7280; font-style: italic; margin: 0;">Based on your conversation</p>
+              <p style="font-size: 9px; color: #6b7280; font-style: italic; margin: 0;">${this.t('quickSuggestionsFooter')}</p>
             </div>
           </div>
         </div>
@@ -1700,7 +1791,7 @@
               type="text" 
               class="tharwah-chat-input" 
               id="tharwah-chat-input"
-              placeholder="Type your message..."
+              placeholder="${this.t('inputPlaceholder')}"
               aria-label="Chat message"
             />
             <button class="tharwah-chat-send" id="tharwah-chat-send" aria-label="Send message">
