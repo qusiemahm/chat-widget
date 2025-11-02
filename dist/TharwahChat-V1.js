@@ -1189,9 +1189,9 @@
         const originalPriceFormatted = originalPrice ? `${currency} ${originalPrice.toLocaleString()}` : '';
         let monthlyPrice = 0;
         if (price <= 5000) {
-          monthlyPrice = price / 4;
+          monthlyPrice = Math.round((price / 4) * 100) / 100;
         } else {
-          monthlyPrice = price / 12;
+          monthlyPrice = Math.round((price / 12) * 100) / 100;
         }
         
         return `
