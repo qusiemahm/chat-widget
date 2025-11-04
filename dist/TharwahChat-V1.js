@@ -787,6 +787,7 @@
     async createConversation() {
       try {
         const sessionId = this.getSessionId();
+        const visitorId = this.getVisitorId();
 
         const response = await fetch(
           `${this.config.apiEndpoint}/widget/conversations/`,
@@ -799,6 +800,7 @@
             body: JSON.stringify({
               bot_id: this.config.botId,
               external_ref: sessionId,
+              visitor_id: visitorId,
               metadata: {
                 user_agent: navigator.userAgent,
                 page_url: window.location.href,
@@ -841,6 +843,28 @@
       }
 
       return sessionId;
+    }
+
+    getVisitorId() {
+      // Try to get visitor_id from the tracker if available
+      if (window.tracker && typeof window.tracker.getVisitorId === 'function') {
+        const visitorId = window.tracker.getVisitorId();
+        if (visitorId) {
+          this.log('Got visitor ID from tracker:', visitorId);
+          return visitorId;
+        }
+      }
+
+      // Fallback to localStorage (persistent across sessions)
+      let visitorId = localStorage.getItem('tharwah_visitor_id');
+
+      if (!visitorId) {
+        visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('tharwah_visitor_id', visitorId);
+        this.log('Generated new visitor ID:', visitorId);
+      }
+
+      return visitorId;
     }
 
     // ============================================
