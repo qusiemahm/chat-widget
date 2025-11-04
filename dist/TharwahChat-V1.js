@@ -951,7 +951,8 @@
 
         // Show assistant's response
         const botMessage = data.assistant_message.content;
-        this.addMessage(botMessage, 'bot');
+        const messageId = data.assistant_message.id;
+        this.addMessage(botMessage, 'bot', messageId);
         
         // Show feedback button after first bot response
         this.showFeedbackButton();
@@ -1213,6 +1214,31 @@
           if (isComplete) {
             // Remove cursor when complete and apply full formatting
             contentDiv.innerHTML = this.formatMessage(text);
+            
+            // Add feedback buttons when streaming is complete
+            let feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
+            if (!feedbackDiv) {
+              feedbackDiv = document.createElement('div');
+              feedbackDiv.className = 'tharwah-feedback-buttons';
+              feedbackDiv.setAttribute('data-message-id', messageId);
+              feedbackDiv.innerHTML = `
+                <button class="tharwah-feedback-btn thumbs-up" data-feedback="positive" title="Thumbs up">
+                  👍
+                </button>
+                <button class="tharwah-feedback-btn thumbs-down" data-feedback="negative" title="Thumbs down">
+                  👎
+                </button>
+              `;
+              
+              messageDiv.appendChild(feedbackDiv);
+              
+              // Add click handlers
+              const thumbsUpBtn = feedbackDiv.querySelector('.thumbs-up');
+              const thumbsDownBtn = feedbackDiv.querySelector('.thumbs-down');
+              
+              thumbsUpBtn?.addEventListener('click', () => this.submitMessageFeedback(messageId, 'positive', thumbsUpBtn, thumbsDownBtn));
+              thumbsDownBtn?.addEventListener('click', () => this.submitMessageFeedback(messageId, 'negative', thumbsUpBtn, thumbsDownBtn));
+            }
           } else {
             // Add text with cursor while streaming
             // Use formatMessage for proper display of bold, lists, etc.
@@ -1964,6 +1990,47 @@
           }
         }
 
+        /* Message Feedback Buttons */
+        .tharwah-feedback-buttons {
+          display: flex;
+          gap: 4px;
+          margin-top: 4px;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .tharwah-chat-message.bot:hover .tharwah-feedback-buttons {
+          opacity: 1;
+        }
+
+        .tharwah-feedback-btn {
+          background: transparent;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 4px 8px;
+          font-size: 16px;
+          cursor: pointer;
+          transition: all 0.2s;
+          opacity: 0.5;
+        }
+
+        .tharwah-feedback-btn:hover {
+          opacity: 1;
+          background: #f9fafb;
+          transform: scale(1.1);
+        }
+
+        .tharwah-feedback-btn.active {
+          opacity: 1;
+          background: #fef3c7;
+          border-color: #fbbf24;
+        }
+
+        .tharwah-feedback-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.3;
+        }
+
         /* Input */
         .tharwah-chat-input-container {
           padding: 16px;
@@ -2177,9 +2244,9 @@
       }
     }
 
-    addMessage(content, sender = 'bot') {
+    addMessage(content, sender = 'bot', messageId = null) {
       const message = {
-        id: Date.now(),
+        id: messageId || Date.now(),
         content,
         sender,
         timestamp: new Date()
@@ -2189,6 +2256,7 @@
 
       const messageDiv = document.createElement('div');
       messageDiv.className = `tharwah-chat-message ${sender}`;
+      messageDiv.setAttribute('data-message-id', message.id);
       
       // Use formatMessage for bot messages to support markdown and line breaks
       // Keep escapeHtml for user messages for safety
@@ -2198,9 +2266,31 @@
       const isArabic = this.isArabicText(content);
       const rtlStyle = isArabic ? ' style="direction: rtl; text-align: right;"' : '';
       
+      // Add feedback buttons for bot messages
+      const feedbackButtons = sender === 'bot' ? `
+        <div class="tharwah-feedback-buttons" data-message-id="${message.id}">
+          <button class="tharwah-feedback-btn thumbs-up" data-feedback="positive" title="Thumbs up">
+            👍
+          </button>
+          <button class="tharwah-feedback-btn thumbs-down" data-feedback="negative" title="Thumbs down">
+            👎
+          </button>
+        </div>
+      ` : '';
+      
       messageDiv.innerHTML = `
         <div class="tharwah-chat-message-content"${rtlStyle}>${formattedContent}</div>
+        ${feedbackButtons}
       `;
+
+      // Add feedback button click handlers
+      if (sender === 'bot') {
+        const thumbsUpBtn = messageDiv.querySelector('.thumbs-up');
+        const thumbsDownBtn = messageDiv.querySelector('.thumbs-down');
+        
+        thumbsUpBtn?.addEventListener('click', () => this.submitMessageFeedback(message.id, 'positive', thumbsUpBtn, thumbsDownBtn));
+        thumbsDownBtn?.addEventListener('click', () => this.submitMessageFeedback(message.id, 'negative', thumbsUpBtn, thumbsDownBtn));
+      }
 
       this.elements.messages.appendChild(messageDiv);
       
@@ -2534,6 +2624,79 @@
         detail: { event: eventName, data }
       });
       window.dispatchEvent(event);
+    }
+
+    async submitMessageFeedback(messageId, feedbackType, thumbsUpBtn, thumbsDownBtn) {
+      try {
+        this.log(`Submitting ${feedbackType} feedback for message ${messageId}`);
+        
+        // Disable both buttons while submitting
+        thumbsUpBtn.disabled = true;
+        thumbsDownBtn.disabled = true;
+        
+        const response = await fetch(
+          `${this.config.apiEndpoint}/widget/conversations/message-feedback/`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.config.apiKey}`
+            },
+            body: JSON.stringify({
+              message: messageId,
+              conversation: this.conversationId,
+              feedback_type: feedbackType,
+              visitor_id: this.getVisitorId(),
+              metadata: {
+                user_agent: navigator.userAgent,
+                page_url: window.location.href,
+                timestamp: new Date().toISOString()
+              }
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          
+          // Handle duplicate feedback
+          if (response.status === 400 && errorData.error) {
+            this.log('Feedback already submitted for this message');
+            return;
+          }
+          
+          throw new Error(`Failed to submit feedback: ${response.status}`);
+        }
+
+        const data = await response.json();
+        this.log('Feedback submitted successfully:', data);
+
+        // Mark the clicked button as active
+        if (feedbackType === 'positive') {
+          thumbsUpBtn.classList.add('active');
+          thumbsDownBtn.classList.remove('active');
+        } else {
+          thumbsDownBtn.classList.add('active');
+          thumbsUpBtn.classList.remove('active');
+        }
+
+        // Track the feedback event
+        this.trackEvent('message_feedback_submitted', {
+          message_id: messageId,
+          feedback_type: feedbackType
+        });
+
+      } catch (error) {
+        this.log('Error submitting message feedback:', error);
+        
+        // Re-enable buttons on error
+        thumbsUpBtn.disabled = false;
+        thumbsDownBtn.disabled = false;
+        
+        this.trackEvent('message_feedback_error', {
+          error: error.message
+        });
+      }
     }
 
     escapeHtml(text) {
