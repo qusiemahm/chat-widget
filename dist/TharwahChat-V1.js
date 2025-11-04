@@ -46,6 +46,8 @@
       this.isRendered = false;
       this.showingWelcome = true; // Start with welcome screen
       this.currentStreamingMessage = null; // Track current streaming message
+      this.feedbackShown = false; // Track if feedback has been shown
+      this.feedbackSubmitted = false; // Track if feedback has been submitted
 
       this.log('TharwahChat initialized', this.config);
       this.log('Streaming enabled:', this.config.enableStreaming);
@@ -123,7 +125,28 @@
           
           // Tool indicator
           toolUsing: 'Using',
-          toolExecuting: 'Executing'
+          toolExecuting: 'Executing',
+          
+          // Feedback
+          feedbackTitle: 'Rate your experience',
+          feedbackSubtitle: 'How was your conversation?',
+          feedbackCategoryLabel: 'Category (optional)',
+          feedbackCategoryPlaceholder: 'Select a category',
+          feedbackTextLabel: 'Additional comments (optional)',
+          feedbackTextPlaceholder: 'Tell us more about your experience...',
+          feedbackSubmit: 'Submit Feedback',
+          feedbackCancel: 'Maybe Later',
+          feedbackSuccess: 'Thank you for your feedback!',
+          feedbackError: 'Failed to submit feedback. Please try again.',
+          feedbackButton: 'Rate Experience',
+          // Category options
+          categoryHelpful: 'Helpful',
+          categoryUnhelpful: 'Unhelpful',
+          categoryIncorrect: 'Incorrect Information',
+          categorySlow: 'Slow Response',
+          categoryBug: 'Bug/Issue',
+          categoryFeature: 'Feature Request',
+          categoryOther: 'Other'
         },
         ar: {
           // Welcome screen
@@ -163,7 +186,28 @@
           
           // Tool indicator
           toolUsing: 'استخدام',
-          toolExecuting: 'تنفيذ'
+          toolExecuting: 'تنفيذ',
+          
+          // Feedback
+          feedbackTitle: 'قيّم تجربتك',
+          feedbackSubtitle: 'كيف كانت محادثتك؟',
+          feedbackCategoryLabel: 'الفئة (اختياري)',
+          feedbackCategoryPlaceholder: 'اختر فئة',
+          feedbackTextLabel: 'تعليقات إضافية (اختياري)',
+          feedbackTextPlaceholder: 'أخبرنا المزيد عن تجربتك...',
+          feedbackSubmit: 'إرسال التقييم',
+          feedbackCancel: 'ربما لاحقاً',
+          feedbackSuccess: 'شكراً لك على تقييمك!',
+          feedbackError: 'فشل إرسال التقييم. يرجى المحاولة مرة أخرى.',
+          feedbackButton: 'قيّم التجربة',
+          // Category options
+          categoryHelpful: 'مفيد',
+          categoryUnhelpful: 'غير مفيد',
+          categoryIncorrect: 'معلومات خاطئة',
+          categorySlow: 'استجابة بطيئة',
+          categoryBug: 'خطأ/مشكلة',
+          categoryFeature: 'طلب ميزة',
+          categoryOther: 'أخرى'
         }
       };
     }
@@ -864,6 +908,9 @@
         // Show assistant's response
         const botMessage = data.assistant_message.content;
         this.addMessage(botMessage, 'bot');
+        
+        // Show feedback button after first bot response
+        this.showFeedbackButton();
 
         // Show products if any (check ui_elements first, fallback to direct products)
         const products = data.composed_response?.ui_elements?.products || data.composed_response?.products || [];
@@ -1036,6 +1083,9 @@
                 
                 // Make sure tool indicator is hidden
                 this.hideToolIndicator();
+                
+                // Show feedback button after streaming response completes
+                this.showFeedbackButton();
                 
                 // Show products if any
                 if (products.length > 0) {
@@ -1583,6 +1633,201 @@
           color: #374151;
         }
 
+        /* Feedback button in header */
+        .tharwah-feedback-button {
+          background: rgba(255, 255, 255, 0.2);
+          border: none;
+          color: white;
+          cursor: pointer;
+          padding: 6px;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .tharwah-feedback-button:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.05);
+        }
+
+        /* Feedback dialog overlay */
+        .tharwah-feedback-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000000;
+          animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        /* Feedback dialog content */
+        .tharwah-feedback-dialog-content {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          max-width: 480px;
+          width: 90%;
+          max-height: 80vh;
+          overflow-y: auto;
+          animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+          from {
+            transform: translateY(20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        .tharwah-feedback-header {
+          padding: 24px 24px 16px;
+          text-align: center;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tharwah-feedback-header h3 {
+          font-size: 20px;
+          font-weight: 600;
+          color: #111827;
+          margin: 0 0 8px 0;
+        }
+
+        .tharwah-feedback-header p {
+          font-size: 14px;
+          color: #6b7280;
+          margin: 0;
+        }
+
+        .tharwah-feedback-body {
+          padding: 24px;
+        }
+
+        /* Star rating */
+        .tharwah-star-rating {
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 24px;
+        }
+
+        .tharwah-star {
+          background: none;
+          border: none;
+          padding: 4px;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+
+        .tharwah-star:hover {
+          transform: scale(1.15);
+        }
+
+        .tharwah-star:active {
+          transform: scale(0.95);
+        }
+
+        .tharwah-star svg {
+          stroke: #d1d5db;
+          transition: all 0.2s ease;
+        }
+
+        /* Feedback form fields */
+        .tharwah-feedback-field {
+          margin-bottom: 16px;
+        }
+
+        .tharwah-feedback-field label {
+          display: block;
+          font-size: 14px;
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 6px;
+        }
+
+        .tharwah-feedback-select,
+        .tharwah-feedback-textarea {
+          width: 100%;
+          padding: 10px 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 14px;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tharwah-feedback-select:focus,
+        .tharwah-feedback-textarea:focus {
+          outline: none;
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .tharwah-feedback-textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        /* Feedback actions */
+        .tharwah-feedback-actions {
+          padding: 16px 24px 24px;
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+
+        .tharwah-feedback-btn {
+          padding: 10px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          border: none;
+          transition: all 0.2s ease;
+        }
+
+        .tharwah-feedback-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .tharwah-feedback-btn-primary {
+          background: #2563eb;
+          color: white;
+        }
+
+        .tharwah-feedback-btn-primary:hover:not(:disabled) {
+          background: #1d4ed8;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .tharwah-feedback-btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .tharwah-feedback-btn-secondary:hover {
+          background: #e5e7eb;
+        }
+
         /* Messages */
         .tharwah-chat-messages {
           flex: 1;
@@ -1776,12 +2021,19 @@
         <div class="tharwah-chat-window" id="tharwah-chat-window">
           <div class="tharwah-chat-header">
             <h2>${this.config.title}</h2>
-            <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 6 6 18"></path>
-                <path d="m6 6 12 12"></path>
-              </svg>
-            </button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="tharwah-feedback-button" id="tharwah-feedback-button" aria-label="Rate experience" title="${this.t('feedbackButton')}" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </button>
+              <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
+            </div>
           </div>
           
           <div class="tharwah-chat-messages" id="tharwah-chat-messages"></div>
@@ -1813,7 +2065,8 @@
         messages: document.getElementById('tharwah-chat-messages'),
         input: document.getElementById('tharwah-chat-input'),
         send: document.getElementById('tharwah-chat-send'),
-        inputContainer: document.querySelector('.tharwah-chat-input-container')
+        inputContainer: document.querySelector('.tharwah-chat-input-container'),
+        feedbackButton: document.getElementById('tharwah-feedback-button')
       };
     }
 
@@ -1821,6 +2074,7 @@
       this.elements.button.addEventListener('click', () => this.toggle());
       this.elements.close.addEventListener('click', () => this.close());
       this.elements.send.addEventListener('click', () => this.sendMessage());
+      this.elements.feedbackButton.addEventListener('click', () => this.showFeedbackDialog());
       
       this.elements.input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -1959,6 +2213,256 @@
       // Scroll with some padding from the top (40px for better visibility)
       container.scrollTop = Math.max(0, targetTop - 40);
     }
+
+    // ============================================
+    // FEEDBACK METHODS
+    // ============================================
+
+    showFeedbackButton() {
+      if (this.elements.feedbackButton && !this.feedbackSubmitted) {
+        this.elements.feedbackButton.style.display = 'flex';
+      }
+    }
+
+    hideFeedbackButton() {
+      if (this.elements.feedbackButton) {
+        this.elements.feedbackButton.style.display = 'none';
+      }
+    }
+
+    showFeedbackDialog() {
+      if (!this.conversationId) {
+        this.log('No conversation to rate');
+        return;
+      }
+
+      if (this.feedbackSubmitted) {
+        this.log('Feedback already submitted for this conversation');
+        return;
+      }
+
+      const feedbackDialog = document.createElement('div');
+      feedbackDialog.id = 'tharwah-feedback-dialog';
+      feedbackDialog.className = 'tharwah-feedback-overlay';
+      
+      const categories = [
+        { value: '', label: this.t('feedbackCategoryPlaceholder') },
+        { value: 'helpful', label: this.t('categoryHelpful') },
+        { value: 'unhelpful', label: this.t('categoryUnhelpful') },
+        { value: 'incorrect', label: this.t('categoryIncorrect') },
+        { value: 'slow', label: this.t('categorySlow') },
+        { value: 'bug', label: this.t('categoryBug') },
+        { value: 'feature', label: this.t('categoryFeature') },
+        { value: 'other', label: this.t('categoryOther') }
+      ];
+
+      feedbackDialog.innerHTML = `
+        <div class="tharwah-feedback-dialog-content">
+          <div class="tharwah-feedback-header">
+            <h3>${this.t('feedbackTitle')}</h3>
+            <p>${this.t('feedbackSubtitle')}</p>
+          </div>
+          
+          <div class="tharwah-feedback-body">
+            <!-- Star Rating -->
+            <div class="tharwah-star-rating">
+              ${[1, 2, 3, 4, 5].map(star => `
+                <button type="button" class="tharwah-star" data-rating="${star}" aria-label="${star} stars">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </button>
+              `).join('')}
+            </div>
+            
+            <!-- Category Selection -->
+            <div class="tharwah-feedback-field">
+              <label>${this.t('feedbackCategoryLabel')}</label>
+              <select id="tharwah-feedback-category" class="tharwah-feedback-select">
+                ${categories.map(cat => `<option value="${cat.value}">${cat.label}</option>`).join('')}
+              </select>
+            </div>
+            
+            <!-- Text Feedback -->
+            <div class="tharwah-feedback-field">
+              <label>${this.t('feedbackTextLabel')}</label>
+              <textarea 
+                id="tharwah-feedback-text" 
+                class="tharwah-feedback-textarea" 
+                placeholder="${this.t('feedbackTextPlaceholder')}"
+                rows="4"
+              ></textarea>
+            </div>
+          </div>
+          
+          <div class="tharwah-feedback-actions">
+            <button type="button" id="tharwah-feedback-cancel" class="tharwah-feedback-btn tharwah-feedback-btn-secondary">
+              ${this.t('feedbackCancel')}
+            </button>
+            <button type="button" id="tharwah-feedback-submit" class="tharwah-feedback-btn tharwah-feedback-btn-primary" disabled>
+              ${this.t('feedbackSubmit')}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(feedbackDialog);
+
+      // Star rating functionality
+      let selectedRating = 0;
+      const stars = feedbackDialog.querySelectorAll('.tharwah-star');
+      const submitBtn = feedbackDialog.querySelector('#tharwah-feedback-submit');
+      
+      const updateStars = (rating) => {
+        stars.forEach((star, index) => {
+          const svg = star.querySelector('svg');
+          if (index < rating) {
+            svg.style.fill = '#fbbf24';
+            svg.style.stroke = '#fbbf24';
+          } else {
+            svg.style.fill = 'none';
+            svg.style.stroke = '#d1d5db';
+          }
+        });
+      };
+
+      stars.forEach((star) => {
+        star.addEventListener('mouseenter', (e) => {
+          const rating = parseInt(e.currentTarget.dataset.rating);
+          updateStars(rating);
+        });
+        
+        star.addEventListener('click', (e) => {
+          selectedRating = parseInt(e.currentTarget.dataset.rating);
+          updateStars(selectedRating);
+          submitBtn.disabled = false;
+          this.log('Rating selected:', selectedRating);
+        });
+      });
+
+      feedbackDialog.addEventListener('mouseleave', () => {
+        updateStars(selectedRating);
+      });
+
+      // Cancel button
+      feedbackDialog.querySelector('#tharwah-feedback-cancel').addEventListener('click', () => {
+        document.body.removeChild(feedbackDialog);
+        this.trackEvent('feedback_cancelled');
+      });
+
+      // Submit button
+      submitBtn.addEventListener('click', async () => {
+        const category = feedbackDialog.querySelector('#tharwah-feedback-category').value;
+        const text = feedbackDialog.querySelector('#tharwah-feedback-text').value.trim();
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = this.config.language === 'ar' ? 'جاري الإرسال...' : 'Submitting...';
+        
+        const success = await this.submitFeedback(selectedRating, category, text);
+        
+        if (success) {
+          // Show success message
+          feedbackDialog.querySelector('.tharwah-feedback-dialog-content').innerHTML = `
+            <div style="text-align: center; padding: 32px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 16px;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <h3 style="color: #10b981; margin-bottom: 8px;">${this.t('feedbackSuccess')}</h3>
+            </div>
+          `;
+          
+          setTimeout(() => {
+            document.body.removeChild(feedbackDialog);
+          }, 2000);
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.textContent = this.t('feedbackSubmit');
+          // Show error message
+          const errorMsg = document.createElement('div');
+          errorMsg.style.cssText = 'color: #ef4444; font-size: 14px; margin-top: 8px; text-align: center;';
+          errorMsg.textContent = this.t('feedbackError');
+          feedbackDialog.querySelector('.tharwah-feedback-actions').appendChild(errorMsg);
+        }
+      });
+
+      this.trackEvent('feedback_dialog_opened');
+    }
+
+    async submitFeedback(rating, category, feedbackText) {
+      try {
+        if (!this.conversationId) {
+          throw new Error('No conversation ID');
+        }
+
+        if (!this.config.apiKey) {
+          throw new Error('API key is not configured');
+        }
+
+        const userEmail = sessionStorage.getItem('tharwah_user_email') || '';
+
+        const payload = {
+          rating: rating,
+          feedback_text: feedbackText,
+          language: this.config.language || 'en'
+        };
+
+        // Only add category if selected
+        if (category) {
+          payload.category = category;
+        }
+
+        // Only add email if provided
+        if (userEmail) {
+          payload.submitted_by_email = userEmail;
+        }
+
+        this.log('Submitting feedback:', payload);
+
+        const response = await fetch(
+          `${this.config.apiEndpoint}/widget/conversations/${this.conversationId}/feedback/`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.config.apiKey}`
+            },
+            body: JSON.stringify(payload)
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`API Error ${response.status}: ${JSON.stringify(errorData)}`);
+        }
+
+        const data = await response.json();
+        this.log('Feedback submitted successfully:', data);
+
+        // Mark feedback as submitted and hide button
+        this.feedbackSubmitted = true;
+        this.hideFeedbackButton();
+
+        this.trackEvent('feedback_submitted', {
+          rating: rating,
+          has_category: !!category,
+          has_text: !!feedbackText,
+          has_email: !!userEmail
+        });
+
+        return true;
+      } catch (error) {
+        this.log('Error submitting feedback:', error);
+        this.trackEvent('feedback_error', {
+          error: error.message
+        });
+        return false;
+      }
+    }
+
+    // ============================================
+    // ANALYTICS & UTILITIES
+    // ============================================
 
     trackEvent(eventName, data = {}) {
       if (window.tracker && typeof window.tracker.event === 'function') {
