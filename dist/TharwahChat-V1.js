@@ -1635,9 +1635,9 @@
 
         /* Feedback button in header */
         .tharwah-feedback-button {
-          background: rgba(255, 255, 255, 0.2);
-          border: none;
-          color: white;
+          background: #fef3c7;
+          border: 1px solid #fcd34d;
+          color: #d97706;
           cursor: pointer;
           padding: 6px;
           width: 32px;
@@ -1650,8 +1650,10 @@
         }
 
         .tharwah-feedback-button:hover {
-          background: rgba(255, 255, 255, 0.3);
-          transform: scale(1.05);
+          background: #fde68a;
+          border-color: #fbbf24;
+          transform: scale(1.1);
+          box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
         }
 
         /* Feedback dialog overlay */
