@@ -48,6 +48,7 @@
       this.currentStreamingMessage = null; // Track current streaming message
       this.feedbackShown = false; // Track if feedback has been shown
       this.feedbackSubmitted = false; // Track if feedback has been submitted
+      this.isWaitingForResponse = false; // Track if waiting for bot response
 
       this.log('TharwahChat initialized', this.config);
       this.log('Streaming enabled:', this.config.enableStreaming);
@@ -110,6 +111,7 @@
           
           // Chat input
           inputPlaceholder: 'Type your message...',
+          waitingPlaceholder: 'Waiting for response...',
           
           // Quick replies
           quickSuggestionsHeader: 'Quick suggestions',
@@ -171,6 +173,7 @@
           
           // Chat input
           inputPlaceholder: 'اكتب رسالتك...',
+          waitingPlaceholder: 'في انتظار الرد...',
           
           // Quick replies
           quickSuggestionsHeader: 'اقتراحات سريعة',
@@ -243,7 +246,7 @@
           this.showWelcomeScreen();
         } else {
           this.showingWelcome = false;
-          this.addMessage(this.config.welcomeMessage, 'bot');
+          this.addMessage(this.config.welcomeMessage, 'bot', null, true);
         }
       }, 500);
 
@@ -290,7 +293,7 @@
 
     showWelcomeScreen() {
       if (!this.suggestions || this.suggestions.length === 0) {
-        this.addMessage(this.config.welcomeMessage, 'bot');
+        this.addMessage(this.config.welcomeMessage, 'bot', null, true);
         return;
       }
 
@@ -742,7 +745,7 @@
       this.showingWelcome = false;
 
       // Add welcome message
-      this.addMessage(this.config.welcomeMessage, 'bot');
+      this.addMessage(this.config.welcomeMessage, 'bot', null, true);
 
       // Focus on input
       this.elements.input.focus();
@@ -891,12 +894,42 @@
     // MESSAGING
     // ============================================
 
+    disableInput() {
+      this.isWaitingForResponse = true;
+      this.elements.input.disabled = true;
+      this.elements.send.disabled = true;
+      this.elements.input.placeholder = this.t('waitingPlaceholder') || 'Waiting for response...';
+      this.elements.send.style.opacity = '0.5';
+      this.elements.send.style.cursor = 'not-allowed';
+      this.log('Input disabled - waiting for response');
+    }
+
+    enableInput() {
+      this.isWaitingForResponse = false;
+      this.elements.input.disabled = false;
+      this.elements.send.disabled = false;
+      this.elements.input.placeholder = this.t('inputPlaceholder');
+      this.elements.send.style.opacity = '1';
+      this.elements.send.style.cursor = 'pointer';
+      this.elements.input.focus();
+      this.log('Input enabled - ready for new message');
+    }
+
     async sendMessage() {
       const message = this.elements.input.value.trim();
       if (!message) return;
 
+      // Prevent sending if already waiting for a response
+      if (this.isWaitingForResponse) {
+        this.log('Already waiting for response, ignoring send');
+        return;
+      }
+
       this.elements.input.value = '';
       this.addMessage(message, 'user');
+
+      // Disable input while waiting for response
+      this.disableInput();
 
       this.trackEvent('chat_message_sent', {
         message_length: message.length
@@ -909,6 +942,9 @@
         this.showTyping();
         await this.getResponse(message);
       }
+
+      // Re-enable input after response
+      this.enableInput();
     }
 
     async getResponse(userMessage) {
@@ -953,6 +989,14 @@
         const botMessage = data.assistant_message.content;
         const messageId = data.assistant_message.id;
         this.addMessage(botMessage, 'bot', messageId);
+        
+        // Update last-message class for non-streaming messages
+        const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
+        allBotMessages.forEach(msg => msg.classList.remove('last-message'));
+        const currentMessage = this.elements.messages.querySelector(`[data-message-id="${messageId}"]`);
+        if (currentMessage) {
+          currentMessage.classList.add('last-message');
+        }
         
         // Show feedback button after first bot response
         this.showFeedbackButton();
@@ -1126,8 +1170,32 @@
                 // Remove cursor from final message
                 this.updateStreamingMessage(messageId, fullText, true);
                 
+                // Update the message with the real backend message ID
+                const messageDiv = document.getElementById(messageId);
+                if (messageDiv && data.message_id) {
+                  // Update the message div ID to the real message ID
+                  messageDiv.id = 'msg-' + data.message_id;
+                  messageDiv.setAttribute('data-message-id', data.message_id);
+                  
+                  // Update feedback buttons data-message-id attribute
+                  const feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
+                  if (feedbackDiv) {
+                    feedbackDiv.setAttribute('data-message-id', data.message_id);
+                  }
+                  
+                  this.log('Updated streaming message ID from', messageId, 'to', data.message_id);
+                }
+                
                 // Make sure tool indicator is hidden
                 this.hideToolIndicator();
+                
+                // Update last-message class for streaming messages
+                const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
+                allBotMessages.forEach(msg => msg.classList.remove('last-message'));
+                const currentMessage = document.getElementById('msg-' + data.message_id);
+                if (currentMessage) {
+                  currentMessage.classList.add('last-message');
+                }
                 
                 // Show feedback button after streaming response completes
                 this.showFeedbackButton();
@@ -1223,10 +1291,16 @@
               feedbackDiv.setAttribute('data-message-id', messageId);
               feedbackDiv.innerHTML = `
                 <button class="tharwah-feedback-btn thumbs-up" data-feedback="positive" title="Thumbs up">
-                  👍
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 10L9.74 9.877C9.7579 9.9844 9.7521 10.0945 9.7231 10.1995C9.6942 10.3045 9.6427 10.4019 9.5723 10.485C9.5018 10.5681 9.4142 10.6348 9.3153 10.6806C9.2165 10.7263 9.1089 10.75 9 10.75V10ZM20 10V9.25C20.1989 9.25 20.3897 9.329 20.5303 9.4697C20.671 9.6103 20.75 9.8011 20.75 10H20ZM18 20.75H6.64V19.25H18V20.75ZM5.44 9.25H9V10.75H5.44V9.25ZM8.26 10.123L7.454 5.288L8.934 5.041L9.74 9.877L8.26 10.123ZM9.18 3.25H9.394V4.75H9.181L9.18 3.25ZM12.515 4.92L15.03 8.693L13.782 9.525L11.267 5.752L12.515 4.92ZM16.07 9.25H20V10.75H16.07V9.25ZM20.75 10V18H19.25V10H20.75ZM3.943 18.54L2.743 12.54L4.213 12.245L5.413 18.245L3.943 18.54ZM15.03 8.693C15.1441 8.8643 15.2987 9.0037 15.4802 9.1009C15.6616 9.1981 15.8642 9.2489 16.07 9.249V10.749C15.15 10.749 14.292 10.29 13.782 9.525L15.03 8.693ZM7.454 5.288C7.4122 5.0373 7.4255 4.7795 7.4929 4.5344C7.5604 4.2894 7.6804 4.062 7.8447 3.868C8.009 3.6741 8.2135 3.5182 8.4441 3.4113C8.6747 3.3044 8.9258 3.25 9.18 3.25V4.749C9.1438 4.7491 9.108 4.7571 9.0751 4.7724C9.0422 4.7877 9.0131 4.8099 8.9897 4.8376C8.9663 4.8653 8.9492 4.8977 8.9396 4.9327C8.93 4.9676 8.9281 5.0052 8.934 5.041L7.454 5.288ZM5.44 10.749C5.2551 10.749 5.0724 10.79 4.9052 10.8691C4.738 10.9481 4.5905 11.0634 4.4732 11.2064C4.3559 11.3494 4.2718 11.5166 4.227 11.6961C4.1822 11.8755 4.1778 12.0626 4.214 12.244L2.743 12.539C2.6633 12.14 2.673 11.7273 2.7716 11.3326C2.8702 10.9378 3.0552 10.5699 3.3132 10.2553C3.5712 9.9407 3.8958 9.6872 4.2635 9.5132C4.6313 9.3392 5.0331 9.2489 5.44 9.249V10.749ZM6.64 20.75C6.0043 20.7501 5.3882 20.529 4.8965 20.1261C4.4048 19.7232 4.0678 19.1633 3.943 18.54L5.413 18.245C5.4695 18.5288 5.6227 18.7832 5.8464 18.9666C6.0702 19.1501 6.3506 19.2502 6.64 19.25V20.75ZM9.394 3.25C10.0113 3.25 10.6191 3.4015 11.1634 3.6928C11.7077 3.9841 12.1716 4.4053 12.514 4.919L11.267 5.751C11.0615 5.4427 10.7829 5.1899 10.4562 5.0151C10.1294 4.8403 9.7646 4.7499 9.394 4.75V3.25ZM18 19.25C18.69 19.25 19.25 18.69 19.25 18H20.75C20.75 18.7293 20.4603 19.4288 19.9445 19.9445C19.4288 20.4603 18.7293 20.75 18 20.75V19.25Z" fill="#AAAAAA"/>
+                    <path d="M16 10V20" stroke="#AAAAAA" stroke-width="1.5"/>
+                  </svg>
                 </button>
                 <button class="tharwah-feedback-btn thumbs-down" data-feedback="negative" title="Thumbs down">
-                  👎
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 14L14.26 14.123C14.2421 14.0156 14.2479 13.9055 14.2769 13.8005C14.3058 13.6955 14.3573 13.5981 14.4277 13.515C14.4982 13.432 14.5858 13.3652 14.6847 13.3194C14.7835 13.2737 14.8911 13.25 15 13.25V14ZM4 14V14.75C3.80109 14.75 3.61032 14.671 3.46967 14.5303C3.32902 14.3897 3.25 14.1989 3.25 14H4ZM6 3.25H17.36V4.75H6V3.25ZM18.56 14.75H15V13.25H18.56V14.75ZM15.74 13.877L16.546 18.712L15.066 18.959L14.26 14.123L15.74 13.877ZM14.82 20.75H14.606V19.25H14.819L14.82 20.75ZM11.485 19.08L8.97 15.307L10.218 14.475L12.733 18.248L11.485 19.08ZM7.93 14.75H4V13.25H7.93V14.75ZM3.25 14V6H4.75V14H3.25ZM20.057 5.46L21.257 11.46L19.787 11.755L18.587 5.755L20.057 5.46ZM8.97 15.307C8.8559 15.1357 8.70127 14.9963 8.51985 14.8991C8.33842 14.8019 8.13581 14.7511 7.93 14.751V13.251C8.85 13.251 9.708 13.71 10.218 14.475L8.97 15.307ZM16.546 18.712C16.5878 18.9627 16.5745 19.2205 16.5071 19.4656C16.4396 19.7106 16.3196 19.938 16.1553 20.132C15.991 20.3259 15.7865 20.4818 15.5559 20.5887C15.3253 20.6956 15.0742 20.75 14.82 20.75V19.251C14.8562 19.2509 14.892 19.2429 14.9249 19.2276C14.9578 19.2123 14.9869 19.1901 15.0103 19.1624C15.0337 19.1347 15.0508 19.1023 15.0604 19.0673C15.07 19.0324 15.0719 18.9948 15.066 18.959L16.546 18.712ZM18.56 13.251C18.7449 13.251 18.9276 13.21 19.0948 13.1309C19.262 13.0519 19.4095 12.9366 19.5268 12.7936C19.6441 12.6506 19.7282 12.4834 19.773 12.3039C19.8178 12.1245 19.8222 11.9374 19.786 11.756L21.257 11.461C21.3367 11.86 21.327 12.2727 21.2284 12.6674C21.1298 13.0622 20.9448 13.4301 20.6868 13.7447C20.4288 14.0593 20.1042 14.3128 19.7365 14.4868C19.3687 14.6608 18.9669 14.7511 18.56 14.751V13.251ZM17.36 3.25C17.9957 3.24988 18.6118 3.471 19.1035 3.87392C19.5952 4.27684 19.9322 4.83667 20.057 5.46L18.587 5.755C18.5305 5.47122 18.3773 5.21682 18.1536 5.03336C17.9298 4.84991 17.6494 4.74976 17.36 4.75V3.25ZM14.606 20.75C13.9887 20.75 13.3809 20.5985 12.8366 20.3072C12.2923 20.0159 11.8284 19.5947 11.486 19.081L12.733 18.249C12.9385 18.5573 13.2171 18.8101 13.5438 18.9849C13.8706 19.1597 14.2354 19.2501 14.606 19.25V20.75ZM6 4.75C5.31 4.75 4.75 5.31 4.75 6H3.25C3.25 5.27065 3.53973 4.57118 4.05546 4.05546C4.57118 3.53973 5.27065 3.25 6 3.25V4.75Z" fill="#AAAAAA"/>
+                    <path d="M8 14V4" stroke="#AAAAAA" stroke-width="1.5"/>
+                  </svg>
                 </button>
               `;
               
@@ -1236,8 +1310,15 @@
               const thumbsUpBtn = feedbackDiv.querySelector('.thumbs-up');
               const thumbsDownBtn = feedbackDiv.querySelector('.thumbs-down');
               
-              thumbsUpBtn?.addEventListener('click', () => this.submitMessageFeedback(messageId, 'positive', thumbsUpBtn, thumbsDownBtn));
-              thumbsDownBtn?.addEventListener('click', () => this.submitMessageFeedback(messageId, 'negative', thumbsUpBtn, thumbsDownBtn));
+              // Get message ID from data attribute when clicked (not from closure)
+              thumbsUpBtn?.addEventListener('click', () => {
+                const msgId = feedbackDiv.getAttribute('data-message-id');
+                this.submitMessageFeedback(msgId, 'positive', thumbsUpBtn, thumbsDownBtn);
+              });
+              thumbsDownBtn?.addEventListener('click', () => {
+                const msgId = feedbackDiv.getAttribute('data-message-id');
+                this.submitMessageFeedback(msgId, 'negative', thumbsUpBtn, thumbsDownBtn);
+              });
             }
           } else {
             // Add text with cursor while streaming
@@ -1710,27 +1791,32 @@
           color: #374151;
         }
 
-        /* Feedback button in header */
-        .tharwah-feedback-button {
-          background: #fef3c7;
-          border: 1px solid #fcd34d;
-          color: #d97706;
-          cursor: pointer;
-          padding: 6px;
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s ease;
+        /* Feedback trigger line under input */
+        .tharwah-feedback-section {
+          padding: 0px 16px;
+          background: white;
+          border-top: 1px solid #e5e7eb;
+          display: none;
+          text-align: center;
         }
 
-        .tharwah-feedback-button:hover {
-          background: #fde68a;
-          border-color: #fbbf24;
-          transform: scale(1.1);
-          box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+        .tharwah-feedback-section.show {
+          display: block;
+        }
+
+        .tharwah-feedback-trigger {
+          background: none;
+          border: none;
+          color: #6b7280;
+          font-size: 11px;
+          cursor: pointer;
+          padding: 0;
+          transition: color 0.2s;
+          text-decoration: underline;
+        }
+
+        .tharwah-feedback-trigger:hover {
+          color: #374151;
         }
 
         /* Feedback dialog overlay */
@@ -1870,41 +1956,51 @@
           display: flex;
           gap: 12px;
           justify-content: center;
+          align-items: center;
         }
 
         .tharwah-feedback-btn {
-          padding: 10px 24px;
+          padding: 12px 32px;
           border-radius: 8px;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
           cursor: pointer;
           border: none;
           transition: all 0.2s ease;
+          min-width: 140px;
+          white-space: nowrap;
         }
 
         .tharwah-feedback-btn:disabled {
-          opacity: 0.5;
           cursor: not-allowed;
         }
 
         .tharwah-feedback-btn-primary {
-          background: #2563eb;
-          color: white;
+          background: #2563eb !important;
+          color: white !important;
+        }
+
+        .tharwah-feedback-btn-primary:disabled {
+          background: #93c5fd !important;
+          color: white !important;
+          opacity: 1;
         }
 
         .tharwah-feedback-btn-primary:hover:not(:disabled) {
-          background: #1d4ed8;
+          background: #1d4ed8 !important;
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
         .tharwah-feedback-btn-secondary {
           background: #f3f4f6;
-          color: #374151;
+          color: #6b7280;
+          border: 1px solid #e5e7eb;
         }
 
         .tharwah-feedback-btn-secondary:hover {
           background: #e5e7eb;
+          color: #374151;
         }
 
         /* Messages */
@@ -1991,39 +2087,73 @@
         }
 
         /* Message Feedback Buttons */
+        .tharwah-chat-message.bot {
+          display: flex;
+          align-items: flex-end;
+          gap: 8px;
+        }
+
         .tharwah-feedback-buttons {
           display: flex;
-          gap: 4px;
-          margin-top: 4px;
+          gap: 6px;
           opacity: 0;
           transition: opacity 0.2s;
+          flex-shrink: 0;
+          margin-bottom: 2px;
         }
 
         .tharwah-chat-message.bot:hover .tharwah-feedback-buttons {
           opacity: 1;
         }
 
+        .tharwah-chat-message.bot.last-message .tharwah-feedback-buttons {
+          opacity: 1;
+        }
+
         .tharwah-feedback-btn {
           background: transparent;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 4px 8px;
-          font-size: 16px;
+          border: 1px solid #d1d5db;
+          border-radius: 4px;
+          padding: 3px 6px;
           cursor: pointer;
-          transition: all 0.2s;
-          opacity: 0.5;
+          transition: all 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 28px;
+          height: 24px;
+        }
+
+        .tharwah-feedback-btn svg {
+          width: 16px;
+          height: 16px;
         }
 
         .tharwah-feedback-btn:hover {
-          opacity: 1;
-          background: #f9fafb;
-          transform: scale(1.1);
+          background: #f3f4f6;
+          border-color: #9ca3af;
+        }
+
+        .tharwah-feedback-btn:hover svg path,
+        .tharwah-feedback-btn:hover svg {
+          stroke: #374151;
         }
 
         .tharwah-feedback-btn.active {
-          opacity: 1;
-          background: #fef3c7;
-          border-color: #fbbf24;
+          background: #f3f4f6;
+          border-color: #6b7280;
+        }
+
+        .tharwah-feedback-btn.active.thumbs-up svg path,
+        .tharwah-feedback-btn.active.thumbs-up svg {
+          stroke: #374151;
+          fill: none;
+        }
+
+        .tharwah-feedback-btn.active.thumbs-down svg path,
+        .tharwah-feedback-btn.active.thumbs-down svg {
+          stroke: #374151;
+          fill: none;
         }
 
         .tharwah-feedback-btn:disabled {
@@ -2141,19 +2271,12 @@
         <div class="tharwah-chat-window" id="tharwah-chat-window">
           <div class="tharwah-chat-header">
             <h2>${this.config.title}</h2>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <button class="tharwah-feedback-button" id="tharwah-feedback-button" aria-label="Rate experience" title="${this.t('feedbackButton')}" style="display: none;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-              </button>
-              <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 6 6 18"></path>
-                  <path d="m6 6 12 12"></path>
-                </svg>
-              </button>
-            </div>
+            <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+              </svg>
+            </button>
           </div>
           
           <div class="tharwah-chat-messages" id="tharwah-chat-messages"></div>
@@ -2173,6 +2296,12 @@
               </svg>
             </button>
           </div>
+          
+          <div class="tharwah-feedback-section" id="tharwah-feedback-section">
+            <button class="tharwah-feedback-trigger" id="tharwah-feedback-trigger">
+              Give us your feedback
+            </button>
+          </div>
         </div>
       `;
 
@@ -2186,7 +2315,8 @@
         input: document.getElementById('tharwah-chat-input'),
         send: document.getElementById('tharwah-chat-send'),
         inputContainer: document.querySelector('.tharwah-chat-input-container'),
-        feedbackButton: document.getElementById('tharwah-feedback-button')
+        feedbackSection: document.getElementById('tharwah-feedback-section'),
+        feedbackTrigger: document.getElementById('tharwah-feedback-trigger')
       };
     }
 
@@ -2194,7 +2324,7 @@
       this.elements.button.addEventListener('click', () => this.toggle());
       this.elements.close.addEventListener('click', () => this.close());
       this.elements.send.addEventListener('click', () => this.sendMessage());
-      this.elements.feedbackButton.addEventListener('click', () => this.showFeedbackDialog());
+      this.elements.feedbackTrigger.addEventListener('click', () => this.showFeedbackDialog());
       
       this.elements.input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -2244,7 +2374,7 @@
       }
     }
 
-    addMessage(content, sender = 'bot', messageId = null) {
+    addMessage(content, sender = 'bot', messageId = null, isWelcomeMessage = false) {
       const message = {
         id: messageId || Date.now(),
         content,
@@ -2266,14 +2396,20 @@
       const isArabic = this.isArabicText(content);
       const rtlStyle = isArabic ? ' style="direction: rtl; text-align: right;"' : '';
       
-      // Add feedback buttons for bot messages
-      const feedbackButtons = sender === 'bot' ? `
+      // Add feedback buttons for bot messages (except welcome message)
+      const feedbackButtons = sender === 'bot' && !isWelcomeMessage ? `
         <div class="tharwah-feedback-buttons" data-message-id="${message.id}">
           <button class="tharwah-feedback-btn thumbs-up" data-feedback="positive" title="Thumbs up">
-            👍
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 10L9.74 9.877C9.7579 9.9844 9.7521 10.0945 9.7231 10.1995C9.6942 10.3045 9.6427 10.4019 9.5723 10.485C9.5018 10.5681 9.4142 10.6348 9.3153 10.6806C9.2165 10.7263 9.1089 10.75 9 10.75V10ZM20 10V9.25C20.1989 9.25 20.3897 9.329 20.5303 9.4697C20.671 9.6103 20.75 9.8011 20.75 10H20ZM18 20.75H6.64V19.25H18V20.75ZM5.44 9.25H9V10.75H5.44V9.25ZM8.26 10.123L7.454 5.288L8.934 5.041L9.74 9.877L8.26 10.123ZM9.18 3.25H9.394V4.75H9.181L9.18 3.25ZM12.515 4.92L15.03 8.693L13.782 9.525L11.267 5.752L12.515 4.92ZM16.07 9.25H20V10.75H16.07V9.25ZM20.75 10V18H19.25V10H20.75ZM3.943 18.54L2.743 12.54L4.213 12.245L5.413 18.245L3.943 18.54ZM15.03 8.693C15.1441 8.8643 15.2987 9.0037 15.4802 9.1009C15.6616 9.1981 15.8642 9.2489 16.07 9.249V10.749C15.15 10.749 14.292 10.29 13.782 9.525L15.03 8.693ZM7.454 5.288C7.4122 5.0373 7.4255 4.7795 7.4929 4.5344C7.5604 4.2894 7.6804 4.062 7.8447 3.868C8.009 3.6741 8.2135 3.5182 8.4441 3.4113C8.6747 3.3044 8.9258 3.25 9.18 3.25V4.749C9.1438 4.7491 9.108 4.7571 9.0751 4.7724C9.0422 4.7877 9.0131 4.8099 8.9897 4.8376C8.9663 4.8653 8.9492 4.8977 8.9396 4.9327C8.93 4.9676 8.9281 5.0052 8.934 5.041L7.454 5.288ZM5.44 10.749C5.2551 10.749 5.0724 10.79 4.9052 10.8691C4.738 10.9481 4.5905 11.0634 4.4732 11.2064C4.3559 11.3494 4.2718 11.5166 4.227 11.6961C4.1822 11.8755 4.1778 12.0626 4.214 12.244L2.743 12.539C2.6633 12.14 2.673 11.7273 2.7716 11.3326C2.8702 10.9378 3.0552 10.5699 3.3132 10.2553C3.5712 9.9407 3.8958 9.6872 4.2635 9.5132C4.6313 9.3392 5.0331 9.2489 5.44 9.249V10.749ZM6.64 20.75C6.0043 20.7501 5.3882 20.529 4.8965 20.1261C4.4048 19.7232 4.0678 19.1633 3.943 18.54L5.413 18.245C5.4695 18.5288 5.6227 18.7832 5.8464 18.9666C6.0702 19.1501 6.3506 19.2502 6.64 19.25V20.75ZM9.394 3.25C10.0113 3.25 10.6191 3.4015 11.1634 3.6928C11.7077 3.9841 12.1716 4.4053 12.514 4.919L11.267 5.751C11.0615 5.4427 10.7829 5.1899 10.4562 5.0151C10.1294 4.8403 9.7646 4.7499 9.394 4.75V3.25ZM18 19.25C18.69 19.25 19.25 18.69 19.25 18H20.75C20.75 18.7293 20.4603 19.4288 19.9445 19.9445C19.4288 20.4603 18.7293 20.75 18 20.75V19.25Z" fill="#AAAAAA"/>
+              <path d="M16 10V20" stroke="#AAAAAA" stroke-width="1.5"/>
+            </svg>
           </button>
           <button class="tharwah-feedback-btn thumbs-down" data-feedback="negative" title="Thumbs down">
-            👎
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 14L14.26 14.123C14.2421 14.0156 14.2479 13.9055 14.2769 13.8005C14.3058 13.6955 14.3573 13.5981 14.4277 13.515C14.4982 13.432 14.5858 13.3652 14.6847 13.3194C14.7835 13.2737 14.8911 13.25 15 13.25V14ZM4 14V14.75C3.80109 14.75 3.61032 14.671 3.46967 14.5303C3.32902 14.3897 3.25 14.1989 3.25 14H4ZM6 3.25H17.36V4.75H6V3.25ZM18.56 14.75H15V13.25H18.56V14.75ZM15.74 13.877L16.546 18.712L15.066 18.959L14.26 14.123L15.74 13.877ZM14.82 20.75H14.606V19.25H14.819L14.82 20.75ZM11.485 19.08L8.97 15.307L10.218 14.475L12.733 18.248L11.485 19.08ZM7.93 14.75H4V13.25H7.93V14.75ZM3.25 14V6H4.75V14H3.25ZM20.057 5.46L21.257 11.46L19.787 11.755L18.587 5.755L20.057 5.46ZM8.97 15.307C8.8559 15.1357 8.70127 14.9963 8.51985 14.8991C8.33842 14.8019 8.13581 14.7511 7.93 14.751V13.251C8.85 13.251 9.708 13.71 10.218 14.475L8.97 15.307ZM16.546 18.712C16.5878 18.9627 16.5745 19.2205 16.5071 19.4656C16.4396 19.7106 16.3196 19.938 16.1553 20.132C15.991 20.3259 15.7865 20.4818 15.5559 20.5887C15.3253 20.6956 15.0742 20.75 14.82 20.75V19.251C14.8562 19.2509 14.892 19.2429 14.9249 19.2276C14.9578 19.2123 14.9869 19.1901 15.0103 19.1624C15.0337 19.1347 15.0508 19.1023 15.0604 19.0673C15.07 19.0324 15.0719 18.9948 15.066 18.959L16.546 18.712ZM18.56 13.251C18.7449 13.251 18.9276 13.21 19.0948 13.1309C19.262 13.0519 19.4095 12.9366 19.5268 12.7936C19.6441 12.6506 19.7282 12.4834 19.773 12.3039C19.8178 12.1245 19.8222 11.9374 19.786 11.756L21.257 11.461C21.3367 11.86 21.327 12.2727 21.2284 12.6674C21.1298 13.0622 20.9448 13.4301 20.6868 13.7447C20.4288 14.0593 20.1042 14.3128 19.7365 14.4868C19.3687 14.6608 18.9669 14.7511 18.56 14.751V13.251ZM17.36 3.25C17.9957 3.24988 18.6118 3.471 19.1035 3.87392C19.5952 4.27684 19.9322 4.83667 20.057 5.46L18.587 5.755C18.5305 5.47122 18.3773 5.21682 18.1536 5.03336C17.9298 4.84991 17.6494 4.74976 17.36 4.75V3.25ZM14.606 20.75C13.9887 20.75 13.3809 20.5985 12.8366 20.3072C12.2923 20.0159 11.8284 19.5947 11.486 19.081L12.733 18.249C12.9385 18.5573 13.2171 18.8101 13.5438 18.9849C13.8706 19.1597 14.2354 19.2501 14.606 19.25V20.75ZM6 4.75C5.31 4.75 4.75 5.31 4.75 6H3.25C3.25 5.27065 3.53973 4.57118 4.05546 4.05546C4.57118 3.53973 5.27065 3.25 6 3.25V4.75Z" fill="#AAAAAA"/>
+              <path d="M8 14V4" stroke="#AAAAAA" stroke-width="1.5"/>
+            </svg>
           </button>
         </div>
       ` : '';
@@ -2284,15 +2420,34 @@
       `;
 
       // Add feedback button click handlers
-      if (sender === 'bot') {
+      if (sender === 'bot' && !isWelcomeMessage) {
         const thumbsUpBtn = messageDiv.querySelector('.thumbs-up');
         const thumbsDownBtn = messageDiv.querySelector('.thumbs-down');
+        const feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
         
-        thumbsUpBtn?.addEventListener('click', () => this.submitMessageFeedback(message.id, 'positive', thumbsUpBtn, thumbsDownBtn));
-        thumbsDownBtn?.addEventListener('click', () => this.submitMessageFeedback(message.id, 'negative', thumbsUpBtn, thumbsDownBtn));
+        // Get message ID from data attribute when clicked (not from closure)
+        // This ensures we use the updated ID after streaming completes
+        thumbsUpBtn?.addEventListener('click', () => {
+          const messageId = feedbackDiv.getAttribute('data-message-id');
+          this.submitMessageFeedback(messageId, 'positive', thumbsUpBtn, thumbsDownBtn);
+        });
+        thumbsDownBtn?.addEventListener('click', () => {
+          const messageId = feedbackDiv.getAttribute('data-message-id');
+          this.submitMessageFeedback(messageId, 'negative', thumbsUpBtn, thumbsDownBtn);
+        });
       }
 
       this.elements.messages.appendChild(messageDiv);
+      
+      // Update last-message class for bot messages
+      if (sender === 'bot') {
+        // Remove last-message class from all bot messages
+        const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
+        allBotMessages.forEach(msg => msg.classList.remove('last-message'));
+        
+        // Add last-message class to this new bot message
+        messageDiv.classList.add('last-message');
+      }
       
       // Smart scrolling: User messages scroll to bottom, bot messages scroll to show the start
       if (sender === 'user') {
@@ -2366,14 +2521,14 @@
     // ============================================
 
     showFeedbackButton() {
-      if (this.elements.feedbackButton && !this.feedbackSubmitted) {
-        this.elements.feedbackButton.style.display = 'flex';
+      if (this.elements.feedbackSection && !this.feedbackSubmitted) {
+        this.elements.feedbackSection.classList.add('show');
       }
     }
 
-    hideFeedbackButton() {
-      if (this.elements.feedbackButton) {
-        this.elements.feedbackButton.style.display = 'none';
+    hideFeedbackSection() {
+      if (this.elements.feedbackSection) {
+        this.elements.feedbackSection.classList.remove('show');
       }
     }
 
@@ -2444,10 +2599,10 @@
           
           <div class="tharwah-feedback-actions">
             <button type="button" id="tharwah-feedback-cancel" class="tharwah-feedback-btn tharwah-feedback-btn-secondary">
-              ${this.t('feedbackCancel')}
+              Cancel
             </button>
             <button type="button" id="tharwah-feedback-submit" class="tharwah-feedback-btn tharwah-feedback-btn-primary" disabled>
-              ${this.t('feedbackSubmit')}
+              Submit Feedback
             </button>
           </div>
         </div>
@@ -2586,9 +2741,9 @@
         const data = await response.json();
         this.log('Feedback submitted successfully:', data);
 
-        // Mark feedback as submitted and hide button
+        // Mark feedback as submitted and hide section
         this.feedbackSubmitted = true;
-        this.hideFeedbackButton();
+        this.hideFeedbackSection();
 
         this.trackEvent('feedback_submitted', {
           rating: rating,
@@ -2634,6 +2789,20 @@
         thumbsUpBtn.disabled = true;
         thumbsDownBtn.disabled = true;
         
+        // Extract numeric message ID (in case it's a string like 'msg-123' or 'stream-msg-123')
+        let numericMessageId = messageId;
+        if (typeof messageId === 'string') {
+          // Try to extract number from formats like 'msg-123' or 'stream-msg-123'
+          const match = messageId.match(/\d+$/);
+          if (match) {
+            numericMessageId = parseInt(match[0], 10);
+          } else {
+            numericMessageId = parseInt(messageId, 10);
+          }
+        }
+        
+        this.log(`Numeric message ID: ${numericMessageId}`);
+        
         const response = await fetch(
           `${this.config.apiEndpoint}/widget/conversations/message-feedback/`,
           {
@@ -2643,7 +2812,7 @@
               'Authorization': `Bearer ${this.config.apiKey}`
             },
             body: JSON.stringify({
-              message: messageId,
+              message: numericMessageId,
               conversation: this.conversationId,
               feedback_type: feedbackType,
               visitor_id: this.getVisitorId(),
