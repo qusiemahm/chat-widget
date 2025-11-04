@@ -46,8 +46,8 @@
       this.isRendered = false;
       this.showingWelcome = true; // Start with welcome screen
       this.currentStreamingMessage = null; // Track current streaming message
-      this.feedbackShown = false; // Track if feedback has been shown
-      this.feedbackSubmitted = false; // Track if feedback has been submitted
+      this.feedbackShown = true; // Track if feedback has been shown
+      this.feedbackSubmitted = true; // Track if feedback has been submitted
 
       this.log('TharwahChat initialized', this.config);
       this.log('Streaming enabled:', this.config.enableStreaming);
