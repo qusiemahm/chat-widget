@@ -1202,6 +1202,13 @@
       if (messageDiv) {
         const contentDiv = messageDiv.querySelector('.tharwah-chat-message-content');
         if (contentDiv) {
+          // Detect Arabic and apply RTL styling
+          const isArabic = this.isArabicText(text);
+          if (isArabic) {
+            contentDiv.style.direction = 'rtl';
+            contentDiv.style.textAlign = 'right';
+          }
+          
           // Add text with or without cursor
           if (isComplete) {
             // Remove cursor when complete and apply full formatting
@@ -2187,8 +2194,12 @@
       // Keep escapeHtml for user messages for safety
       const formattedContent = sender === 'bot' ? this.formatMessage(content) : this.escapeHtml(content);
       
+      // Detect if content is Arabic to apply RTL styling
+      const isArabic = this.isArabicText(content);
+      const rtlStyle = isArabic ? ' style="direction: rtl; text-align: right;"' : '';
+      
       messageDiv.innerHTML = `
-        <div class="tharwah-chat-message-content">${formattedContent}</div>
+        <div class="tharwah-chat-message-content"${rtlStyle}>${formattedContent}</div>
       `;
 
       this.elements.messages.appendChild(messageDiv);
@@ -2529,6 +2540,13 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    isArabicText(text) {
+      // Check if text contains Arabic characters
+      // Arabic Unicode range: \u0600-\u06FF (Arabic block) and \u0750-\u077F (Arabic Supplement)
+      const arabicPattern = /[\u0600-\u06FF\u0750-\u077F]/;
+      return arabicPattern.test(text);
     }
 
     formatMessage(text) {
