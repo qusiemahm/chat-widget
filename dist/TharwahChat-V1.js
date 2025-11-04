@@ -855,15 +855,35 @@
         }
       }
 
-      // Fallback to localStorage (persistent across sessions)
-      let visitorId = localStorage.getItem('tharwah_visitor_id');
-
-      if (!visitorId) {
-        visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('tharwah_visitor_id', visitorId);
-        this.log('Generated new visitor ID:', visitorId);
+      // Fallback to localStorage - use SAME key as tracker!
+      const trackerKey = '_ut_visitor';  // Same key as UniversalTracker
+      let stored = null;
+      
+      try {
+        const item = localStorage.getItem(trackerKey);
+        if (item) {
+          stored = JSON.parse(item);
+        }
+      } catch (e) {
+        this.log('Error parsing tracker storage:', e);
       }
 
+      if (stored && stored.id) {
+        this.log('Got visitor ID from tracker storage:', stored.id);
+        return stored.id;
+      }
+
+      // Generate new visitor ID with same format as tracker (vis_ prefix)
+      const visitorId = 'vis_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      // Store in same format as tracker
+      localStorage.setItem(trackerKey, JSON.stringify({
+        id: visitorId,
+        firstSeen: Date.now(),
+        visits: 1
+      }));
+      
+      this.log('Generated new visitor ID:', visitorId);
       return visitorId;
     }
 

@@ -1045,6 +1045,14 @@
       };
     }
 
+    getVisitorId() {
+      return this.visitorId;
+    }
+
+    getSessionId() {
+      return this.sessionId;
+    }
+
     reset() {
       this.clearStorage('_ut_session');
       this.clearStorage('_ut_visitor');
