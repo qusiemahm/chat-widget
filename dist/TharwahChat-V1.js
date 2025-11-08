@@ -1525,24 +1525,31 @@
               
               <!-- Enroll Button -->
               ${productLink ? `
-                <a href="${productLink}" target="_blank" rel="noopener noreferrer" style="
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  width: 100%;
-                  padding: 6px 16px;
-                  background: #2563eb;
-                  color: white;
-                  text-decoration: none;
-                  border-radius: 6px;
-                  font-size: 11px;
-                  font-weight: 600;
-                  transition: background 0.2s;
-                  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                  line-height: 1.5;
-                " onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
-                  ${this.t('enrollNow')}
-                </a>
+                <button 
+                  data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'
+                  onclick="window.tharwahChatWidget.showEnrollmentForm(JSON.parse(this.dataset.product))"
+                  style="
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    padding: 6px 16px;
+                    background: #2563eb;
+                    color: white;
+                    text-decoration: none;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    transition: background 0.2s;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                    line-height: 1.5;
+                    cursor: pointer;
+                  " 
+                  onmouseover="this.style.background='#1d4ed8'" 
+                  onmouseout="this.style.background='#2563eb'">
+                    ${this.t('enrollNow')}
+                </button>
               ` : ''}
               
               <!-- Download Brochure Button -->
@@ -2517,6 +2524,148 @@
             height: calc(100vh - 140px);
           }
         }
+
+        /* ========================================
+           ENROLLMENT FORM MODAL
+           ======================================== */
+        .tharwah-enrollment-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1000000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+
+        .tharwah-enrollment-modal.show {
+          opacity: 1;
+        }
+
+        .tharwah-enrollment-form {
+          background: white;
+          border-radius: 16px;
+          padding: 24px;
+          max-width: 420px;
+          width: 100%;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          transform: scale(0.9);
+          transition: transform 0.3s;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .tharwah-enrollment-modal.show .tharwah-enrollment-form {
+          transform: scale(1);
+        }
+
+        .tharwah-enrollment-form h3 {
+          margin: 0 0 8px 0;
+          font-size: 20px;
+          font-weight: 700;
+          color: #111827;
+        }
+
+        .tharwah-enrollment-form .product-name {
+          font-size: 14px;
+          color: #6b7280;
+          margin-bottom: 20px;
+        }
+
+        .tharwah-enrollment-form label {
+          display: block;
+          font-size: 14px;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 8px;
+        }
+
+        .tharwah-enrollment-form select {
+          width: 100%;
+          padding: 10px 12px;
+          border: 1px solid #d1d5db;
+          border-radius: 8px;
+          font-size: 14px;
+          margin-bottom: 16px;
+          background: white;
+          cursor: pointer;
+        }
+
+        .tharwah-enrollment-form select:focus {
+          outline: none;
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .tharwah-enrollment-form .form-group {
+          margin-bottom: 16px;
+        }
+
+        .tharwah-enrollment-form .button-group {
+          display: flex;
+          gap: 12px;
+          margin-top: 24px;
+        }
+
+        .tharwah-enrollment-form button {
+          flex: 1;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .tharwah-enrollment-form .btn-cancel {
+          background: white;
+          border: 1px solid #d1d5db;
+          color: #374151;
+        }
+
+        .tharwah-enrollment-form .btn-cancel:hover {
+          background: #f9fafb;
+        }
+
+        .tharwah-enrollment-form .btn-enroll {
+          background: #2563eb;
+          border: none;
+          color: white;
+        }
+
+        .tharwah-enrollment-form .btn-enroll:hover {
+          background: #1d4ed8;
+        }
+
+        .tharwah-enrollment-form .btn-enroll:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+        }
+
+        .tharwah-enrollment-form .price-info {
+          background: #eff6ff;
+          padding: 12px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+        }
+
+        .tharwah-enrollment-form .price-label {
+          font-size: 12px;
+          color: #6b7280;
+          margin-bottom: 4px;
+        }
+
+        .tharwah-enrollment-form .price-value {
+          font-size: 24px;
+          font-weight: 700;
+          color: #2563eb;
+        }
       `;
 
       const styleSheet = document.createElement('style');
@@ -3385,6 +3534,184 @@
     sendMessageProgrammatically(message) {
       this.elements.input.value = message;
       this.sendMessage();
+    }
+
+    // ============================================
+    // ENROLLMENT FORM METHODS
+    // ============================================
+
+    showEnrollmentForm(product) {
+      const metadata = product.metadata || {};
+      const courseType = metadata.course_type || 'both';
+      const allDates = metadata.virtual_dates || [];
+      
+      // Filter to only show future dates
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const virtualDates = allDates.filter(date => {
+        const courseDate = new Date(date);
+        return courseDate >= today;
+      });
+      
+      const wpId = metadata.wp_id || product.id;
+      const price = metadata.price || product.price || 0;
+      const currency = metadata.currency || product.currency || 'SAR';
+      
+      // Check if there are any future dates available
+      if (virtualDates.length === 0) {
+        alert('No upcoming dates available for this course. Please contact support for more information.');
+        return;
+      }
+      
+      // Create modal HTML
+      const modalHtml = `
+        <div class="tharwah-enrollment-modal" id="enrollmentModal">
+          <div class="tharwah-enrollment-form">
+            <h3>${this.t('enrollNow')}</h3>
+            <div class="product-name">${this.escapeHtml(product.name)}</div>
+            
+            <div class="price-info">
+              <div class="price-label">Total Price</div>
+              <div class="price-value">${currency} ${price.toLocaleString()}</div>
+            </div>
+            
+            <form id="enrollmentFormData">
+              <!-- Training Type -->
+              <div class="form-group">
+                <label for="training_type">Training Type</label>
+                <select id="training_type" name="training_type" required>
+                  <option value="">Select type...</option>
+                  ${courseType === 'both' || courseType === 'virtual' ? '<option value="virtual">Virtual Training</option>' : ''}
+                  ${courseType === 'both' || courseType === 'in-person' ? '<option value="in-person">In-Person Training</option>' : ''}
+                </select>
+              </div>
+              
+              <!-- Date Selection -->
+              <div class="form-group">
+                <label for="virtual_date">Course Date</label>
+                <select id="virtual_date" name="virtual_date" required>
+                  <option value="">Select date...</option>
+                  ${virtualDates.map(date => {
+                    // Format date from YYYY-MM-DD to DD-MM-YYYY
+                    const [year, month, day] = date.split('-');
+                    const formattedDate = day + '-' + month + '-' + year;
+                    const displayDate = new Date(date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    });
+                    return '<option value="' + formattedDate + '">' + displayDate + '</option>';
+                  }).join('')}
+                </select>
+              </div>
+              
+              <input type="hidden" name="product_id" value="${wpId}">
+              <input type="hidden" name="variation_id" value="5728">
+              <input type="hidden" name="quantity" value="1">
+              
+              <div class="button-group">
+                <button type="button" class="btn-cancel" onclick="window.tharwahChatWidget.closeEnrollmentForm()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn-enroll">
+                  Add to Cart
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      // Add modal to document
+      const modalContainer = document.createElement('div');
+      modalContainer.innerHTML = modalHtml;
+      document.body.appendChild(modalContainer.firstElementChild);
+      
+      // Show modal with animation
+      setTimeout(() => {
+        document.getElementById('enrollmentModal').classList.add('show');
+      }, 10);
+      
+      // Handle form submission
+      document.getElementById('enrollmentFormData').addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.submitEnrollment(e.target);
+      });
+      
+      // Close modal on backdrop click
+      document.getElementById('enrollmentModal').addEventListener('click', (e) => {
+        if (e.target.id === 'enrollmentModal') {
+          this.closeEnrollmentForm();
+        }
+      });
+    }
+
+    closeEnrollmentForm() {
+      const modal = document.getElementById('enrollmentModal');
+      if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+          modal.remove();
+        }, 300);
+      }
+    }
+
+    async submitEnrollment(form) {
+      const formData = new FormData(form);
+      const trainingType = formData.get('training_type');
+      const virtualDate = formData.get('virtual_date');
+      const productId = formData.get('product_id');
+      const variationId = formData.get('variation_id');
+      const quantity = formData.get('quantity');
+      
+      // Validate
+      if (!trainingType || !virtualDate) {
+        alert('Please select training type and date');
+        return;
+      }
+      
+      // Disable submit button
+      const submitBtn = form.querySelector('.btn-enroll');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Adding...';
+      
+      try {
+        // Create form data for WooCommerce
+        const cartData = new FormData();
+        cartData.append('add-to-cart', productId);
+        cartData.append('variation_id', variationId);
+        cartData.append('attribute_type', trainingType);
+        cartData.append('quantity', quantity);
+        cartData.append('training_type', trainingType);
+        cartData.append('virtual_date', virtualDate);
+        
+        // Submit to cart
+        const response = await fetch('https://academy.tharwah.net/mystaging01/cart/', {
+          method: 'POST',
+          body: cartData,
+          redirect: 'follow'
+        });
+        
+        if (response.ok) {
+          // Close modal
+          this.closeEnrollmentForm();
+          
+          // Show success message in chat
+          this.addMessage('Product added to cart successfully! Redirecting to checkout...', 'bot');
+          
+          // Redirect to checkout after a short delay
+          setTimeout(() => {
+            window.location.href = 'https://academy.tharwah.net/mystaging01/checkout/';
+          }, 1500);
+        } else {
+          throw new Error('Failed to add to cart');
+        }
+      } catch (error) {
+        console.error('Enrollment error:', error);
+        alert('Failed to add product to cart. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add to Cart';
+      }
     }
   }
 
