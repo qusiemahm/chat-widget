@@ -1602,31 +1602,96 @@
           border-left: 4px solid #f56565;
         }
         
-        /* Mobile Responsive */
+        /* MOBILE PORTRAIT - UPDATED FOR BETTER UX */
         @media (max-width: 640px) {
           .tharwah-popover {
-            bottom: 80px !important;
-            right: 15px !important;
-            left: 15px !important;
+            /* Full width with proper margins */
+            bottom: 90px !important;
+            left: 12px !important;
+            right: 12px !important;
             max-width: none !important;
+            width: calc(100% - 24px) !important;
+            
+            /* iPhone X+ notch support */
+            bottom: max(90px, calc(80px + env(safe-area-inset-bottom))) !important;
+            left: max(12px, env(safe-area-inset-left)) !important;
+            right: max(12px, env(safe-area-inset-right)) !important;
+            
+            /* Mobile animation */
+            transform: translateY(30px) !important;
           }
           
-          .tharwah-popover-content-modern {
+          .tharwah-popover-visible {
+            transform: translateY(0) !important;
+          }
+          
+          .tharwah-popover-card {
+            border-radius: 16px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+          }
+          
+          /* Horizontal layout with more padding */
+          .tharwah-popover-horizontal {
             padding: 20px !important;
-            padding-right: 45px !important;
+            padding-right: 52px !important;
+            gap: 14px !important;
           }
           
+          /* Larger icon on mobile */
           .tharwah-popover-icon-wrapper {
-            width: 36px !important;
-            height: 36px !important;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
           }
           
-          .tharwah-popover-title-modern {
-            font-size: 16px !important;
+          .tharwah-popover-icon-wrapper svg {
+            width: 24px !important;
+            height: 24px !important;
           }
           
+          /* Larger, readable text */
           .tharwah-popover-description {
-            font-size: 13px !important;
+            font-size: 15px !important;
+            line-height: 1.6 !important;
+            color: #1f2937 !important;
+            margin-bottom: 12px !important;
+          }
+          
+          /* Touch-friendly button (48px minimum) */
+          .tharwah-popover-cta {
+            padding: 14px 20px !important;
+            font-size: 15px !important;
+            min-height: 48px !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+          }
+          
+          /* Larger close button for easier tapping */
+          .tharwah-popover-close {
+            width: 40px !important;
+            height: 40px !important;
+            top: 10px !important;
+            right: 10px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+          }
+          
+          .tharwah-popover-close svg {
+            width: 20px !important;
+            height: 20px !important;
+          }
+        }
+        
+        /* LANDSCAPE MODE */
+        @media (max-height: 500px) {
+          .tharwah-popover {
+            bottom: 60px !important;
+            max-width: 360px !important;
+          }
+          
+          .tharwah-popover-horizontal {
+            padding: 14px !important;
+            padding-right: 48px !important;
           }
         }
       `;

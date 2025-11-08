@@ -119,6 +119,7 @@
           
           // Product cards
           enrollNow: 'Enroll Now',
+          downloadBrochure: 'Download Brochure',
           audioFeature: 'Audio description feature coming soon!',
           
           // Error messages
@@ -181,6 +182,7 @@
           
           // Product cards
           enrollNow: 'سجل الآن',
+          downloadBrochure: 'تحميل الكتيب',
           audioFeature: 'ميزة الوصف الصوتي قريباً!',
           
           // Error messages
@@ -1000,6 +1002,9 @@
         
         // Show feedback button after first bot response
         this.showFeedbackButton();
+        
+        // Play notification sound when response is complete
+        this.playNotificationSound();
 
         // Show products if any (check ui_elements first, fallback to direct products)
         const products = data.composed_response?.ui_elements?.products || data.composed_response?.products || [];
@@ -1139,14 +1144,14 @@
                 textQueue.push(data.content);
                 displayTextGradually();
               }
-              else if (eventType === 'tool_start') {
-                // Show tool indicator
-                this.showToolIndicator(data.tool_name);
-              }
-              else if (eventType === 'tool_executing') {
-                // Update tool indicator
-                this.updateToolIndicator(data.tool_name, 'executing');
-              }
+              // else if (eventType === 'tool_start') {
+              //   // Show tool indicator
+              //   this.showToolIndicator(data.tool_name);
+              // }
+              // else if (eventType === 'tool_executing') {
+              //   // Update tool indicator
+              //   this.updateToolIndicator(data.tool_name, 'executing');
+              // }
               else if (eventType === 'tool_complete') {
                 // Hide tool indicator
                 this.hideToolIndicator();
@@ -1199,6 +1204,9 @@
                 
                 // Show feedback button after streaming response completes
                 this.showFeedbackButton();
+                
+                // Play notification sound when streaming response is complete
+                this.playNotificationSound();
                 
                 // Show products if any
                 if (products.length > 0) {
@@ -1387,14 +1395,22 @@
         const imageAlt = product.image_alt || name;
         const productLink = product.product_link || product.enroll_link || product.external_link || product.link || null;
         const price = product.metadata?.price || product.price || null;
-        const originalPrice = product.metadata?.original_price || product.original_price || null;
+        const regularPrice = product.metadata?.regular_price || 0;
+        const salePrice = product.metadata?.sale_price || 0;
+        const hasDiscount = product.metadata?.has_discount || false;
+        const discountPercentage = product.metadata?.discount_percentage || 0;
+        const onSale = product.metadata?.on_sale || false;
         const currency = product.metadata?.currency || product.currency || 'SAR';
         const rating = product.metadata?.rating || product.rating || null;
         const reviewCount = product.metadata?.enrollments || product.enrollments || null;
+        const brochureUrl = product.metadata?.brochure_url || null;
+        const audioUrl = product.metadata?.audio_url || product.metadata?.audio_url_en || product.metadata?.audio_url_ar || null;
+        const fullAudioUrl = audioUrl ? `${baseUrl}${audioUrl}` : null;
         
-        // Format price
-        const priceFormatted = price ? `${currency} ${price.toLocaleString()}` : '';
-        const originalPriceFormatted = originalPrice ? `${currency} ${originalPrice.toLocaleString()}` : '';
+        // Format price (show sale price if discount active)
+        const displayPrice = hasDiscount && salePrice ? salePrice : price;
+        const priceFormatted = displayPrice ? `${currency} ${displayPrice.toLocaleString()}` : '';
+        const regularPriceFormatted = hasDiscount && regularPrice ? `${currency} ${regularPrice.toLocaleString()}` : '';
         let monthlyPrice = 0;
         if (price <= 5000) {
           monthlyPrice = Math.round((price / 4) * 100) / 100;
@@ -1419,6 +1435,22 @@
                 `<img src="${fullImageUrl}" alt="${this.escapeHtml(imageAlt)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);\\' />';" />` :
                 `<div style="width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);"></div>`
               }
+              ${hasDiscount && discountPercentage ? `
+                <div style="
+                  position: absolute;
+                  top: 6px;
+                  right: 6px;
+                  background: #dc2626;
+                  color: white;
+                  padding: 2px 6px;
+                  border-radius: 6px;
+                  font-size: 10px;
+                  font-weight: 700;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                ">
+                  -${discountPercentage}%
+                </div>
+              ` : ''}
             </div>
             
             <!-- Content -->
@@ -1438,21 +1470,29 @@
                   height: 32px;
                   flex: 1;
                 ">${this.escapeHtml(name)}</h4>
-                <button style="
+                <button 
+                  data-audio-url="${fullAudioUrl || ''}"
+                  style="
                   flex-shrink: 0;
                   padding: 4px;
                   border-radius: 50%;
                   background: #eff6ff;
                   color: #2563eb;
                   border: none;
-                  cursor: pointer;
+                  cursor: ${fullAudioUrl ? 'pointer' : 'not-allowed'};
                   transition: all 0.2s;
                   display: flex;
                   align-items: center;
                   justify-content: center;
                   width: 24px;
                   height: 24px;
-                " onmouseover="this.style.background='#dbeafe'; this.style.transform='scale(1.1)'" onmouseout="this.style.background='#eff6ff'; this.style.transform='scale(1)'" onclick="alert(window.tharwahChatWidget.t('audioFeature'))" aria-label="Listen to description" title="Listen to description">
+                  opacity: ${fullAudioUrl ? '1' : '0.5'};
+                " 
+                onmouseover="if(this.dataset.audioUrl) { this.style.background='#dbeafe'; this.style.transform='scale(1.1)' }" 
+                onmouseout="this.style.background='#eff6ff'; this.style.transform='scale(1)'" 
+                onclick="window.tharwahChatWidget.playProductAudio(this.dataset.audioUrl, this)" 
+                aria-label="Listen to description" 
+                title="${fullAudioUrl ? 'Listen to description' : 'Audio not available'}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
                     <path d="M16 9a5 5 0 0 1 0 6"></path>
@@ -1475,8 +1515,10 @@
               <!-- Pricing -->
               ${priceFormatted ? `
                 <div style="border-top: 1px solid #e5e7eb; padding-top: 4px; margin-bottom: 8px;">
-                  <div style="font-size: 14px; font-weight: 700; color: #2563eb; line-height: 1.2; margin-bottom: 2px;">${this.escapeHtml(priceFormatted)}</div>
-                  ${originalPriceFormatted ? `<div style="font-size: 9px; color: #9ca3af; text-decoration: line-through; line-height: 1;">${this.escapeHtml(originalPriceFormatted)}</div>` : ''}
+                  ${hasDiscount && regularPriceFormatted ? `
+                    <div style="font-size: 9px; color: #9ca3af; text-decoration: line-through; line-height: 1; margin-bottom: 2px;">${this.escapeHtml(regularPriceFormatted)}</div>
+                  ` : ''}
+                  <div style="font-size: 14px; font-weight: 700; color: ${hasDiscount ? '#dc2626' : '#2563eb'}; line-height: 1.2; margin-bottom: 2px;">${this.escapeHtml(priceFormatted)}</div>
                   ${monthlyPrice ? `<div style="font-size: 9px; color: #16a34a; font-weight: 500; margin-top: 2px; line-height: 1;">${currency} ${monthlyPrice}/mo</div>` : ''}
                 </div>
               ` : ''}
@@ -1500,6 +1542,36 @@
                   line-height: 1.5;
                 " onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
                   ${this.t('enrollNow')}
+                </a>
+              ` : ''}
+              
+              <!-- Download Brochure Button -->
+              ${brochureUrl ? `
+                <a href="${brochureUrl}" target="_blank" rel="noopener noreferrer" download style="
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 4px;
+                  width: 100%;
+                  padding: 6px 16px;
+                  margin-top: 6px;
+                  background: white;
+                  color: #2563eb;
+                  text-decoration: none;
+                  border: 1px solid #2563eb;
+                  border-radius: 6px;
+                  font-size: 11px;
+                  font-weight: 600;
+                  transition: all 0.2s;
+                  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                  line-height: 1.5;
+                " onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#1d4ed8'; this.style.color='#1d4ed8'" onmouseout="this.style.background='white'; this.style.borderColor='#2563eb'; this.style.color='#2563eb'">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  ${this.t('downloadBrochure')}
                 </a>
               ` : ''}
             </div>
@@ -1527,6 +1599,92 @@
       
       this.elements.messages.appendChild(messageDiv);
       // Don't auto-scroll for products - let user scroll to see them
+    }
+
+    playProductAudio(audioUrl, buttonElement) {
+      // Check if audio URL is available
+      if (!audioUrl || audioUrl === 'null' || audioUrl === '') {
+        alert(this.t('audioFeature'));
+        return;
+      }
+
+      // If clicking the same button that's currently playing, stop it
+      if (this.currentAudioButton === buttonElement && this.currentAudio && !this.currentAudio.paused) {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+        
+        // Reset button icon to speaker
+        buttonElement.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+            <path d="M16 9a5 5 0 0 1 0 6"></path>
+            <path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
+          </svg>
+        `;
+        
+        this.currentAudio = null;
+        this.currentAudioButton = null;
+        return;
+      }
+
+      // Stop any OTHER currently playing audio
+      if (this.currentAudio) {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+        
+        // Reset previous button icon
+        if (this.currentAudioButton) {
+          this.currentAudioButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+              <path d="M16 9a5 5 0 0 1 0 6"></path>
+              <path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
+            </svg>
+          `;
+        }
+      }
+
+      // Create new audio element
+      this.currentAudio = new Audio(audioUrl);
+      this.currentAudioButton = buttonElement;
+
+      // Change button icon to pause/loading
+      buttonElement.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="4" width="4" height="16"></rect>
+          <rect x="14" y="4" width="4" height="16"></rect>
+        </svg>
+      `;
+
+      // Play audio
+      this.currentAudio.play().catch(error => {
+        console.error('Audio playback error:', error);
+        alert('Failed to play audio. Please try again.');
+        
+        // Reset button
+        buttonElement.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+            <path d="M16 9a5 5 0 0 1 0 6"></path>
+            <path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
+          </svg>
+        `;
+        this.currentAudio = null;
+        this.currentAudioButton = null;
+      });
+
+      // Reset button when audio ends
+      this.currentAudio.addEventListener('ended', () => {
+        buttonElement.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+            <path d="M16 9a5 5 0 0 1 0 6"></path>
+            <path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
+          </svg>
+        `;
+        this.currentAudio = null;
+        this.currentAudioButton = null;
+      });
     }
 
     showQuickReplies(quickReplies) {
@@ -1789,6 +1947,118 @@
         .tharwah-chat-close:hover {
           background: #f3f4f6;
           color: #374151;
+        }
+
+        /* Menu Button (3-dots) */
+        .tharwah-chat-menu {
+          background: none;
+          border: none;
+          color: #6b7280;
+          cursor: pointer;
+          padding: 6px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          transition: all 0.2s;
+        }
+
+        .tharwah-chat-menu:hover {
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        /* Menu Dropdown */
+        .tharwah-menu-dropdown {
+          position: absolute;
+          top: 50px;
+          right: 16px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+          padding: 8px;
+          min-width: 240px;
+          z-index: 1000;
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .tharwah-menu-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+          color: #374151;
+          font-size: 14px;
+          user-select: none;
+        }
+
+        .tharwah-menu-item:hover {
+          background: #f9fafb;
+        }
+
+        .tharwah-menu-item:active {
+          background: #f3f4f6;
+        }
+
+        .tharwah-menu-item svg {
+          flex-shrink: 0;
+          color: #6b7280;
+        }
+
+        .tharwah-menu-item span {
+          flex: 1;
+        }
+
+        /* Toggle Switch */
+        .tharwah-toggle-switch {
+          position: relative;
+          width: 44px;
+          height: 24px;
+        }
+
+        .tharwah-toggle-switch input {
+          position: absolute;
+          opacity: 0;
+          width: 0;
+          height: 0;
+          pointer-events: none;
+        }
+
+        .tharwah-toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #cbd5e0;
+          transition: 0.3s;
+          border-radius: 24px;
+        }
+
+        .tharwah-toggle-slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: 0.3s;
+          border-radius: 50%;
+        }
+
+        .tharwah-toggle-switch input:checked + .tharwah-toggle-slider {
+          background-color: ${this.config.primaryColor};
+        }
+
+        .tharwah-toggle-switch input:checked + .tharwah-toggle-slider:before {
+          transform: translateX(20px);
         }
 
         /* Feedback trigger line under input */
@@ -2271,12 +2541,36 @@
         <div class="tharwah-chat-window" id="tharwah-chat-window">
           <div class="tharwah-chat-header">
             <h2>${this.config.title}</h2>
-            <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 6 6 18"></path>
-                <path d="m6 6 12 12"></path>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="tharwah-chat-menu" id="tharwah-chat-menu" aria-label="Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="1"></circle>
+                  <circle cx="12" cy="5" r="1"></circle>
+                  <circle cx="12" cy="19" r="1"></circle>
+                </svg>
+              </button>
+              <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Menu Dropdown -->
+          <div class="tharwah-menu-dropdown" id="tharwah-menu-dropdown" style="display: none;">
+            <label class="tharwah-menu-item" for="tharwah-sound-checkbox" id="tharwah-sound-toggle">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
               </svg>
-            </button>
+              <span>Sound Notifications</span>
+              <div class="tharwah-toggle-switch">
+                <input type="checkbox" id="tharwah-sound-checkbox" checked>
+                <span class="tharwah-toggle-slider"></span>
+              </div>
+            </label>
           </div>
           
           <div class="tharwah-chat-messages" id="tharwah-chat-messages"></div>
@@ -2311,6 +2605,9 @@
         button: document.getElementById('tharwah-chat-button'),
         window: document.getElementById('tharwah-chat-window'),
         close: document.getElementById('tharwah-chat-close'),
+        menu: document.getElementById('tharwah-chat-menu'),
+        menuDropdown: document.getElementById('tharwah-menu-dropdown'),
+        soundCheckbox: document.getElementById('tharwah-sound-checkbox'),
         messages: document.getElementById('tharwah-chat-messages'),
         input: document.getElementById('tharwah-chat-input'),
         send: document.getElementById('tharwah-chat-send'),
@@ -2318,19 +2615,95 @@
         feedbackSection: document.getElementById('tharwah-feedback-section'),
         feedbackTrigger: document.getElementById('tharwah-feedback-trigger')
       };
+      
+      // Initialize sound notification state from localStorage
+      const soundEnabled = localStorage.getItem('tharwah-sound-enabled');
+      if (soundEnabled === 'false') {
+        this.elements.soundCheckbox.checked = false;
+      }
+      this.isSoundEnabled = this.elements.soundCheckbox.checked;
     }
 
     attachEventListeners() {
       this.elements.button.addEventListener('click', () => this.toggle());
       this.elements.close.addEventListener('click', () => this.close());
+      this.elements.menu.addEventListener('click', () => this.toggleMenu());
       this.elements.send.addEventListener('click', () => this.sendMessage());
       this.elements.feedbackTrigger.addEventListener('click', () => this.showFeedbackDialog());
+      
+      // Sound toggle event listener
+      this.elements.soundCheckbox.addEventListener('change', (e) => {
+        this.isSoundEnabled = e.target.checked;
+        localStorage.setItem('tharwah-sound-enabled', this.isSoundEnabled);
+        this.log('Sound notifications:', this.isSoundEnabled ? 'enabled' : 'disabled');
+        
+        // Keep menu open after toggling
+        e.stopPropagation();
+      });
+      
+      // Prevent menu from closing when clicking inside it
+      this.elements.menuDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!this.elements.menu.contains(e.target) && !this.elements.menuDropdown.contains(e.target)) {
+          this.closeMenu();
+        }
+      });
       
       this.elements.input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           this.sendMessage();
         }
       });
+    }
+
+    toggleMenu() {
+      const isVisible = this.elements.menuDropdown.style.display === 'block';
+      if (isVisible) {
+        this.closeMenu();
+      } else {
+        this.elements.menuDropdown.style.display = 'block';
+      }
+    }
+
+    closeMenu() {
+      this.elements.menuDropdown.style.display = 'none';
+    }
+
+    playNotificationSound() {
+      if (!this.isSoundEnabled) {
+        this.log('Sound notification skipped (disabled by user)');
+        return;
+      }
+
+      try {
+        // Create a subtle notification sound using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Subtle notification tone (E6 note)
+        oscillator.frequency.value = 1318.51;
+        oscillator.type = 'sine';
+
+        // Gentle volume curve
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+
+        this.log('Notification sound played');
+      } catch (error) {
+        this.log('Error playing notification sound:', error);
+      }
     }
 
     toggle() {
@@ -2874,6 +3247,29 @@
       return div.innerHTML;
     }
 
+    escapeHtmlExceptTables(text) {
+      // Extract tables with placeholder
+      const tables = [];
+      const tableRegex = /<table[\s\S]*?<\/table>/g;
+      
+      // Replace tables with placeholders
+      let processed = text.replace(tableRegex, (match) => {
+        const placeholder = `___TABLE_${tables.length}___`;
+        tables.push(match);
+        return placeholder;
+      });
+      
+      // Escape the rest of the content
+      processed = this.escapeHtml(processed);
+      
+      // Restore tables
+      tables.forEach((table, index) => {
+        processed = processed.replace(`___TABLE_${index}___`, table);
+      });
+      
+      return processed;
+    }
+
     isArabicText(text) {
       // Check if text contains Arabic characters
       // Arabic Unicode range: \u0600-\u06FF (Arabic block) and \u0750-\u077F (Arabic Supplement)
@@ -2882,8 +3278,12 @@
     }
 
     formatMessage(text) {
-      // First escape HTML to prevent XSS
-      let formatted = this.escapeHtml(text);
+      // Convert markdown tables FIRST (before any escaping)
+      // We need raw text with \n for table detection
+      let formatted = this.convertMarkdownTables(text);
+      
+      // Now escape HTML to prevent XSS (but preserve our table HTML)
+      formatted = this.escapeHtmlExceptTables(formatted);
       
       // Convert **bold** to <strong> (more robust - handles any content including special chars)
       formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -2910,6 +3310,62 @@
       formatted = formatted.replace(/^<br>/, '');
       
       return formatted;
+    }
+
+    convertMarkdownTables(text) {
+      // Detect markdown tables pattern:
+      // | Header 1 | Header 2 | Header 3 |
+      // |----------|----------|----------|
+      // | Cell 1   | Cell 2   | Cell 3   |
+      
+      const tableRegex = /\|(.+)\|\n\|[\s\-:]+\|\n((?:\|.+\|\n?)+)/g;
+      
+      return text.replace(tableRegex, (match, headerRow, bodyRows) => {
+        // Parse header
+        const headers = headerRow.split('|')
+          .map(h => h.trim())
+          .filter(h => h.length > 0);
+        
+        // Parse body rows
+        const rows = bodyRows.trim().split('\n')
+          .map(row => row.split('|')
+            .map(cell => cell.trim())
+            .filter(cell => cell.length > 0)
+          );
+        
+        // Helper to escape HTML in cell content
+        const escapeCell = (cell) => {
+          const div = document.createElement('div');
+          div.textContent = cell;
+          return div.innerHTML;
+        };
+        
+        // Build HTML table
+        let html = '\n<table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">';
+        
+        // Header
+        html += '<thead><tr style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white;">';
+        headers.forEach(header => {
+          html += `<th style="padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #1e40af;">${escapeCell(header)}</th>`;
+        });
+        html += '</tr></thead>';
+        
+        // Body
+        html += '<tbody>';
+        rows.forEach((row, idx) => {
+          const bgColor = idx % 2 === 0 ? '#f9fafb' : 'white';
+          html += `<tr style="background: ${bgColor}; transition: background 0.2s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='${bgColor}'">`;
+          row.forEach(cell => {
+            html += `<td style="padding: 10px 12px; border-bottom: 1px solid #e5e7eb;">${escapeCell(cell)}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody>';
+        
+        html += '</table>\n';
+        
+        return html;
+      });
     }
 
     log(...args) {
