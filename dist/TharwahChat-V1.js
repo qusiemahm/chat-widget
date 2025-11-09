@@ -459,11 +459,11 @@
             </p>
           </div>
 
-          <form id="tharwah-email-form" style="display: flex; flex-direction: column; gap: 16px;">
+          <form id="tharwah-chat-email-form" style="display: flex; flex-direction: column; gap: 16px;">
             <div>
               <input
                 type="email"
-                id="tharwah-email-input"
+                id="tharwah-chat-email-input"
                 placeholder="${this.t('emailPlaceholder')}"
                 required
                 style="
@@ -484,7 +484,7 @@
             <label style="display: flex; align-items: start; gap: 8px; cursor: pointer;">
               <input
                 type="checkbox"
-                id="tharwah-terms-checkbox"
+                id="tharwah-chat-terms-checkbox"
                 required
                 style="
                   width: 18px;
@@ -503,7 +503,7 @@
 
             <button
               type="submit"
-              id="tharwah-submit-button"
+              id="tharwah-chat-submit-button"
               disabled
               style="
                 width: 100%;
@@ -531,7 +531,7 @@
       this.emailCaptureCallback = callbackData;
 
       // Attach form submit handler
-      const form = document.getElementById('tharwah-email-form');
+      const form = document.getElementById('tharwah-chat-email-form');
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleEmailSubmit();
@@ -539,8 +539,8 @@
     }
 
     async handleEmailSubmit() {
-      const emailInput = document.getElementById('tharwah-email-input');
-      const termsCheckbox = document.getElementById('tharwah-terms-checkbox');
+      const emailInput = document.getElementById('tharwah-chat-email-input');
+      const termsCheckbox = document.getElementById('tharwah-chat-terms-checkbox');
 
       const email = emailInput.value.trim();
       const termsAccepted = termsCheckbox.checked;
@@ -633,9 +633,9 @@
     }
 
     validateEmailForm() {
-      const emailInput = document.getElementById('tharwah-email-input');
-      const termsCheckbox = document.getElementById('tharwah-terms-checkbox');
-      const submitButton = document.getElementById('tharwah-submit-button');
+      const emailInput = document.getElementById('tharwah-chat-email-input');
+      const termsCheckbox = document.getElementById('tharwah-chat-terms-checkbox');
+      const submitButton = document.getElementById('tharwah-chat-submit-button');
 
       if (!emailInput || !termsCheckbox || !submitButton) return;
 
@@ -2712,7 +2712,7 @@
           
           <!-- Menu Dropdown -->
           <div class="tharwah-menu-dropdown" id="tharwah-menu-dropdown" style="display: none;">
-            <label class="tharwah-menu-item" for="tharwah-sound-checkbox" id="tharwah-sound-toggle">
+            <label class="tharwah-menu-item" for="tharwah-chat-sound-checkbox" id="tharwah-chat-sound-toggle">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -2759,7 +2759,7 @@
         close: document.getElementById('tharwah-chat-close'),
         menu: document.getElementById('tharwah-chat-menu'),
         menuDropdown: document.getElementById('tharwah-menu-dropdown'),
-        soundCheckbox: document.getElementById('tharwah-sound-checkbox'),
+        soundCheckbox: document.getElementById('tharwah-chat-sound-checkbox'),
         messages: document.getElementById('tharwah-chat-messages'),
         input: document.getElementById('tharwah-chat-input'),
         send: document.getElementById('tharwah-chat-send'),
@@ -3138,7 +3138,7 @@
       // Star rating functionality
       let selectedRating = 0;
       const stars = feedbackDialog.querySelectorAll('.tharwah-star');
-      const submitBtn = feedbackDialog.querySelector('#tharwah-feedback-submit');
+      const submitBtn = feedbackDialog.querySelector('#tharwah-chat-feedback-submit');
       
       const updateStars = (rating) => {
         stars.forEach((star, index) => {
@@ -3172,15 +3172,15 @@
       });
 
       // Cancel button
-      feedbackDialog.querySelector('#tharwah-feedback-cancel').addEventListener('click', () => {
+      feedbackDialog.querySelector('#tharwah-chat-feedback-cancel').addEventListener('click', () => {
         document.body.removeChild(feedbackDialog);
         this.trackEvent('feedback_cancelled');
       });
 
       // Submit button
       submitBtn.addEventListener('click', async () => {
-        const category = feedbackDialog.querySelector('#tharwah-feedback-category').value;
-        const text = feedbackDialog.querySelector('#tharwah-feedback-text').value.trim();
+        const category = feedbackDialog.querySelector('#tharwah-chat-feedback-category').value;
+        const text = feedbackDialog.querySelector('#tharwah-chat-feedback-text').value.trim();
         
         submitBtn.disabled = true;
         submitBtn.textContent = this.config.language === 'ar' ? 'جاري الإرسال...' : 'Submitting...';
