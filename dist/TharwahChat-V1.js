@@ -1846,8 +1846,8 @@
         }
 
         .tharwah-chat-button svg {
-          width: 24px;
-          height: 24px;
+          width: 28px;
+          height: 28px;
         }
 
         /* Notification badge */
@@ -2678,8 +2678,10 @@
       container.className = 'tharwah-chat-widget';
       container.innerHTML = `
         <button class="tharwah-chat-button" id="tharwah-chat-button" aria-label="Open chat">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="currentColor">
+            <path d="M65.1,12.1H54.3V3.4h-8.6v8.6H34.9C17,12.1,2.5,26.2,2.5,43.7c0,17.4,14.5,31.6,32.4,31.6H37v-8.6h-2.2c-13.1,0-23.8-10.3-23.8-22.9c0-12.7,10.7-22.9,23.8-22.9h30.2c13.1,0,23.8,10.3,23.8,22.9c0,12.7-10.7,22.9-23.8,22.9H52.7L37,80.3v11.5l18.9-16.5h9.2c17.9,0,32.4-14.2,32.4-31.6C97.5,26.2,83,12.1,65.1,12.1z"/>
+            <circle cx="34.9" cy="44.5" r="6.5"/>
+            <circle cx="65.1" cy="44.5" r="6.5"/>
           </svg>
           <span class="tharwah-notification-badge">
             <span class="tharwah-notification-ping"></span>
@@ -3782,7 +3784,7 @@
         }
       } catch (error) {
         console.error('Enrollment error:', error);
-        this.addMessage('❌ Failed to add product to cart. Please try again.', 'bot');
+        // this.addMessage('❌ Failed to add product to cart. Please try again.', 'bot');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '🛒 Add to Cart';
       }
