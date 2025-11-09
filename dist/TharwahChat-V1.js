@@ -3556,107 +3556,177 @@
       const wpId = metadata.wp_id || product.id;
       const price = metadata.price || product.price || 0;
       const currency = metadata.currency || product.currency || 'SAR';
+      const productName = product.name || 'Course';
       
       // Check if there are any future dates available
       if (virtualDates.length === 0) {
-        alert('No upcoming dates available for this course. Please contact support for more information.');
+        this.addMessage('Sorry, there are no upcoming dates available for this course. Please contact support for more information.', 'bot');
         return;
       }
       
-      // Create modal HTML
-      const modalHtml = `
-        <div class="tharwah-enrollment-modal" id="enrollmentModal">
-          <div class="tharwah-enrollment-form">
-            <h3>${this.t('enrollNow')}</h3>
-            <div class="product-name">${this.escapeHtml(product.name)}</div>
-            
-            <div class="price-info">
-              <div class="price-label">Total Price</div>
-              <div class="price-value">${currency} ${price.toLocaleString()}</div>
+      // Create enrollment form as a chat message card
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'tharwah-chat-message bot enrollment-form-message';
+      messageDiv.dataset.productId = wpId;
+      
+      messageDiv.innerHTML = `
+        <div class="tharwah-chat-message-content" style="
+          padding: 0;
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          overflow: hidden;
+          max-width: 100%;
+        ">
+          <!-- Header -->
+          <div style="
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 16px;
+          ">
+            <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 600; color: #111827;">
+              ${this.escapeHtml(productName)}
+            </h3>
+            <p style="margin: 0; font-size: 12px; color: #6b7280;">
+              ${currency} ${price.toLocaleString()}
+            </p>
+          </div>
+          
+          <!-- Form -->
+          <form id="enrollmentFormData" style="padding: 16px;">
+            <!-- Training Type -->
+            <div style="margin-bottom: 12px;">
+              <label style="
+                display: block;
+                font-size: 12px;
+                font-weight: 500;
+                color: #374151;
+                margin-bottom: 4px;
+              ">Training Type</label>
+              <select 
+                id="training_type" 
+                name="training_type" 
+                required
+                style="
+                  width: 100%;
+                  padding: 8px 10px;
+                  border: 1px solid #d1d5db;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  color: #374151;
+                  background: white;
+                  cursor: pointer;
+                "
+              >
+                <option value="">Select type...</option>
+                ${courseType === 'both' || courseType === 'virtual' ? '<option value="virtual">Virtual Training</option>' : ''}
+                ${courseType === 'both' || courseType === 'in-person' ? '<option value="in-person">In-Person Training</option>' : ''}
+              </select>
             </div>
             
-            <form id="enrollmentFormData">
-              <!-- Training Type -->
-              <div class="form-group">
-                <label for="training_type">Training Type</label>
-                <select id="training_type" name="training_type" required>
-                  <option value="">Select type...</option>
-                  ${courseType === 'both' || courseType === 'virtual' ? '<option value="virtual">Virtual Training</option>' : ''}
-                  ${courseType === 'both' || courseType === 'in-person' ? '<option value="in-person">In-Person Training</option>' : ''}
-                </select>
-              </div>
-              
-              <!-- Date Selection -->
-              <div class="form-group">
-                <label for="virtual_date">Course Date</label>
-                <select id="virtual_date" name="virtual_date" required>
-                  <option value="">Select date...</option>
-                  ${virtualDates.map(date => {
-                    // Format date from YYYY-MM-DD to DD-MM-YYYY
-                    const [year, month, day] = date.split('-');
-                    const formattedDate = day + '-' + month + '-' + year;
-                    const displayDate = new Date(date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    });
-                    return '<option value="' + formattedDate + '">' + displayDate + '</option>';
-                  }).join('')}
-                </select>
-              </div>
-              
-              <input type="hidden" name="product_id" value="${wpId}">
-              <input type="hidden" name="variation_id" value="5728">
-              <input type="hidden" name="quantity" value="1">
-              
-              <div class="button-group">
-                <button type="button" class="btn-cancel" onclick="window.tharwahChatWidget.closeEnrollmentForm()">
-                  Cancel
-                </button>
-                <button type="submit" class="btn-enroll">
-                  Add to Cart
-                </button>
-              </div>
-            </form>
-          </div>
+            <!-- Date Selection -->
+            <div style="margin-bottom: 12px;">
+              <label style="
+                display: block;
+                font-size: 12px;
+                font-weight: 500;
+                color: #374151;
+                margin-bottom: 4px;
+              ">Course Date</label>
+              <select 
+                id="virtual_date" 
+                name="virtual_date" 
+                required
+                style="
+                  width: 100%;
+                  padding: 8px 10px;
+                  border: 1px solid #d1d5db;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  color: #374151;
+                  background: white;
+                  cursor: pointer;
+                "
+              >
+                <option value="">Select date...</option>
+                ${virtualDates.map(date => {
+                  const [year, month, day] = date.split('-');
+                  const formattedDate = day + '-' + month + '-' + year;
+                  const displayDate = new Date(date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  });
+                  return '<option value="' + formattedDate + '">' + displayDate + '</option>';
+                }).join('')}
+              </select>
+            </div>
+            
+            <input type="hidden" name="product_id" value="${wpId}">
+            <input type="hidden" name="variation_id" value="5728">
+            <input type="hidden" name="quantity" value="1">
+            
+            <!-- Buttons -->
+            <div style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px;
+              margin-top: 16px;
+            ">
+              <button 
+                type="button" 
+                onclick="this.closest('.enrollment-form-message').remove()"
+                style="
+                  padding: 10px;
+                  border: 1px solid #d1d5db;
+                  background: white;
+                  color: #6b7280;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  font-weight: 500;
+                  cursor: pointer;
+                "
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                style="
+                  padding: 10px;
+                  border: 1px solid #111827;
+                  background: #111827;
+                  color: white;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  font-weight: 500;
+                  cursor: pointer;
+                "
+              >
+                Add to Cart
+              </button>
+            </div>
+          </form>
         </div>
       `;
       
-      // Add modal to document
-      const modalContainer = document.createElement('div');
-      modalContainer.innerHTML = modalHtml;
-      document.body.appendChild(modalContainer.firstElementChild);
-      
-      // Show modal with animation
-      setTimeout(() => {
-        document.getElementById('enrollmentModal').classList.add('show');
-      }, 10);
+      // Add to chat messages
+      this.elements.messages.appendChild(messageDiv);
+      this.scrollToBottom();
       
       // Handle form submission
-      document.getElementById('enrollmentFormData').addEventListener('submit', (e) => {
+      const form = messageDiv.querySelector('#enrollmentFormData');
+      form.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.submitEnrollment(e.target);
-      });
-      
-      // Close modal on backdrop click
-      document.getElementById('enrollmentModal').addEventListener('click', (e) => {
-        if (e.target.id === 'enrollmentModal') {
-          this.closeEnrollmentForm();
-        }
+        this.submitEnrollment(e.target, messageDiv);
       });
     }
 
     closeEnrollmentForm() {
-      const modal = document.getElementById('enrollmentModal');
-      if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => {
-          modal.remove();
-        }, 300);
-      }
+      // Legacy method - no longer needed as form is in chat
+      // Kept for compatibility
     }
 
-    async submitEnrollment(form) {
+    async submitEnrollment(form, messageDiv) {
       const formData = new FormData(form);
       const trainingType = formData.get('training_type');
       const virtualDate = formData.get('virtual_date');
@@ -3666,14 +3736,16 @@
       
       // Validate
       if (!trainingType || !virtualDate) {
-        alert('Please select training type and date');
+        this.addMessage('⚠️ Please select training type and date', 'bot');
         return;
       }
       
       // Disable submit button
-      const submitBtn = form.querySelector('.btn-enroll');
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Adding...';
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Adding...';
+      }
       
       try {
         // Create form data for WooCommerce
@@ -3693,11 +3765,13 @@
         });
         
         if (response.ok) {
-          // Close modal
-          this.closeEnrollmentForm();
+          // Remove enrollment form from chat
+          if (messageDiv) {
+            messageDiv.remove();
+          }
           
           // Show success message in chat
-          this.addMessage('Product added to cart successfully! Redirecting to checkout...', 'bot');
+          this.addMessage('✅ Product added to cart successfully! Redirecting to checkout...', 'bot');
           
           // Redirect to checkout after a short delay
           setTimeout(() => {
@@ -3708,9 +3782,9 @@
         }
       } catch (error) {
         console.error('Enrollment error:', error);
-        alert('Failed to add product to cart. Please try again.');
+        this.addMessage('❌ Failed to add product to cart. Please try again.', 'bot');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Add to Cart';
+        submitBtn.innerHTML = '🛒 Add to Cart';
       }
     }
   }

@@ -1176,22 +1176,22 @@
           return;
         }
 
-        this.renderPopover(popover, suggestion);
-        this.popoverState.currentPopover = popover;
-        this.popoverState.shown.add(popover.id);
-        this.popoverState.count++;
-        
-        // Track view
-        this.trackPopoverInteraction(popover.id, 'view');
-        
-        // Auto dismiss if configured
-        if (popover.auto_dismiss_seconds) {
-          setTimeout(() => {
-            this.hidePopover();
-          }, popover.auto_dismiss_seconds * 1000);
-        }
-        
-        this.log('Popover displayed:', popover.title);
+          this.renderPopover(popover, suggestion);
+          this.popoverState.currentPopover = popover;
+          this.popoverState.shown.add(popover.id);
+          this.popoverState.count++;
+          
+          // Track view
+          this.trackPopoverInteraction(popover.id, 'view');
+          
+          // Auto dismiss if configured
+          if (popover.auto_dismiss_seconds) {
+            setTimeout(() => {
+              this.hidePopover();
+            }, popover.auto_dismiss_seconds * 1000);
+          }
+          
+          this.log('Popover displayed:', popover.title);
       }, delay);
     }
 
