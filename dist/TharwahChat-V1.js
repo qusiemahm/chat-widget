@@ -3472,9 +3472,13 @@
       // |----------|----------|----------|
       // | Cell 1   | Cell 2   | Cell 3   |
       
-      const tableRegex = /\|(.+)\|\n\|[\s\-:]+\|\n((?:\|.+\|\n?)+)/g;
+      // Updated regex to handle full table rows with multiple cells
+      // The separator line has multiple cells like |-------|-------|-------|
+      const tableRegex = /^\s*\|(.+)\|\s*\n\s*\|(?:[\s\-:]+\|)+\s*\n((?:\s*\|.+\|\s*\n?)+)/gm;
       
       return text.replace(tableRegex, (match, headerRow, bodyRows) => {
+        console.log('[TharwahChat] Found markdown table!', {headerRow, bodyRows});
+        
         // Parse header
         const headers = headerRow.split('|')
           .map(h => h.trim())
