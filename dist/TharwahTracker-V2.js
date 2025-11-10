@@ -1204,7 +1204,7 @@
     renderPopover(popover, suggestion) {
       // Create popover container
       const container = document.createElement('div');
-      container.id = 'tharwah-popover';
+      container.id = 'tharwah-chat-popover';
       container.className = 'tharwah-popover';
       container.dataset.popoverId = popover.id;
       
@@ -1239,7 +1239,7 @@
       `;
       
       // Inject styles if not already present
-      if (!document.getElementById('tharwah-popover-styles')) {
+      if (!document.getElementById('tharwah-chat-popover-styles')) {
         this.injectPopoverStyles();
       }
       
@@ -1296,7 +1296,7 @@
     }
 
     hidePopover() {
-      const popover = document.getElementById('tharwah-popover');
+      const popover = document.getElementById('tharwah-chat-popover');
       if (popover) {
         popover.classList.remove('tharwah-popover-visible');
         setTimeout(() => {
@@ -1336,7 +1336,7 @@
 
     injectPopoverStyles() {
       const styles = document.createElement('style');
-      styles.id = 'tharwah-popover-styles';
+      styles.id = 'tharwah-chat-popover-styles';
       styles.textContent = `
         /* Popover Container */
         .tharwah-popover {
