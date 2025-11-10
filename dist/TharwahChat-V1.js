@@ -1299,13 +1299,13 @@
               feedbackDiv.className = 'tharwah-feedback-buttons';
               feedbackDiv.setAttribute('data-message-id', messageId);
               feedbackDiv.innerHTML = `
-                <button class="tharwah-feedback-btn thumbs-up" data-feedback="positive" title="Thumbs up">
+                <button class="tharwah-feedback-btn thumbs-up" id="tharwah-chat-feedback-thumbs-up-streaming" data-feedback="positive" title="Thumbs up">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M9 10L9.74 9.877C9.7579 9.9844 9.7521 10.0945 9.7231 10.1995C9.6942 10.3045 9.6427 10.4019 9.5723 10.485C9.5018 10.5681 9.4142 10.6348 9.3153 10.6806C9.2165 10.7263 9.1089 10.75 9 10.75V10ZM20 10V9.25C20.1989 9.25 20.3897 9.329 20.5303 9.4697C20.671 9.6103 20.75 9.8011 20.75 10H20ZM18 20.75H6.64V19.25H18V20.75ZM5.44 9.25H9V10.75H5.44V9.25ZM8.26 10.123L7.454 5.288L8.934 5.041L9.74 9.877L8.26 10.123ZM9.18 3.25H9.394V4.75H9.181L9.18 3.25ZM12.515 4.92L15.03 8.693L13.782 9.525L11.267 5.752L12.515 4.92ZM16.07 9.25H20V10.75H16.07V9.25ZM20.75 10V18H19.25V10H20.75ZM3.943 18.54L2.743 12.54L4.213 12.245L5.413 18.245L3.943 18.54ZM15.03 8.693C15.1441 8.8643 15.2987 9.0037 15.4802 9.1009C15.6616 9.1981 15.8642 9.2489 16.07 9.249V10.749C15.15 10.749 14.292 10.29 13.782 9.525L15.03 8.693ZM7.454 5.288C7.4122 5.0373 7.4255 4.7795 7.4929 4.5344C7.5604 4.2894 7.6804 4.062 7.8447 3.868C8.009 3.6741 8.2135 3.5182 8.4441 3.4113C8.6747 3.3044 8.9258 3.25 9.18 3.25V4.749C9.1438 4.7491 9.108 4.7571 9.0751 4.7724C9.0422 4.7877 9.0131 4.8099 8.9897 4.8376C8.9663 4.8653 8.9492 4.8977 8.9396 4.9327C8.93 4.9676 8.9281 5.0052 8.934 5.041L7.454 5.288ZM5.44 10.749C5.2551 10.749 5.0724 10.79 4.9052 10.8691C4.738 10.9481 4.5905 11.0634 4.4732 11.2064C4.3559 11.3494 4.2718 11.5166 4.227 11.6961C4.1822 11.8755 4.1778 12.0626 4.214 12.244L2.743 12.539C2.6633 12.14 2.673 11.7273 2.7716 11.3326C2.8702 10.9378 3.0552 10.5699 3.3132 10.2553C3.5712 9.9407 3.8958 9.6872 4.2635 9.5132C4.6313 9.3392 5.0331 9.2489 5.44 9.249V10.749ZM6.64 20.75C6.0043 20.7501 5.3882 20.529 4.8965 20.1261C4.4048 19.7232 4.0678 19.1633 3.943 18.54L5.413 18.245C5.4695 18.5288 5.6227 18.7832 5.8464 18.9666C6.0702 19.1501 6.3506 19.2502 6.64 19.25V20.75ZM9.394 3.25C10.0113 3.25 10.6191 3.4015 11.1634 3.6928C11.7077 3.9841 12.1716 4.4053 12.514 4.919L11.267 5.751C11.0615 5.4427 10.7829 5.1899 10.4562 5.0151C10.1294 4.8403 9.7646 4.7499 9.394 4.75V3.25ZM18 19.25C18.69 19.25 19.25 18.69 19.25 18H20.75C20.75 18.7293 20.4603 19.4288 19.9445 19.9445C19.4288 20.4603 18.7293 20.75 18 20.75V19.25Z" fill="#AAAAAA"/>
                     <path d="M16 10V20" stroke="#AAAAAA" stroke-width="1.5"/>
                   </svg>
                 </button>
-                <button class="tharwah-feedback-btn thumbs-down" data-feedback="negative" title="Thumbs down">
+                <button class="tharwah-feedback-btn thumbs-down" id="tharwah-chat-feedback-thumbs-down-streaming" data-feedback="negative" title="Thumbs down">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15 14L14.26 14.123C14.2421 14.0156 14.2479 13.9055 14.2769 13.8005C14.3058 13.6955 14.3573 13.5981 14.4277 13.515C14.4982 13.432 14.5858 13.3652 14.6847 13.3194C14.7835 13.2737 14.8911 13.25 15 13.25V14ZM4 14V14.75C3.80109 14.75 3.61032 14.671 3.46967 14.5303C3.32902 14.3897 3.25 14.1989 3.25 14H4ZM6 3.25H17.36V4.75H6V3.25ZM18.56 14.75H15V13.25H18.56V14.75ZM15.74 13.877L16.546 18.712L15.066 18.959L14.26 14.123L15.74 13.877ZM14.82 20.75H14.606V19.25H14.819L14.82 20.75ZM11.485 19.08L8.97 15.307L10.218 14.475L12.733 18.248L11.485 19.08ZM7.93 14.75H4V13.25H7.93V14.75ZM3.25 14V6H4.75V14H3.25ZM20.057 5.46L21.257 11.46L19.787 11.755L18.587 5.755L20.057 5.46ZM8.97 15.307C8.8559 15.1357 8.70127 14.9963 8.51985 14.8991C8.33842 14.8019 8.13581 14.7511 7.93 14.751V13.251C8.85 13.251 9.708 13.71 10.218 14.475L8.97 15.307ZM16.546 18.712C16.5878 18.9627 16.5745 19.2205 16.5071 19.4656C16.4396 19.7106 16.3196 19.938 16.1553 20.132C15.991 20.3259 15.7865 20.4818 15.5559 20.5887C15.3253 20.6956 15.0742 20.75 14.82 20.75V19.251C14.8562 19.2509 14.892 19.2429 14.9249 19.2276C14.9578 19.2123 14.9869 19.1901 15.0103 19.1624C15.0337 19.1347 15.0508 19.1023 15.0604 19.0673C15.07 19.0324 15.0719 18.9948 15.066 18.959L16.546 18.712ZM18.56 13.251C18.7449 13.251 18.9276 13.21 19.0948 13.1309C19.262 13.0519 19.4095 12.9366 19.5268 12.7936C19.6441 12.6506 19.7282 12.4834 19.773 12.3039C19.8178 12.1245 19.8222 11.9374 19.786 11.756L21.257 11.461C21.3367 11.86 21.327 12.2727 21.2284 12.6674C21.1298 13.0622 20.9448 13.4301 20.6868 13.7447C20.4288 14.0593 20.1042 14.3128 19.7365 14.4868C19.3687 14.6608 18.9669 14.7511 18.56 14.751V13.251ZM17.36 3.25C17.9957 3.24988 18.6118 3.471 19.1035 3.87392C19.5952 4.27684 19.9322 4.83667 20.057 5.46L18.587 5.755C18.5305 5.47122 18.3773 5.21682 18.1536 5.03336C17.9298 4.84991 17.6494 4.74976 17.36 4.75V3.25ZM14.606 20.75C13.9887 20.75 13.3809 20.5985 12.8366 20.3072C12.2923 20.0159 11.8284 19.5947 11.486 19.081L12.733 18.249C12.9385 18.5573 13.2171 18.8101 13.5438 18.9849C13.8706 19.1597 14.2354 19.2501 14.606 19.25V20.75ZM6 4.75C5.31 4.75 4.75 5.31 4.75 6H3.25C3.25 5.27065 3.53973 4.57118 4.05546 4.05546C4.57118 3.53973 5.27065 3.25 6 3.25V4.75Z" fill="#AAAAAA"/>
                     <path d="M8 14V4" stroke="#AAAAAA" stroke-width="1.5"/>
@@ -1526,7 +1526,8 @@
               
               <!-- Enroll Button -->
               ${productLink ? `
-                <button 
+                <button
+                  id="tharwah-chat-enroll-now-${product.wp_id || product.id}"
                   data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'
                   onclick="window.tharwahChatWidget.showEnrollmentForm(JSON.parse(this.dataset.product))"
                   style="
@@ -1555,7 +1556,7 @@
               
               <!-- Download Brochure Button -->
               ${brochureUrl ? `
-                <a href="${brochureUrl}" target="_blank" rel="noopener noreferrer" download style="
+                <a id="tharwah-chat-download-brochure-${product.wp_id || product.id}" href="${brochureUrl}" target="_blank" rel="noopener noreferrer" download style="
                   display: inline-flex;
                   align-items: center;
                   justify-content: center;
@@ -1716,8 +1717,9 @@
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
         </svg>`;
         
-        return `<button 
-          onclick="window.tharwahChatWidget.handleQuickReply('${this.escapeHtml(replyText).replace(/'/g, "\\'")}', '${replyId}')" 
+        return `<button
+          id="tharwah-chat-quick-reply-${replyId || index}"
+          onclick="window.tharwahChatWidget.handleQuickReply('${this.escapeHtml(replyText).replace(/'/g, "\\'")}', '${replyId}')"
           style="
             display: inline-flex;
             align-items: center;
@@ -2743,8 +2745,8 @@
             </button>
           </div>
           
-          <div class="tharwah-feedback-section" id="tharwah-feedback-section">
-            <button class="tharwah-feedback-trigger" id="tharwah-feedback-trigger">
+          <div class="tharwah-feedback-section" id="tharwah-chat-feedback-section">
+            <button class="tharwah-feedback-trigger" id="tharwah-chat-feedback-trigger">
               Give us your feedback
             </button>
           </div>
@@ -2764,8 +2766,8 @@
         input: document.getElementById('tharwah-chat-input'),
         send: document.getElementById('tharwah-chat-send'),
         inputContainer: document.querySelector('.tharwah-chat-input-container'),
-        feedbackSection: document.getElementById('tharwah-feedback-section'),
-        feedbackTrigger: document.getElementById('tharwah-feedback-trigger')
+        feedbackSection: document.getElementById('tharwah-chat-feedback-section'),
+        feedbackTrigger: document.getElementById('tharwah-chat-feedback-trigger')
       };
       
       // Initialize sound notification state from localStorage
