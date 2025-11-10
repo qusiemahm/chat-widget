@@ -1695,20 +1695,20 @@
         }
         
         /* ========================================
-           COMPACT FLOATING CARD - MOBILE DESIGN
-           Small & Elegant Style
+           ULTRA-COMPACT MOBILE DESIGN
+           Minimal & Space-Efficient
            ======================================== */
         @media (max-width: 768px) {
-          /* Floating Card Container - Small */
+          /* Floating Card Container - Ultra Compact */
           .tharwah-popover {
-            bottom: 20px !important;
-            left: 16px !important;
-            right: 16px !important;
+            bottom: 16px !important;
+            left: 12px !important;
+            right: 12px !important;
             max-width: none !important;
             width: auto !important;
             opacity: 0;
-            transform: translateY(15px) scale(0.95);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            transform: translateY(12px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
           }
           
           .tharwah-popover-visible {
@@ -1716,86 +1716,86 @@
             transform: translateY(0) scale(1) !important;
           }
           
-          /* Card Styling - Compact */
+          /* Card Styling - Minimal Shadow */
           .tharwah-popover-card {
-            border-radius: 16px !important;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
             background: white !important;
           }
           
-          /* Close Button - Small */
+          /* Close Button - Tiny */
           .tharwah-popover-close {
-            width: 28px !important;
-            height: 28px !important;
-            top: 8px !important;
-            right: 8px !important;
-            background: rgba(0, 0, 0, 0.05) !important;
+            width: 24px !important;
+            height: 24px !important;
+            top: 6px !important;
+            right: 6px !important;
+            background: rgba(0, 0, 0, 0.04) !important;
             border-radius: 50% !important;
           }
           
           .tharwah-popover-close:hover {
-            background: rgba(0, 0, 0, 0.1) !important;
+            background: rgba(0, 0, 0, 0.08) !important;
           }
           
           .tharwah-popover-close svg {
-            width: 14px !important;
-            height: 14px !important;
+            width: 12px !important;
+            height: 12px !important;
           }
           
-          /* Content Layout - Horizontal & Compact */
+          /* Content Layout - Horizontal & Ultra Compact */
           .tharwah-popover-horizontal {
-            padding: 14px 16px !important;
-            padding-right: 40px !important;
-            gap: 12px !important;
+            padding: 10px 12px !important;
+            padding-right: 34px !important;
+            gap: 8px !important;
             flex-direction: row !important;
             align-items: center !important;
           }
           
-          /* Icon - Small, Left Side */
+          /* Icon - Tiny, Left Side */
           .tharwah-popover-icon-wrapper {
-            width: 40px !important;
-            height: 40px !important;
-            border-radius: 10px !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
             margin: 0 !important;
             box-shadow: none !important;
             flex-shrink: 0 !important;
           }
           
           .tharwah-popover-icon-wrapper svg {
-            width: 20px !important;
-            height: 20px !important;
+            width: 16px !important;
+            height: 16px !important;
           }
           
-          /* Text Content - Left Aligned, Compact */
+          /* Text Content - Minimal Spacing */
           .tharwah-popover-text-content {
             flex: 1 !important;
             text-align: left !important;
           }
           
           .tharwah-popover-title {
-            font-size: 15px !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
-            margin-bottom: 4px !important;
+            margin-bottom: 2px !important;
             color: #111827 !important;
             line-height: 1.2 !important;
           }
           
           .tharwah-popover-description {
-            font-size: 13px !important;
-            line-height: 1.4 !important;
-            margin-bottom: 12px !important;
+            font-size: 11px !important;
+            line-height: 1.3 !important;
+            margin-bottom: 8px !important;
             color: #6b7280 !important;
           }
           
-          /* CTA Button - Compact */
+          /* CTA Button - Ultra Compact */
           .tharwah-popover-cta {
             width: 100% !important;
-            padding: 10px 16px !important;
-            font-size: 14px !important;
+            padding: 6px 12px !important;
+            font-size: 12px !important;
             font-weight: 600 !important;
-            height: 38px !important;
-            min-height: 38px !important;
-            border-radius: 10px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            border-radius: 8px !important;
             background: #059669 !important;
             transition: all 0.2s !important;
           }
