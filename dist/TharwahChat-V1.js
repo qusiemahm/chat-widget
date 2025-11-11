@@ -1458,6 +1458,23 @@
             <div style="padding: 8px;">
               <!-- Title with audio button -->
               <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                ${productLink ? `
+                <a href="${productLink}" target="_blank" rel="noopener noreferrer" style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: #111827;
+                  margin: 0;
+                  line-height: 1.3;
+                  display: -webkit-box;
+                  -webkit-line-clamp: 2;
+                  -webkit-box-orient: vertical;
+                  overflow: hidden;
+                  height: 32px;
+                  flex: 1;
+                  text-decoration: none;
+                  transition: color 0.2s;
+                " onmouseover="this.style.color='#2563eb'" onmouseout="this.style.color='#111827'">${this.escapeHtml(name)}</a>
+                ` : `
                 <h4 style="
                   font-size: 12px;
                   font-weight: 600;
@@ -1471,6 +1488,7 @@
                   height: 32px;
                   flex: 1;
                 ">${this.escapeHtml(name)}</h4>
+                `}
                 <button 
                   data-audio-url="${fullAudioUrl || ''}"
                   style="
@@ -3553,6 +3571,7 @@
       const metadata = product.metadata || {};
       const courseType = metadata.course_type || 'both';
       const allDates = metadata.virtual_dates || [];
+      const locations = metadata.locations || [];
       
       // Filter to only show future dates
       const today = new Date();
@@ -3566,10 +3585,24 @@
       const price = metadata.price || product.price || 0;
       const currency = metadata.currency || product.currency || 'SAR';
       const productName = product.name || 'Course';
+      const enrollLink = product.enroll_link || product.product_link || '';
       
-      // Check if there are any future dates available
-      if (virtualDates.length === 0) {
-        this.addMessage('Sorry, there are no upcoming dates available for this course. Please contact support for more information.', 'bot');
+      // Determine enrollment type:
+      // Type 1: Date only (virtualDates exists, 0-1 locations)
+      // Type 2: Date + Location (virtualDates exists, 2+ locations)
+      // Type 3: No enrollment form needed (no dates, just redirect)
+      
+      const requiresDate = virtualDates.length > 0;
+      const requiresLocation = locations.length > 1;
+      
+      // Type 3: No dates available - just redirect to enrollment link
+      if (!requiresDate) {
+        if (enrollLink) {
+          window.open(enrollLink, '_blank');
+          this.addMessage('✅ Opening enrollment page...', 'bot');
+        } else {
+          this.addMessage('Sorry, enrollment is not available at this time. Please contact support.', 'bot');
+        }
         return;
       }
       
@@ -3577,6 +3610,7 @@
       const messageDiv = document.createElement('div');
       messageDiv.className = 'tharwah-chat-message bot enrollment-form-message';
       messageDiv.dataset.productId = wpId;
+      messageDiv.dataset.enrollLink = enrollLink;
       
       messageDiv.innerHTML = `
         <div class="tharwah-chat-message-content" style="
@@ -3603,37 +3637,8 @@
           
           <!-- Form -->
           <form id="enrollmentFormData" style="padding: 16px;">
-            <!-- Training Type -->
-            <div style="margin-bottom: 12px;">
-              <label style="
-                display: block;
-                font-size: 12px;
-                font-weight: 500;
-                color: #374151;
-                margin-bottom: 4px;
-              ">Training Type</label>
-              <select 
-                id="training_type" 
-                name="training_type" 
-                required
-                style="
-                  width: 100%;
-                  padding: 8px 10px;
-                  border: 1px solid #d1d5db;
-                  border-radius: 6px;
-                  font-size: 13px;
-                  color: #374151;
-                  background: white;
-                  cursor: pointer;
-                "
-              >
-                <option value="">Select type...</option>
-                ${courseType === 'both' || courseType === 'virtual' ? '<option value="virtual">Virtual Training</option>' : ''}
-                ${courseType === 'both' || courseType === 'in-person' ? '<option value="in-person">In-Person Training</option>' : ''}
-              </select>
-            </div>
             
-            <!-- Date Selection -->
+            <!-- Date Selection (Always shown if dates available) -->
             <div style="margin-bottom: 12px;">
               <label style="
                 display: block;
@@ -3641,7 +3646,10 @@
                 font-weight: 500;
                 color: #374151;
                 margin-bottom: 4px;
-              ">Course Date</label>
+              ">
+                ${this.config.language === 'ar' ? 'تاريخ الدورة' : 'Course Date'}
+                <span style="color: #ef4444;">*</span>
+              </label>
               <select 
                 id="virtual_date" 
                 name="virtual_date" 
@@ -3657,23 +3665,59 @@
                   cursor: pointer;
                 "
               >
-                <option value="">Select date...</option>
+                <option value="">${this.config.language === 'ar' ? 'اختر التاريخ...' : 'Select date...'}</option>
                 ${virtualDates.map(date => {
                   const [year, month, day] = date.split('-');
                   const formattedDate = day + '-' + month + '-' + year;
-                  const displayDate = new Date(date).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  });
+                  const displayDate = new Date(date).toLocaleDateString(
+                    this.config.language === 'ar' ? 'ar-SA' : 'en-US',
+                    { year: 'numeric', month: 'short', day: 'numeric' }
+                  );
                   return '<option value="' + formattedDate + '">' + displayDate + '</option>';
                 }).join('')}
               </select>
             </div>
             
+            <!-- Location Selection (Only shown if multiple locations) -->
+            ${requiresLocation ? `
+            <div style="margin-bottom: 12px;">
+              <label style="
+                display: block;
+                font-size: 12px;
+                font-weight: 500;
+                color: #374151;
+                margin-bottom: 4px;
+              ">
+                ${this.config.language === 'ar' ? 'الموقع' : 'Location'}
+                <span style="color: #ef4444;">*</span>
+              </label>
+              <select 
+                id="location" 
+                name="location" 
+                required
+                style="
+                  width: 100%;
+                  padding: 8px 10px;
+                  border: 1px solid #d1d5db;
+                  border-radius: 6px;
+                  font-size: 13px;
+                  color: #374151;
+                  background: white;
+                  cursor: pointer;
+                "
+              >
+                <option value="">${this.config.language === 'ar' ? 'اختر الموقع...' : 'Select location...'}</option>
+                ${locations.map(location => 
+                  '<option value="' + this.escapeHtml(location) + '">' + this.escapeHtml(location) + '</option>'
+                ).join('')}
+              </select>
+            </div>
+            ` : ''}
+            
             <input type="hidden" name="product_id" value="${wpId}">
             <input type="hidden" name="variation_id" value="5728">
             <input type="hidden" name="quantity" value="1">
+            ${!requiresLocation && locations.length > 0 ? '<input type="hidden" name="location" value="' + this.escapeHtml(locations[0]) + '">' : ''}
             
             <!-- Buttons -->
             <div style="
@@ -3697,23 +3741,26 @@
                   cursor: pointer;
                 "
               >
-                Cancel
+                ${this.config.language === 'ar' ? 'إلغاء' : 'Cancel'}
               </button>
               <button
                 type="submit"
                 id="tharwah-chat-enrollment-submit"
                 style="
                   padding: 10px;
-                  border: 1px solid #111827;
-                  background: #111827;
+                  border: 1px solid #2563eb;
+                  background: #2563eb;
                   color: white;
                   border-radius: 6px;
                   font-size: 13px;
-                  font-weight: 500;
+                  font-weight: 600;
                   cursor: pointer;
+                  transition: background 0.2s;
                 "
+                onmouseover="this.style.background='#1d4ed8'"
+                onmouseout="this.style.background='#2563eb'"
               >
-                Add to Cart
+                ${this.config.language === 'ar' ? '🎓 التسجيل الآن' : '🎓 Enroll Now'}
               </button>
             </div>
           </form>
@@ -3739,37 +3786,66 @@
 
     async submitEnrollment(form, messageDiv) {
       const formData = new FormData(form);
-      const trainingType = formData.get('training_type');
       const virtualDate = formData.get('virtual_date');
+      const location = formData.get('location');
       const productId = formData.get('product_id');
       const variationId = formData.get('variation_id');
       const quantity = formData.get('quantity');
       
-      // Validate
-      if (!trainingType || !virtualDate) {
-        this.addMessage('⚠️ Please select training type and date', 'bot');
+      // Validate required fields
+      if (!virtualDate) {
+        this.addMessage(
+          this.config.language === 'ar' ? '⚠️ يرجى اختيار التاريخ' : '⚠️ Please select a date',
+          'bot'
+        );
+        return;
+      }
+      
+      // Check if location is required (if location field exists and no value)
+      const locationField = form.querySelector('#location');
+      if (locationField && !location) {
+        this.addMessage(
+          this.config.language === 'ar' ? '⚠️ يرجى اختيار الموقع' : '⚠️ Please select a location',
+          'bot'
+        );
         return;
       }
       
       // Disable submit button
       const submitBtn = form.querySelector('button[type="submit"]');
+      const originalHTML = submitBtn.innerHTML;
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = 'Adding...';
+        submitBtn.innerHTML = this.config.language === 'ar' ? '⏳ جاري التسجيل...' : '⏳ Enrolling...';
       }
       
       try {
+        // Build enrollment URL with query parameters
+        const enrollUrl = new URL(form.closest('.enrollment-form-message').dataset.enrollLink || 'https://academy.tharwah.net/mystaging01/cart/');
+        
         // Create form data for WooCommerce
         const cartData = new FormData();
         cartData.append('add-to-cart', productId);
         cartData.append('variation_id', variationId);
-        cartData.append('attribute_type', trainingType);
         cartData.append('quantity', quantity);
-        cartData.append('training_type', trainingType);
         cartData.append('virtual_date', virtualDate);
         
+        if (location) {
+          cartData.append('location', location);
+          cartData.append('attribute_location', location);
+        }
+        
+        // Log enrollment data for debugging
+        this.log('Submitting enrollment:', {
+          productId,
+          virtualDate,
+          location: location || 'Not required',
+          variationId,
+          quantity
+        });
+        
         // Submit to cart
-        const response = await fetch('https://academy.tharwah.net/mystaging01/cart/', {
+        const response = await fetch(enrollUrl.toString(), {
           method: 'POST',
           body: cartData,
           redirect: 'follow'
@@ -3782,7 +3858,17 @@
           }
           
           // Show success message in chat
-          this.addMessage('✅ Product added to cart successfully! Redirecting to checkout...', 'bot');
+          const successMessage = this.config.language === 'ar' 
+            ? '✅ تم إضافة الدورة إلى السلة! جاري التحويل إلى صفحة الدفع...' 
+            : '✅ Course added to cart! Redirecting to checkout...';
+          this.addMessage(successMessage, 'bot');
+          
+          // Track enrollment event
+          this.trackEvent('course_enrollment_submitted', {
+            product_id: productId,
+            date: virtualDate,
+            location: location || 'N/A'
+          });
           
           // Redirect to checkout after a short delay
           setTimeout(() => {
@@ -3792,10 +3878,24 @@
           throw new Error('Failed to add to cart');
         }
       } catch (error) {
-        console.error('Enrollment error:', error);
-        // this.addMessage('❌ Failed to add product to cart. Please try again.', 'bot');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '🛒 Add to Cart';
+        this.log('Enrollment error:', error);
+        
+        const errorMessage = this.config.language === 'ar'
+          ? '❌ فشل التسجيل. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.'
+          : '❌ Enrollment failed. Please try again or contact support.';
+        this.addMessage(errorMessage, 'bot');
+        
+        // Re-enable button
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHTML;
+        }
+        
+        // Track error
+        this.trackEvent('course_enrollment_error', {
+          error: error.message,
+          product_id: productId
+        });
       }
     }
   }
