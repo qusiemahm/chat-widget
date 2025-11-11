@@ -3669,10 +3669,16 @@
                 ${virtualDates.map(date => {
                   const [year, month, day] = date.split('-');
                   const formattedDate = day + '-' + month + '-' + year;
-                  const displayDate = new Date(date).toLocaleDateString(
-                    this.config.language === 'ar' ? 'ar-SA' : 'en-US',
-                    { year: 'numeric', month: 'short', day: 'numeric' }
-                  );
+                  
+                  // For Arabic: keep original format, For English: format nicely
+                  const displayDate = this.config.language === 'ar' 
+                    ? date  // Keep original: 2025-11-30
+                    : new Date(date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      });  // Format: Nov 30, 2025
+                  
                   return '<option value="' + formattedDate + '">' + displayDate + '</option>';
                 }).join('')}
               </select>
@@ -3715,7 +3721,6 @@
             ` : ''}
             
             <input type="hidden" name="product_id" value="${wpId}">
-            <input type="hidden" name="variation_id" value="5728">
             <input type="hidden" name="quantity" value="1">
             ${!requiresLocation && locations.length > 0 ? '<input type="hidden" name="location" value="' + this.escapeHtml(locations[0]) + '">' : ''}
             
@@ -3789,7 +3794,6 @@
       const virtualDate = formData.get('virtual_date');
       const location = formData.get('location');
       const productId = formData.get('product_id');
-      const variationId = formData.get('variation_id');
       const quantity = formData.get('quantity');
       
       // Validate required fields
@@ -3816,67 +3820,73 @@
       const originalHTML = submitBtn.innerHTML;
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = this.config.language === 'ar' ? '⏳ جاري التسجيل...' : '⏳ Enrolling...';
+        submitBtn.innerHTML = this.config.language === 'ar' ? '⏳ جاري الإضافة...' : '⏳ Adding to cart...';
       }
       
       try {
-        // Build enrollment URL with query parameters
-        const enrollUrl = new URL(form.closest('.enrollment-form-message').dataset.enrollLink || 'https://academy.tharwah.net/mystaging01/cart/');
+        // Build cart URL
+        const cartUrl = 'https://academy.tharwah.net/cart/';
         
-        // Create form data for WooCommerce
-        const cartData = new FormData();
-        cartData.append('add-to-cart', productId);
-        cartData.append('variation_id', variationId);
-        cartData.append('quantity', quantity);
-        cartData.append('virtual_date', virtualDate);
+        // Create form element for submission
+        const hiddenForm = document.createElement('form');
+        hiddenForm.method = 'POST';
+        hiddenForm.action = cartUrl;
+        hiddenForm.target = '_blank';  // Open in new tab
+        hiddenForm.style.display = 'none';
         
+        // Add form fields
+        const fields = {
+          'add-to-cart': productId,
+          'quantity': quantity,
+          'training_type': 'virtual',  // Always virtual
+          'virtual_date': virtualDate
+        };
+        
+        // Add location if provided
         if (location) {
-          cartData.append('location', location);
-          cartData.append('attribute_location', location);
+          fields['location'] = location;
         }
+        
+        // Create hidden input fields
+        Object.keys(fields).forEach(key => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = fields[key];
+          hiddenForm.appendChild(input);
+        });
         
         // Log enrollment data for debugging
-        this.log('Submitting enrollment:', {
-          productId,
-          virtualDate,
-          location: location || 'Not required',
-          variationId,
-          quantity
-        });
+        this.log('Submitting enrollment:', fields);
         
-        // Submit to cart
-        const response = await fetch(enrollUrl.toString(), {
-          method: 'POST',
-          body: cartData,
-          redirect: 'follow'
-        });
+        // Append form to body and submit
+        document.body.appendChild(hiddenForm);
+        hiddenForm.submit();
         
-        if (response.ok) {
-          // Remove enrollment form from chat
-          if (messageDiv) {
-            messageDiv.remove();
-          }
-          
-          // Show success message in chat
-          const successMessage = this.config.language === 'ar' 
-            ? '✅ تم إضافة الدورة إلى السلة! جاري التحويل إلى صفحة الدفع...' 
-            : '✅ Course added to cart! Redirecting to checkout...';
-          this.addMessage(successMessage, 'bot');
-          
-          // Track enrollment event
-          this.trackEvent('course_enrollment_submitted', {
-            product_id: productId,
-            date: virtualDate,
-            location: location || 'N/A'
-          });
-          
-          // Redirect to checkout after a short delay
-          setTimeout(() => {
-            window.location.href = 'https://academy.tharwah.net/mystaging01/checkout/';
-          }, 1500);
-        } else {
-          throw new Error('Failed to add to cart');
+        // Remove form after submission
+        setTimeout(() => {
+          document.body.removeChild(hiddenForm);
+        }, 1000);
+        
+        // Remove enrollment form from chat
+        if (messageDiv) {
+          messageDiv.remove();
         }
+        
+        // Show success message in chat
+        const successMessage = this.config.language === 'ar' 
+          ? '✅ تم إضافة الدورة إلى السلة! يرجى إكمال عملية الدفع في النافذة الجديدة.' 
+          : '✅ Course added to cart! Please complete checkout in the new tab.';
+        this.addMessage(successMessage, 'bot');
+        
+        // Track enrollment event
+        this.trackEvent('course_enrollment_submitted', {
+          product_id: productId,
+          date: virtualDate,
+          location: location || 'N/A',
+          training_type: 'virtual'
+        });
+        
       } catch (error) {
         this.log('Enrollment error:', error);
         
