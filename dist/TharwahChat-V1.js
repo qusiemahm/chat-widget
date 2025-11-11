@@ -3824,8 +3824,11 @@
       }
       
       try {
-        // Build cart URL
-        const cartUrl = 'https://academy.tharwah.net/cart/';
+        // Build cart URL based on language
+        const isArabic = this.config.language === 'ar';
+        const cartUrl = isArabic 
+          ? 'https://academy.tharwah.net/ar/السلة/'
+          : 'https://academy.tharwah.net/cart/';
         
         // Create form element for submission
         const hiddenForm = document.createElement('form');
