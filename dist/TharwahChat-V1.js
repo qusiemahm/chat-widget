@@ -1999,7 +1999,7 @@
         }
 
         /* Menu Dropdown */
-        .tharwah-menu-dropdown {
+        .tharwah-chat-menu-dropdown {
           position: absolute;
           top: 50px;
           right: 16px;
@@ -2731,7 +2731,7 @@
           </div>
           
           <!-- Menu Dropdown -->
-          <div class="tharwah-menu-dropdown" id="tharwah-menu-dropdown" style="display: none;">
+          <div class="tharwah-chat-menu-dropdown" id="tharwah-chat-menu-dropdown" style="display: none;">
             <label class="tharwah-menu-item" for="tharwah-chat-sound-checkbox" id="tharwah-chat-sound-toggle">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -2778,7 +2778,7 @@
         window: document.getElementById('tharwah-chat-window'),
         close: document.getElementById('tharwah-chat-close'),
         menu: document.getElementById('tharwah-chat-menu'),
-        menuDropdown: document.getElementById('tharwah-menu-dropdown'),
+        menuDropdown: document.getElementById('tharwah-chat-menu-dropdown'),
         soundCheckbox: document.getElementById('tharwah-chat-sound-checkbox'),
         messages: document.getElementById('tharwah-chat-messages'),
         input: document.getElementById('tharwah-chat-input'),
