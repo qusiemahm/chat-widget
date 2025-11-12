@@ -1066,7 +1066,31 @@
     // AI-POWERED POPOVER SYSTEM
     // ============================================
 
+    isMobileDevice() {
+      // Check if device is mobile using multiple detection methods
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      
+      // Check user agent for mobile devices
+      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i;
+      const isMobileUserAgent = mobileRegex.test(userAgent.toLowerCase());
+      
+      // Check screen size (mobile devices typically < 768px width)
+      const isMobileScreen = window.innerWidth <= 768;
+      
+      // Check for touch capability (not definitive but helpful)
+      const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      
+      // Return true if any mobile indicator is detected
+      return isMobileUserAgent || (isMobileScreen && isTouchDevice);
+    }
+
     startPopoverSystem() {
+      // Don't start popover system on mobile devices
+      if (this.isMobileDevice()) {
+        this.log('📱 Popover system disabled on mobile devices');
+        return;
+      }
+      
       if (!this.config.popoverEnablePeriodicChecks) {
         this.log('⏸️ Periodic popover checks disabled. Only event-based checks will run.');
         return;
@@ -1160,6 +1184,12 @@
     }
 
     showPopover(popover, suggestion) {
+      // Don't show popover on mobile devices
+      if (this.isMobileDevice()) {
+        this.log('📱 Popover not shown - mobile device detected');
+        return;
+      }
+      
       // Don't show popover if chat is open
       if (this.isChatOpen()) {
         this.log('Popover not shown - chat is currently open');
