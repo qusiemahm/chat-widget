@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultra-Compact Mobile Popover Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .device-frame {
+      max-width: 375px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 40px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      min-height: 600px;
+      position: relative;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #111827;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .demo-content {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .demo-content h2 {
+      font-size: 16px;
+      margin: 0 0 8px 0;
+      color: #111827;
+    }
+
+    .demo-content p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    /* ULTRA-COMPACT POPOVER STYLES */
+    .tharwah-popover {
+      position: fixed;
+      bottom: 16px;
+      left: 12px;
+      right: 12px;
+      z-index: 999998;
+      opacity: 0;
+      transform: translateY(12px) scale(0.95);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .tharwah-popover-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .tharwah-popover-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tharwah-popover-close {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.04);
+      border: none;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #6b7280;
+      z-index: 10;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .tharwah-popover-close:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .tharwah-popover-close svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .tharwah-popover-horizontal {
+      padding: 10px 12px;
+      padding-right: 34px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tharwah-popover-icon-wrapper {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      color: #059669;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tharwah-popover-icon-wrapper svg {
+      width: 16px;
+      height: 16px;
+      stroke: #059669;
+    }
+
+    .tharwah-popover-text-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tharwah-popover-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 0 0 2px 0;
+      color: #111827;
+      line-height: 1.2;
+    }
+
+    .tharwah-popover-description {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.3;
+      color: #6b7280;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+
+    .tharwah-popover-cta {
+      width: 100%;
+      padding: 6px 12px;
+      background: #059669;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tharwah-popover-cta:hover {
+      background: #047857;
+      transform: translateY(-1px);
+    }
+
+    .tharwah-popover-cta:active {
+      transform: translateY(0);
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 1000000;
+    }
+
+    .controls button {
+      background: white;
+      color: #111827;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin: 0 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .size-comparison {
+      margin-top: 20px;
+      padding: 16px;
+      background: #eff6ff;
+      border-radius: 12px;
+      border-left: 4px solid #2563eb;
+    }
+
+    .size-comparison h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #1e40af;
+    }
+
+    .size-comparison ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 12px;
+      color: #374151;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="device-frame">
+    <div class="header">
+      <h1>🎯 Ultra-Compact Popover</h1>
+      <p class="subtitle">Mobile-Optimized Design</p>
+    </div>
+
+    <div class="demo-content">
+      <h2>Sample Content</h2>
+      <p>This is a demo page showing how the ultra-compact popover looks on mobile devices. The popover is now 25% smaller than before!</p>
+    </div>
+
+    <div class="demo-content">
+      <h2>Key Features</h2>
+      <p>Minimal spacing, smaller text, compact buttons, and reduced shadows create a cleaner, less intrusive experience.</p>
+    </div>
+
+    <div class="size-comparison">
+      <h3>📏 Size Reductions</h3>
+      <ul>
+        <li>Icon: 40px → 32px (-20%)</li>
+        <li>Text: 13px → 11px (-15%)</li>
+        <li>Button: 38px → 32px (-16%)</li>
+        <li>Padding: 14px → 10px (-29%)</li>
+        <li>Total height: ~120px → ~90px (-25%)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- POPOVER -->
+  <div class="tharwah-popover tharwah-popover-visible" id="popover">
+    <div class="tharwah-popover-card">
+      <button class="tharwah-popover-close" onclick="hidePopover()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+      
+      <div class="tharwah-popover-horizontal">
+        <div class="tharwah-popover-icon-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+        </div>
+        
+        <div class="tharwah-popover-text-content">
+          <div class="tharwah-popover-title">Need help choosing a course?</div>
+          <div class="tharwah-popover-description">Our advisors are ready to help you find the perfect program</div>
+          <button class="tharwah-popover-cta" onclick="alert('CTA clicked!')">
+            Chat with Us
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button onclick="showPopover()">Show</button>
+    <button onclick="hidePopover()">Hide</button>
+    <button onclick="togglePopover()">Toggle</button>
+  </div>
+
+  <script>
+    function showPopover() {
+      document.getElementById('popover').classList.add('tharwah-popover-visible');
+    }
+
+    function hidePopover() {
+      document.getElementById('popover').classList.remove('tharwah-popover-visible');
+    }
+
+    function togglePopover() {
+      document.getElementById('popover').classList.toggle('tharwah-popover-visible');
+    }
+
+    // Auto-show after 1 second
+    setTimeout(showPopover, 1000);
+  </script>
+
+</body>
+</html>

@@ -11,7 +11,7 @@
  * Replace the content of TharwahChat-V1.js with this code
  */
 
-(function(window, document) {
+(function (window, document) {
   'use strict';
 
   class TharwahChat {
@@ -49,10 +49,11 @@
       this.feedbackShown = false; // Track if feedback has been shown
       this.feedbackSubmitted = false; // Track if feedback has been submitted
       this.isWaitingForResponse = false; // Track if waiting for bot response
+      this.abortController = null; // Controller for aborting fetch requests
 
       this.log('TharwahChat initialized', this.config);
       this.log('Streaming enabled:', this.config.enableStreaming);
-      
+
       if (!this.config.apiKey) {
         console.error('[TharwahChat] ERROR: apiKey is required in config!');
       }
@@ -72,17 +73,17 @@
       // 1. HTML lang attribute
       // 2. Browser language
       // 3. Default to 'en'
-      
+
       const htmlLang = document.documentElement.lang;
       if (htmlLang && htmlLang.toLowerCase().startsWith('ar')) {
         return 'ar';
       }
-      
+
       const browserLang = navigator.language || navigator.userLanguage;
       if (browserLang && browserLang.toLowerCase().startsWith('ar')) {
         return 'ar';
       }
-      
+
       return 'en';
     }
 
@@ -94,42 +95,42 @@
           welcomeSubtitle: "Let's find what you're looking for",
           startConversation: 'Start a conversation',
           startConversationDesc: 'Ask us anything about our programs',
-          
+
           // Email capture screen
           emailScreenTitle: 'Chat with Tharwah Academy',
           emailScreenSubtitle: 'To get started, please share your email address:',
           emailPlaceholder: 'your@email.com',
           termsText: "I agree to Tharwah Academy's Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.",
           submitButton: 'Submit',
-          
+
           // Alert messages
           alertEnterEmail: 'Please enter your email address',
           alertAcceptTerms: 'Please accept the Terms & Conditions',
           alertValidEmail: 'Please enter a valid email address',
           alertConversationFailed: 'Failed to start conversation. Please try again.',
           alertSaveFailed: 'Failed to save your information. Please try again.',
-          
+
           // Chat input
           inputPlaceholder: 'Type your message...',
           waitingPlaceholder: 'Waiting for response...',
-          
+
           // Quick replies
           quickSuggestionsHeader: 'Quick suggestions',
           quickSuggestionsFooter: 'Based on your conversation',
-          
+
           // Product cards
           enrollNow: 'Enroll Now',
           downloadBrochure: 'Download Brochure',
           audioFeature: 'Audio description feature coming soon!',
-          
+
           // Error messages
           errorGeneric: 'Sorry, I encountered an error. Please try again.',
           errorConfig: 'Configuration error. Please contact support.',
-          
+
           // Tool indicator
           toolUsing: 'Using',
           toolExecuting: 'Executing',
-          
+
           // Feedback
           feedbackTitle: 'Rate your experience',
           feedbackSubtitle: 'How was your conversation?',
@@ -157,42 +158,42 @@
           welcomeSubtitle: 'دعنا نجد ما تبحث عنه',
           startConversation: 'ابدأ محادثة',
           startConversationDesc: 'اسألنا أي شيء عن برامجنا',
-          
+
           // Email capture screen
           emailScreenTitle: 'الدردشة مع أكاديمية ثروة',
           emailScreenSubtitle: 'للبدء، يرجى مشاركة عنوان بريدك الإلكتروني:',
           emailPlaceholder: 'your@email.com',
           termsText: 'أوافق على شروط وأحكام أكاديمية ثروة وأقر بأنه ستتم معالجة معلوماتي الشخصية وفقاً للوائح حماية البيانات.',
           submitButton: 'إرسال',
-          
+
           // Alert messages
           alertEnterEmail: 'يرجى إدخال عنوان بريدك الإلكتروني',
           alertAcceptTerms: 'يرجى الموافقة على الشروط والأحكام',
           alertValidEmail: 'يرجى إدخال عنوان بريد إلكتروني صالح',
           alertConversationFailed: 'فشل بدء المحادثة. يرجى المحاولة مرة أخرى.',
           alertSaveFailed: 'فشل حفظ معلوماتك. يرجى المحاولة مرة أخرى.',
-          
+
           // Chat input
           inputPlaceholder: 'اكتب رسالتك...',
           waitingPlaceholder: 'في انتظار الرد...',
-          
+
           // Quick replies
           quickSuggestionsHeader: 'اقتراحات سريعة',
           quickSuggestionsFooter: 'بناءً على محادثتك',
-          
+
           // Product cards
           enrollNow: 'سجل الآن',
           downloadBrochure: 'تحميل الكتيب',
           audioFeature: 'ميزة الوصف الصوتي قريباً!',
-          
+
           // Error messages
           errorGeneric: 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.',
           errorConfig: 'خطأ في الإعدادات. يرجى الاتصال بالدعم.',
-          
+
           // Tool indicator
           toolUsing: 'استخدام',
           toolExecuting: 'تنفيذ',
-          
+
           // Feedback
           feedbackTitle: 'قيّم تجربتك',
           feedbackSubtitle: 'كيف كانت محادثتك؟',
@@ -285,7 +286,7 @@
 
         const data = await response.json();
         this.suggestions = data.suggestions || [];
-        
+
         this.log(`Loaded ${this.suggestions.length} suggestions for language: ${this.config.language}`);
       } catch (error) {
         this.log('Error loading suggestions:', error);
@@ -302,7 +303,7 @@
       // Hide the chat interface
       this.elements.messages.style.display = 'none';
       this.elements.inputContainer.style.display = 'none';
-      
+
       // Create welcome screen overlay
       const welcomeScreen = document.createElement('div');
       welcomeScreen.id = 'tharwah-welcome-screen';
@@ -320,6 +321,34 @@
 
       welcomeScreen.innerHTML = `
         <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 24px; overflow-y: auto;">
+          <button
+            style="
+              position: absolute;
+              top: 16px;
+              right: 16px;
+              background: rgba(255, 255, 255, 0.2);
+              border: none;
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              color: white;
+              transition: background 0.2s;
+              z-index: 20;
+            "
+            onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'"
+            onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'"
+            onclick="window.tharwahChatWidget.close()"
+            aria-label="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
           <div style="text-align: center; margin-bottom: 24px;">
             <h1 style="font-size: 28px; font-weight: 700; color: white; margin: 0 0 8px 0;">${this.t('welcomeTitle')}</h1>
             <p style="font-size: 16px; color: rgba(255, 255, 255, 0.9); margin: 0;">${this.t('welcomeSubtitle')}</p>
@@ -412,7 +441,7 @@
           actionText: actionText
         });
       }
-      
+
     }
 
     showEmailCaptureScreen(callbackData = {}) {
@@ -732,7 +761,7 @@
       }
     }
 
-    
+
     async proceedToNormalChat() {
       // Remove welcome screen
       const welcomeScreen = document.getElementById('tharwah-welcome-screen');
@@ -864,7 +893,7 @@
       // Fallback to localStorage - use SAME key as tracker!
       const trackerKey = '_ut_visitor';  // Same key as UniversalTracker
       let stored = null;
-      
+
       try {
         const item = localStorage.getItem(trackerKey);
         if (item) {
@@ -881,14 +910,14 @@
 
       // Generate new visitor ID with same format as tracker (vis_ prefix)
       const visitorId = 'vis_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      
+
       // Store in same format as tracker
       localStorage.setItem(trackerKey, JSON.stringify({
         id: visitorId,
         firstSeen: Date.now(),
         visits: 1
       }));
-      
+
       this.log('Generated new visitor ID:', visitorId);
       return visitorId;
     }
@@ -899,12 +928,19 @@
 
     disableInput() {
       this.isWaitingForResponse = true;
-      this.elements.input.disabled = true;
-      this.elements.send.disabled = true;
+      // Don't disable input, just change placeholder
       this.elements.input.placeholder = this.t('waitingPlaceholder') || 'Waiting for response...';
-      this.elements.send.style.opacity = '0.5';
-      this.elements.send.style.cursor = 'not-allowed';
-      this.log('Input disabled - waiting for response');
+
+      // Change send button to stop button
+      this.elements.send.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6" y="6" width="12" height="12"></rect>
+        </svg>
+      `;
+      this.elements.send.setAttribute('aria-label', 'Stop generation');
+      this.elements.send.classList.add('stop-generation');
+
+      this.log('Input state changed - waiting for response (stop button active)');
     }
 
     enableInput() {
@@ -912,31 +948,75 @@
       this.elements.input.disabled = false;
       this.elements.send.disabled = false;
       this.elements.input.placeholder = this.t('inputPlaceholder');
+
+      // Revert send button
+      this.elements.send.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path>
+          <path d="m21.854 2.147-10.94 10.939"></path>
+        </svg>
+      `;
+      this.elements.send.setAttribute('aria-label', 'Send message');
+      this.elements.send.classList.remove('stop-generation');
+
       this.elements.send.style.opacity = '1';
       this.elements.send.style.cursor = 'pointer';
       this.elements.input.focus();
       this.log('Input enabled - ready for new message');
     }
 
-    async sendMessage() {
-      const message = this.elements.input.value.trim();
-      if (!message) return;
+    stopGeneration() {
+      if (this.abortController) {
+        this.abortController.abort();
+        this.abortController = null;
+        this.log('Generation stopped by user');
 
-      // Prevent sending if already waiting for a response
+        // Add a system message or visual indicator that generation was stopped
+        if (this.currentStreamingMessage) {
+          const contentDiv = this.currentStreamingMessage.querySelector('.tharwah-chat-message-content');
+          if (contentDiv) {
+            // Remove cursor
+            const cursor = contentDiv.querySelector('.streaming-cursor');
+            if (cursor) cursor.remove();
+
+            // Add "Stopped" indicator
+            const stoppedSpan = document.createElement('span');
+            stoppedSpan.style.fontSize = '11px';
+            stoppedSpan.style.color = '#6b7280';
+            stoppedSpan.style.marginLeft = '8px';
+            stoppedSpan.style.fontStyle = 'italic';
+            stoppedSpan.textContent = '(Stopped)';
+            contentDiv.appendChild(stoppedSpan);
+          }
+          this.currentStreamingMessage = null;
+        }
+
+        this.enableInput();
+      }
+    }
+
+    async sendMessage() {
+      // Check if we are waiting for response - if so, this is a stop action
       if (this.isWaitingForResponse) {
-        this.log('Already waiting for response, ignoring send');
+        this.stopGeneration();
         return;
       }
+
+      const message = this.elements.input.value.trim();
+      if (!message) return;
 
       this.elements.input.value = '';
       this.addMessage(message, 'user');
 
-      // Disable input while waiting for response
+      // Disable input (switch to stop button) while waiting for response
       this.disableInput();
 
       this.trackEvent('chat_message_sent', {
         message_length: message.length
       });
+
+      // Initialize AbortController
+      this.abortController = new AbortController();
 
       // Use streaming or non-streaming based on config
       if (this.config.enableStreaming) {
@@ -946,8 +1026,10 @@
         await this.getResponse(message);
       }
 
-      // Re-enable input after response
-      this.enableInput();
+      // Re-enable input after response (if not already enabled by stop)
+      if (this.isWaitingForResponse) {
+        this.enableInput();
+      }
     }
 
     async getResponse(userMessage) {
@@ -963,7 +1045,7 @@
         }
 
         this.log('Sending message to backend:', userMessage);
-        
+
         const response = await fetch(
           `${this.config.apiEndpoint}/widget/conversations/${this.conversationId}/send-agent/`,
           {
@@ -992,7 +1074,7 @@
         const botMessage = data.assistant_message.content;
         const messageId = data.assistant_message.id;
         this.addMessage(botMessage, 'bot', messageId);
-        
+
         // Update last-message class for non-streaming messages
         const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
         allBotMessages.forEach(msg => msg.classList.remove('last-message'));
@@ -1000,10 +1082,10 @@
         if (currentMessage) {
           currentMessage.classList.add('last-message');
         }
-        
+
         // Show feedback button after first bot response
         this.showFeedbackButton();
-        
+
         // Play notification sound when response is complete
         this.playNotificationSound();
 
@@ -1030,16 +1112,16 @@
 
       } catch (error) {
         this.hideTyping();
-        
+
         let errorMessage = this.t('errorGeneric');
-        
+
         if (error.message.includes('API key')) {
           errorMessage = this.t('errorConfig');
         }
-        
+
         this.addMessage(errorMessage, 'bot');
         this.log('Error getting response:', error);
-        
+
         this.trackEvent('chat_error', {
           error: error.message
         });
@@ -1048,7 +1130,6 @@
 
     async getResponseStreaming(userMessage) {
       try {
-        // Ensure we have a conversation
         if (!this.conversationId) {
           this.log('No conversation ID, creating new conversation...');
           await this.createConversation();
@@ -1059,11 +1140,11 @@
         }
 
         this.log('Sending streaming message to backend:', userMessage);
-        
+
         // Create empty bot message for streaming
         const messageId = 'stream-msg-' + Date.now();
         this.currentStreamingMessage = this.createEmptyBotMessage(messageId);
-        
+
         const response = await fetch(
           `${this.config.apiEndpoint}/widget/conversations/${this.conversationId}/send-agent-stream/`,
           {
@@ -1074,7 +1155,8 @@
             },
             body: JSON.stringify({
               content: userMessage
-            })
+            }),
+            signal: this.abortController.signal
           }
         );
 
@@ -1098,15 +1180,15 @@
         const displayTextGradually = async () => {
           if (isDisplaying) return;
           isDisplaying = true;
-          
+
           while (textQueue.length > 0) {
             const chunk = textQueue.shift();
-            
+
             // Display character by character for smooth effect
             for (let i = 0; i < chunk.length; i++) {
               fullText += chunk[i];
               this.updateStreamingMessage(messageId, fullText, false);
-              
+
               // Small delay between characters (15ms = smooth like ChatGPT)
               // Skip delay for spaces to make words appear faster
               if (chunk[i] !== ' ') {
@@ -1114,28 +1196,28 @@
               }
             }
           }
-          
+
           isDisplaying = false;
         };
 
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) break;
-          
+
           buffer += decoder.decode(value, { stream: true });
-          
+
           // Process complete lines
           const lines = buffer.split('\n\n');
           buffer = lines.pop(); // Keep incomplete line in buffer
-          
+
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = JSON.parse(line.slice(6));
               const eventType = data.type;
-              
+
               this.log('Stream event:', eventType, data);
-              
+
               if (eventType === 'routing') {
                 routingInfo = data.routing_info;
                 this.log('Routing to agent:', routingInfo.selected_agent.name);
@@ -1167,34 +1249,34 @@
               }
               else if (eventType === 'done') {
                 this.log('Streaming complete. Message ID:', data.message_id);
-                
+
                 // Wait for text display to complete
                 while (textQueue.length > 0 || isDisplaying) {
                   await new Promise(resolve => setTimeout(resolve, 50));
                 }
-                
+
                 // Remove cursor from final message
                 this.updateStreamingMessage(messageId, fullText, true);
-                
+
                 // Update the message with the real backend message ID
                 const messageDiv = document.getElementById(messageId);
                 if (messageDiv && data.message_id) {
                   // Update the message div ID to the real message ID
                   messageDiv.id = 'msg-' + data.message_id;
                   messageDiv.setAttribute('data-message-id', data.message_id);
-                  
+
                   // Update feedback buttons data-message-id attribute
                   const feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
                   if (feedbackDiv) {
                     feedbackDiv.setAttribute('data-message-id', data.message_id);
                   }
-                  
+
                   this.log('Updated streaming message ID from', messageId, 'to', data.message_id);
                 }
-                
+
                 // Make sure tool indicator is hidden
                 this.hideToolIndicator();
-                
+
                 // Update last-message class for streaming messages
                 const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
                 allBotMessages.forEach(msg => msg.classList.remove('last-message'));
@@ -1202,23 +1284,23 @@
                 if (currentMessage) {
                   currentMessage.classList.add('last-message');
                 }
-                
+
                 // Show feedback button after streaming response completes
                 this.showFeedbackButton();
-                
+
                 // Play notification sound when streaming response is complete
                 this.playNotificationSound();
-                
+
                 // Show products if any
                 if (products.length > 0) {
                   this.showProducts(products);
                 }
-                
+
                 // Show quick replies if any
                 if (quickReplies.length > 0) {
                   this.showQuickReplies(quickReplies);
                 }
-                
+
                 this.trackEvent('chat_response_received_streaming', {
                   agent: routingInfo?.selected_agent?.name,
                   agent_type: routingInfo?.selected_agent?.type,
@@ -1233,28 +1315,33 @@
             }
           }
         }
-        
+
         this.currentStreamingMessage = null;
         this.hideToolIndicator();
 
       } catch (error) {
         this.hideToolIndicator();
-        
+
+        if (error.name === 'AbortError') {
+          this.log('Streaming request aborted');
+          return;
+        }
+
         if (this.currentStreamingMessage) {
           // Remove the empty streaming message
           this.currentStreamingMessage.remove();
           this.currentStreamingMessage = null;
         }
-        
+
         let errorMessage = this.t('errorGeneric');
-        
+
         if (error.message.includes('API key')) {
           errorMessage = this.t('errorConfig');
         }
-        
+
         this.addMessage(errorMessage, 'bot');
         this.log('Error getting streaming response:', error);
-        
+
         this.trackEvent('chat_error_streaming', {
           error: error.message
         });
@@ -1286,12 +1373,12 @@
             contentDiv.style.direction = 'rtl';
             contentDiv.style.textAlign = 'right';
           }
-          
+
           // Add text with or without cursor
           if (isComplete) {
             // Remove cursor when complete and apply full formatting
             contentDiv.innerHTML = this.formatMessage(text);
-            
+
             // Add feedback buttons when streaming is complete
             let feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
             if (!feedbackDiv) {
@@ -1312,13 +1399,13 @@
                   </svg>
                 </button>
               `;
-              
+
               messageDiv.appendChild(feedbackDiv);
-              
+
               // Add click handlers
               const thumbsUpBtn = feedbackDiv.querySelector('.thumbs-up');
               const thumbsDownBtn = feedbackDiv.querySelector('.thumbs-down');
-              
+
               // Get message ID from data attribute when clicked (not from closure)
               thumbsUpBtn?.addEventListener('click', () => {
                 const msgId = feedbackDiv.getAttribute('data-message-id');
@@ -1342,7 +1429,7 @@
     showToolIndicator(toolName) {
       // Remove existing indicator if any
       this.hideToolIndicator();
-      
+
       const indicator = document.createElement('div');
       indicator.className = 'tharwah-chat-message bot tool-indicator';
       indicator.id = 'tool-indicator';
@@ -1385,7 +1472,7 @@
     showProducts(products) {
       // Get base URL for images (remove /api/ from apiEndpoint)
       const baseUrl = this.config.apiEndpoint.replace(/\/api\/?$/, '');
-      
+
       // Create horizontal scrollable container for products
       const productsHtml = products.map(product => {
         // Extract values from API response structure
@@ -1407,7 +1494,7 @@
         const brochureUrl = product.metadata?.brochure_url || null;
         const audioUrl = product.metadata?.audio_url || product.metadata?.audio_url_en || product.metadata?.audio_url_ar || null;
         const fullAudioUrl = audioUrl ? `${baseUrl}${audioUrl}` : null;
-        
+
         // Format price (show sale price if discount active)
         const displayPrice = hasDiscount && salePrice ? salePrice : price;
         const priceFormatted = displayPrice ? `${currency} ${displayPrice.toLocaleString()}` : '';
@@ -1418,7 +1505,7 @@
         } else {
           monthlyPrice = Math.round((price / 12) * 100) / 100;
         }
-        
+
         return `
           <div style="
             background: white;
@@ -1432,10 +1519,10 @@
           " onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
             <!-- Image -->
             <div style="position: relative;">
-              ${fullImageUrl ? 
-                `<img src="${fullImageUrl}" alt="${this.escapeHtml(imageAlt)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);\\' />';" />` :
-                `<div style="width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);"></div>`
-              }
+              ${fullImageUrl ?
+            `<img src="${fullImageUrl}" alt="${this.escapeHtml(imageAlt)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);\\' />';" />` :
+            `<div style="width: 100%; height: 96px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);"></div>`
+          }
               ${hasDiscount && discountPercentage ? `
                 <div style="
                   position: absolute;
@@ -1527,7 +1614,7 @@
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                   </svg>
                   <span style="font-size: 10px; font-weight: 500; color: #111827;">${rating}</span>
-                  ${reviewCount ? `<span style="font-size: 10px; color: #6b7280;">(${reviewCount > 1000 ? Math.floor(reviewCount/1000) + 'k+' : reviewCount})</span>` : ''}
+                  ${reviewCount ? `<span style="font-size: 10px; color: #6b7280;">(${reviewCount > 1000 ? Math.floor(reviewCount / 1000) + 'k+' : reviewCount})</span>` : ''}
                 </div>
               ` : ''}
               
@@ -1605,7 +1692,7 @@
           </div>
         `;
       }).join('');
-      
+
       // Create message with horizontal scroll
       const messageDiv = document.createElement('div');
       messageDiv.className = 'tharwah-chat-message bot';
@@ -1623,7 +1710,7 @@
           </div>
         </div>
       `;
-      
+
       this.elements.messages.appendChild(messageDiv);
       // Don't auto-scroll for products - let user scroll to see them
     }
@@ -1639,7 +1726,7 @@
       if (this.currentAudioButton === buttonElement && this.currentAudio && !this.currentAudio.paused) {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
-        
+
         // Reset button icon to speaker
         buttonElement.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1648,7 +1735,7 @@
             <path d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
           </svg>
         `;
-        
+
         this.currentAudio = null;
         this.currentAudioButton = null;
         return;
@@ -1658,7 +1745,7 @@
       if (this.currentAudio) {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
-        
+
         // Reset previous button icon
         if (this.currentAudioButton) {
           this.currentAudioButton.innerHTML = `
@@ -1687,7 +1774,7 @@
       this.currentAudio.play().catch(error => {
         console.error('Audio playback error:', error);
         alert('Failed to play audio. Please try again.');
-        
+
         // Reset button
         buttonElement.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1722,19 +1809,19 @@
         { bg: '#f3e8ff', hover: '#e9d5ff', text: '#7e22ce', border: '#d8b4fe' }, // Purple
         { bg: '#fef3c7', hover: '#fde68a', text: '#a16207', border: '#fcd34d' }, // Yellow
       ];
-      
+
       const repliesHtml = quickReplies.map((reply, index) => {
         const title = reply.title || reply.text || '';
         const replyText = reply.reply_text || reply.text || title;
         const icon = reply.icon || '';
         const replyId = reply.id || '';
         const colorScheme = colorSchemes[index % colorSchemes.length];
-        
+
         // Default sparkles icon if no icon provided
         const iconSvg = icon || `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
         </svg>`;
-        
+
         return `<button
           id="tharwah-chat-quick-reply-${replyId || index}"
           onclick="window.tharwahChatWidget.handleQuickReply('${this.escapeHtml(replyText).replace(/'/g, "\\'")}', '${replyId}')"
@@ -1764,7 +1851,7 @@
           <span>${this.escapeHtml(title)}</span>
         </button>`;
       }).join('');
-      
+
       const messageDiv = document.createElement('div');
       messageDiv.className = 'tharwah-chat-message bot';
       messageDiv.innerHTML = `
@@ -1794,19 +1881,19 @@
           </div>
         </div>
       `;
-      
+
       this.elements.messages.appendChild(messageDiv);
       // Don't auto-scroll for quick replies - let user scroll to see them
     }
 
     handleQuickReply(replyText, replyId) {
       this.log('Quick reply clicked:', replyText, replyId);
-      
+
       this.trackEvent('chat_quick_reply_clicked', {
         reply_id: replyId,
         reply_text: replyText
       });
-      
+
       this.elements.input.value = replyText;
       this.sendMessage();
     }
@@ -2541,8 +2628,23 @@
         /* Mobile */
         @media (max-width: 768px) {
           .tharwah-chat-window {
-            width: calc(100vw - 40px);
-            height: calc(100vh - 140px);
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            border-radius: 0 !important;
+            max-height: 100vh !important;
+            margin: 0 !important;
+          }
+          
+          .tharwah-chat-window.active {
+            display: flex !important;
+          }
+
+          .tharwah-chat-button.open {
+            display: none !important;
           }
         }
 
@@ -2787,7 +2889,7 @@
         feedbackSection: document.getElementById('tharwah-chat-feedback-section'),
         feedbackTrigger: document.getElementById('tharwah-chat-feedback-trigger')
       };
-      
+
       // Initialize sound notification state from localStorage
       const soundEnabled = localStorage.getItem('tharwah-sound-enabled');
       if (soundEnabled === 'false') {
@@ -2802,29 +2904,29 @@
       this.elements.menu.addEventListener('click', () => this.toggleMenu());
       this.elements.send.addEventListener('click', () => this.sendMessage());
       this.elements.feedbackTrigger.addEventListener('click', () => this.showFeedbackDialog());
-      
+
       // Sound toggle event listener
       this.elements.soundCheckbox.addEventListener('change', (e) => {
         this.isSoundEnabled = e.target.checked;
         localStorage.setItem('tharwah-sound-enabled', this.isSoundEnabled);
         this.log('Sound notifications:', this.isSoundEnabled ? 'enabled' : 'disabled');
-        
+
         // Keep menu open after toggling
         e.stopPropagation();
       });
-      
+
       // Prevent menu from closing when clicking inside it
       this.elements.menuDropdown.addEventListener('click', (e) => {
         e.stopPropagation();
       });
-      
+
       // Close menu when clicking outside
       document.addEventListener('click', (e) => {
         if (!this.elements.menu.contains(e.target) && !this.elements.menuDropdown.contains(e.target)) {
           this.closeMenu();
         }
       });
-      
+
       this.elements.input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           this.sendMessage();
@@ -2912,7 +3014,7 @@
 
     hidePopover() {
       // Hide any visible popover when chat opens
-      const popover = document.getElementById('tharwah-popover');
+      const popover = document.getElementById('tharwah-chat-popover');
       if (popover) {
         popover.style.display = 'none';
         this.log('Popover hidden because chat is open');
@@ -2932,15 +3034,15 @@
       const messageDiv = document.createElement('div');
       messageDiv.className = `tharwah-chat-message ${sender}`;
       messageDiv.setAttribute('data-message-id', message.id);
-      
+
       // Use formatMessage for bot messages to support markdown and line breaks
       // Keep escapeHtml for user messages for safety
       const formattedContent = sender === 'bot' ? this.formatMessage(content) : this.escapeHtml(content);
-      
+
       // Detect if content is Arabic to apply RTL styling
       const isArabic = this.isArabicText(content);
       const rtlStyle = isArabic ? ' style="direction: rtl; text-align: right;"' : '';
-      
+
       // Add feedback buttons for bot messages (except welcome message)
       const feedbackButtons = sender === 'bot' && !isWelcomeMessage ? `
         <div class="tharwah-feedback-buttons" data-message-id="${message.id}" id="tharwah-chat-feedback-buttons-${message.id}">
@@ -2958,7 +3060,7 @@
           </button>
         </div>
       ` : '';
-      
+
       messageDiv.innerHTML = `
         <div class="tharwah-chat-message-content"${rtlStyle}>${formattedContent}</div>
         ${feedbackButtons}
@@ -2969,7 +3071,7 @@
         const thumbsUpBtn = messageDiv.querySelector('.thumbs-up');
         const thumbsDownBtn = messageDiv.querySelector('.thumbs-down');
         const feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
-        
+
         // Get message ID from data attribute when clicked (not from closure)
         // This ensures we use the updated ID after streaming completes
         thumbsUpBtn?.addEventListener('click', () => {
@@ -2983,17 +3085,17 @@
       }
 
       this.elements.messages.appendChild(messageDiv);
-      
+
       // Update last-message class for bot messages
       if (sender === 'bot') {
         // Remove last-message class from all bot messages
         const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
         allBotMessages.forEach(msg => msg.classList.remove('last-message'));
-        
+
         // Add last-message class to this new bot message
         messageDiv.classList.add('last-message');
       }
-      
+
       // Smart scrolling: User messages scroll to bottom, bot messages scroll to show the start
       if (sender === 'user') {
         this.scrollToBottom();
@@ -3039,11 +3141,11 @@
       // Scroll to show the user's input and the beginning of the bot's response
       // This allows users to manually scroll for long responses
       const container = this.elements.messages;
-      
+
       // Find the previous user message (the one right before this bot message)
       const allMessages = container.querySelectorAll('.tharwah-chat-message');
       const botMessageIndex = Array.from(allMessages).indexOf(messageDiv);
-      
+
       // Look for the user message right before this bot message
       let targetMessage = messageDiv; // Default to bot message
       for (let i = botMessageIndex - 1; i >= 0; i--) {
@@ -3052,11 +3154,11 @@
           break;
         }
       }
-      
+
       // Scroll to show the user's message (or bot message if no user message found)
       // This ensures the context (user's question) is always visible
       const targetTop = targetMessage.offsetTop;
-      
+
       // Scroll with some padding from the top (40px for better visibility)
       container.scrollTop = Math.max(0, targetTop - 40);
     }
@@ -3091,7 +3193,7 @@
       const feedbackDialog = document.createElement('div');
       feedbackDialog.id = 'tharwah-feedback-dialog';
       feedbackDialog.className = 'tharwah-feedback-overlay';
-      
+
       const categories = [
         { value: '', label: this.t('feedbackCategoryPlaceholder') },
         { value: 'helpful', label: this.t('categoryHelpful') },
@@ -3159,7 +3261,7 @@
       let selectedRating = 0;
       const stars = feedbackDialog.querySelectorAll('.tharwah-star');
       const submitBtn = feedbackDialog.querySelector('#tharwah-chat-feedback-submit');
-      
+
       const updateStars = (rating) => {
         stars.forEach((star, index) => {
           const svg = star.querySelector('svg');
@@ -3178,7 +3280,7 @@
           const rating = parseInt(e.currentTarget.dataset.rating);
           updateStars(rating);
         });
-        
+
         star.addEventListener('click', (e) => {
           selectedRating = parseInt(e.currentTarget.dataset.rating);
           updateStars(selectedRating);
@@ -3201,12 +3303,12 @@
       submitBtn.addEventListener('click', async () => {
         const category = feedbackDialog.querySelector('#tharwah-chat-feedback-category').value;
         const text = feedbackDialog.querySelector('#tharwah-chat-feedback-text').value.trim();
-        
+
         submitBtn.disabled = true;
         submitBtn.textContent = this.config.language === 'ar' ? 'جاري الإرسال...' : 'Submitting...';
-        
+
         const success = await this.submitFeedback(selectedRating, category, text);
-        
+
         if (success) {
           // Show success message
           feedbackDialog.querySelector('.tharwah-feedback-dialog-content').innerHTML = `
@@ -3218,7 +3320,7 @@
               <h3 style="color: #10b981; margin-bottom: 8px;">${this.t('feedbackSuccess')}</h3>
             </div>
           `;
-          
+
           setTimeout(() => {
             document.body.removeChild(feedbackDialog);
           }, 2000);
@@ -3329,11 +3431,11 @@
     async submitMessageFeedback(messageId, feedbackType, thumbsUpBtn, thumbsDownBtn) {
       try {
         this.log(`Submitting ${feedbackType} feedback for message ${messageId}`);
-        
+
         // Disable both buttons while submitting
         thumbsUpBtn.disabled = true;
         thumbsDownBtn.disabled = true;
-        
+
         // Extract numeric message ID (in case it's a string like 'msg-123' or 'stream-msg-123')
         let numericMessageId = messageId;
         if (typeof messageId === 'string') {
@@ -3345,9 +3447,9 @@
             numericMessageId = parseInt(messageId, 10);
           }
         }
-        
+
         this.log(`Numeric message ID: ${numericMessageId}`);
-        
+
         const response = await fetch(
           `${this.config.apiEndpoint}/widget/conversations/message-feedback/`,
           {
@@ -3372,13 +3474,13 @@
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          
+
           // Handle duplicate feedback
           if (response.status === 400 && errorData.error) {
             this.log('Feedback already submitted for this message');
             return;
           }
-          
+
           throw new Error(`Failed to submit feedback: ${response.status}`);
         }
 
@@ -3402,11 +3504,11 @@
 
       } catch (error) {
         this.log('Error submitting message feedback:', error);
-        
+
         // Re-enable buttons on error
         thumbsUpBtn.disabled = false;
         thumbsDownBtn.disabled = false;
-        
+
         this.trackEvent('message_feedback_error', {
           error: error.message
         });
@@ -3423,22 +3525,22 @@
       // Extract tables with placeholder
       const tables = [];
       const tableRegex = /<table[\s\S]*?<\/table>/g;
-      
+
       // Replace tables with placeholders
       let processed = text.replace(tableRegex, (match) => {
         const placeholder = `___TABLE_${tables.length}___`;
         tables.push(match);
         return placeholder;
       });
-      
+
       // Escape the rest of the content
       processed = this.escapeHtml(processed);
-      
+
       // Restore tables
       tables.forEach((table, index) => {
         processed = processed.replace(`___TABLE_${index}___`, table);
       });
-      
+
       return processed;
     }
 
@@ -3453,34 +3555,34 @@
       // Convert markdown tables FIRST (before any escaping)
       // We need raw text with \n for table detection
       let formatted = this.convertMarkdownTables(text);
-      
+
       // Now escape HTML to prevent XSS (but preserve our table HTML)
       formatted = this.escapeHtmlExceptTables(formatted);
-      
+
       // Convert **bold** to <strong> (more robust - handles any content including special chars)
       formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      
+
       // Convert line breaks to <br> tags
       formatted = formatted.replace(/\n/g, '<br>');
-      
+
       // Add line break after colons when followed by content (like "could you tell me a bit more:")
       // But not for time formats like "12:30" or URLs like "http://"
       formatted = formatted.replace(/([a-zA-Z\?])\s*:\s*(?=<br>|$)/g, '$1:<br><br>');
-      
+
       // Convert numbered lists (1. Item) to proper format
       // Each number on its own line with the content on the next line
       formatted = formatted.replace(/^(\d+)\.\s+\*\*(.+?)\*\*/gm, '<br><strong>$1. $2</strong><br>');
       formatted = formatted.replace(/^(\d+)\.\s+/gm, '<br><strong>$1.</strong> ');
-      
+
       // Convert bullet points (- Item) to proper format with indentation
       formatted = formatted.replace(/^-\s+/gm, '<br>&nbsp;&nbsp;&nbsp;• ');
-      
+
       // Clean up multiple consecutive <br> tags (max 2)
       formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
-      
+
       // Remove leading <br> if present
       formatted = formatted.replace(/^<br>/, '');
-      
+
       return formatted;
     }
 
@@ -3489,43 +3591,43 @@
       // | Header 1 | Header 2 | Header 3 |
       // |----------|----------|----------|
       // | Cell 1   | Cell 2   | Cell 3   |
-      
+
       // Updated regex to handle full table rows with multiple cells
       // The separator line has multiple cells like |-------|-------|-------|
       const tableRegex = /^\s*\|(.+)\|\s*\n\s*\|(?:[\s\-:]+\|)+\s*\n((?:\s*\|.+\|\s*\n?)+)/gm;
-      
+
       return text.replace(tableRegex, (match, headerRow, bodyRows) => {
-        console.log('[TharwahChat] Found markdown table!', {headerRow, bodyRows});
-        
+        console.log('[TharwahChat] Found markdown table!', { headerRow, bodyRows });
+
         // Parse header
         const headers = headerRow.split('|')
           .map(h => h.trim())
           .filter(h => h.length > 0);
-        
+
         // Parse body rows
         const rows = bodyRows.trim().split('\n')
           .map(row => row.split('|')
             .map(cell => cell.trim())
             .filter(cell => cell.length > 0)
           );
-        
+
         // Helper to escape HTML in cell content
         const escapeCell = (cell) => {
           const div = document.createElement('div');
           div.textContent = cell;
           return div.innerHTML;
         };
-        
+
         // Build HTML table
         let html = '\n<table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;">';
-        
+
         // Header
         html += '<thead><tr style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white;">';
         headers.forEach(header => {
           html += `<th style="padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #1e40af;">${escapeCell(header)}</th>`;
         });
         html += '</tr></thead>';
-        
+
         // Body
         html += '<tbody>';
         rows.forEach((row, idx) => {
@@ -3537,9 +3639,9 @@
           html += '</tr>';
         });
         html += '</tbody>';
-        
+
         html += '</table>\n';
-        
+
         return html;
       });
     }
@@ -3572,7 +3674,7 @@
       const courseType = metadata.course_type || 'both';
       const allDates = metadata.virtual_dates || [];
       const locations = metadata.locations || [];
-      
+
       // Filter to only show future dates
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -3580,21 +3682,21 @@
         const courseDate = new Date(date);
         return courseDate >= today;
       });
-      
+
       const wpId = metadata.wp_id || product.id;
       const price = metadata.price || product.price || 0;
       const currency = metadata.currency || product.currency || 'SAR';
       const productName = product.name || 'Course';
       const enrollLink = product.enroll_link || product.product_link || '';
-      
+
       // Determine enrollment type:
       // Type 1: Date only (virtualDates exists, 0-1 locations)
       // Type 2: Date + Location (virtualDates exists, 2+ locations)
       // Type 3: No enrollment form needed (no dates, just redirect)
-      
+
       const requiresDate = virtualDates.length > 0;
       const requiresLocation = locations.length > 1;
-      
+
       // Type 3: No dates available - just redirect to enrollment link
       if (!requiresDate) {
         if (enrollLink) {
@@ -3605,13 +3707,13 @@
         }
         return;
       }
-      
+
       // Create enrollment form as a chat message card
       const messageDiv = document.createElement('div');
       messageDiv.className = 'tharwah-chat-message bot enrollment-form-message';
       messageDiv.dataset.productId = wpId;
       messageDiv.dataset.enrollLink = enrollLink;
-      
+
       messageDiv.innerHTML = `
         <div class="tharwah-chat-message-content" style="
           padding: 0;
@@ -3667,20 +3769,20 @@
               >
                 <option value="">${this.config.language === 'ar' ? 'اختر التاريخ...' : 'Select date...'}</option>
                 ${virtualDates.map(date => {
-                  const [year, month, day] = date.split('-');
-                  const formattedDate = day + '-' + month + '-' + year;
-                  
-                  // For Arabic: keep original format, For English: format nicely
-                  const displayDate = this.config.language === 'ar' 
-                    ? date  // Keep original: 2025-11-30
-                    : new Date(date).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      });  // Format: Nov 30, 2025
-                  
-                  return '<option value="' + formattedDate + '">' + displayDate + '</option>';
-                }).join('')}
+        const [year, month, day] = date.split('-');
+        const formattedDate = day + '-' + month + '-' + year;
+
+        // For Arabic: keep original format, For English: format nicely
+        const displayDate = this.config.language === 'ar'
+          ? date  // Keep original: 2025-11-30
+          : new Date(date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });  // Format: Nov 30, 2025
+
+        return '<option value="' + formattedDate + '">' + displayDate + '</option>';
+      }).join('')}
               </select>
             </div>
             
@@ -3713,9 +3815,9 @@
                 "
               >
                 <option value="">${this.config.language === 'ar' ? 'اختر الموقع...' : 'Select location...'}</option>
-                ${locations.map(location => 
-                  '<option value="' + this.escapeHtml(location) + '">' + this.escapeHtml(location) + '</option>'
-                ).join('')}
+                ${locations.map(location =>
+        '<option value="' + this.escapeHtml(location) + '">' + this.escapeHtml(location) + '</option>'
+      ).join('')}
               </select>
             </div>
             ` : ''}
@@ -3771,11 +3873,11 @@
           </form>
         </div>
       `;
-      
+
       // Add to chat messages
       this.elements.messages.appendChild(messageDiv);
       this.scrollToBottom();
-      
+
       // Handle form submission
       const form = messageDiv.querySelector('#enrollmentFormData');
       form.addEventListener('submit', (e) => {
@@ -3795,7 +3897,7 @@
       const location = formData.get('location');
       const productId = formData.get('product_id');
       const quantity = formData.get('quantity');
-      
+
       // Validate required fields
       if (!virtualDate) {
         this.addMessage(
@@ -3804,7 +3906,7 @@
         );
         return;
       }
-      
+
       // Check if location is required (if location field exists and no value)
       const locationField = form.querySelector('#location');
       if (locationField && !location) {
@@ -3814,7 +3916,7 @@
         );
         return;
       }
-      
+
       // Disable submit button
       const submitBtn = form.querySelector('button[type="submit"]');
       const originalHTML = submitBtn.innerHTML;
@@ -3822,21 +3924,21 @@
         submitBtn.disabled = true;
         submitBtn.innerHTML = this.config.language === 'ar' ? '⏳ جاري الإضافة...' : '⏳ Adding to cart...';
       }
-      
+
       try {
         // Build cart URL based on language
         const isArabic = this.config.language === 'ar';
-        const cartUrl = isArabic 
+        const cartUrl = isArabic
           ? 'https://academy.tharwah.net/ar/السلة/'
           : 'https://academy.tharwah.net/cart/';
-        
+
         // Create form element for submission
         const hiddenForm = document.createElement('form');
         hiddenForm.method = 'POST';
         hiddenForm.action = cartUrl;
         hiddenForm.target = '_blank';  // Open in new tab
         hiddenForm.style.display = 'none';
-        
+
         // Add form fields
         const fields = {
           'add-to-cart': productId,
@@ -3844,12 +3946,12 @@
           'training_type': 'virtual',  // Always virtual
           'virtual_date': virtualDate
         };
-        
+
         // Add location if provided
         if (location) {
           fields['location'] = location;
         }
-        
+
         // Create hidden input fields
         Object.keys(fields).forEach(key => {
           const input = document.createElement('input');
@@ -3858,30 +3960,30 @@
           input.value = fields[key];
           hiddenForm.appendChild(input);
         });
-        
+
         // Log enrollment data for debugging
         this.log('Submitting enrollment:', fields);
-        
+
         // Append form to body and submit
         document.body.appendChild(hiddenForm);
         hiddenForm.submit();
-        
+
         // Remove form after submission
         setTimeout(() => {
           document.body.removeChild(hiddenForm);
         }, 1000);
-        
+
         // Remove enrollment form from chat
         if (messageDiv) {
           messageDiv.remove();
         }
-        
+
         // Show success message in chat
-        const successMessage = this.config.language === 'ar' 
-          ? '✅ تم إضافة الدورة إلى السلة! يرجى إكمال عملية الدفع في النافذة الجديدة.' 
+        const successMessage = this.config.language === 'ar'
+          ? '✅ تم إضافة الدورة إلى السلة! يرجى إكمال عملية الدفع في النافذة الجديدة.'
           : '✅ Course added to cart! Please complete checkout in the new tab.';
         this.addMessage(successMessage, 'bot');
-        
+
         // Track enrollment event
         this.trackEvent('course_enrollment_submitted', {
           product_id: productId,
@@ -3889,21 +3991,21 @@
           location: location || 'N/A',
           training_type: 'virtual'
         });
-        
+
       } catch (error) {
         this.log('Enrollment error:', error);
-        
+
         const errorMessage = this.config.language === 'ar'
           ? '❌ فشل التسجيل. يرجى المحاولة مرة أخرى أو الاتصال بالدعم.'
           : '❌ Enrollment failed. Please try again or contact support.';
         this.addMessage(errorMessage, 'bot');
-        
+
         // Re-enable button
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalHTML;
         }
-        
+
         // Track error
         this.trackEvent('course_enrollment_error', {
           error: error.message,

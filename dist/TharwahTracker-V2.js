@@ -6,7 +6,7 @@
  * @license MIT
  */
 
-(function(window) {
+(function (window) {
   'use strict';
 
   class UniversalTracker {
@@ -16,7 +16,7 @@
         apiEndpoint: config.apiEndpoint || null,
         projectId: config.projectId || 'default',
         debug: config.debug || false,
-        
+
         // Tracking options
         trackPageViews: config.trackPageViews !== false,
         trackClicks: config.trackClicks !== false,
@@ -25,26 +25,26 @@
         trackErrors: config.trackErrors !== false,
         trackPerformance: config.trackPerformance !== false,
         trackUserTiming: config.trackUserTiming !== false,
-        
+
         // Batching configuration
         batchSize: config.batchSize || 20,
         batchInterval: config.batchInterval || 15000, // 15 seconds
-        
+
         // Sampling
         sampleRate: config.sampleRate || 1.0, // Track 100% by default
-        
+
         // Custom callbacks
         beforeSend: config.beforeSend || null,
         onError: config.onError || null,
-        
+
         // Storage
         useLocalStorage: config.useLocalStorage !== false,
         storageDuration: config.storageDuration || 30 * 24 * 60 * 60 * 1000, // 30 days
-        
+
         // Privacy
         anonymizeIP: config.anonymizeIP || false,
         respectDoNotTrack: config.respectDoNotTrack || false,
-        
+
         // AI-Powered Popovers
         enablePopovers: config.enablePopovers !== false,
         popoverApiKey: config.popoverApiKey || null,
@@ -53,7 +53,7 @@
         popoverMinDelay: config.popoverMinDelay || 10000, // Wait 10s before first check
         popoverMaxPerSession: config.popoverMaxPerSession || 3,
         popoverUseFastEndpoint: config.popoverUseFastEndpoint !== false, // Use fast rule-based endpoint by default
-        
+
         // Immediate popover triggering
         immediatePopoverEvents: config.immediatePopoverEvents || [
           'exit_intent',
@@ -79,21 +79,21 @@
       }
 
       this.enabled = true;
-      
+
       // Session & User identification
       this.sessionId = this.getOrCreateSession();
       this.visitorId = this.getOrCreateVisitor();
       this.userId = config.userId || null;
-      
+
       // Event queue
       this.eventQueue = [];
       this.batchTimer = null;
-      
+
       // Tracking state
       this.startTime = Date.now();
       this.lastActivityTime = Date.now();
       this.pageLoadTime = Date.now();
-      
+
       // Page session state
       this.state = {
         // Page info
@@ -101,7 +101,7 @@
         currentPath: window.location.pathname,
         pageTitle: document.title,
         referrer: document.referrer,
-        
+
         // Device & Browser
         userAgent: navigator.userAgent,
         language: navigator.language,
@@ -111,7 +111,7 @@
         viewportWidth: window.innerWidth,
         viewportHeight: window.innerHeight,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        
+
         // Engagement metrics
         pageViews: 0,
         totalClicks: 0,
@@ -121,7 +121,7 @@
         timeOnPage: 0,
         activeTime: 0,
         idleTime: 0,
-        
+
         // Interaction tracking
         formSubmissions: 0,
         formStarts: 0,
@@ -130,27 +130,27 @@
         buttonClicks: 0,
         downloadClicks: 0,
         outboundClicks: 0,
-        
+
         // Content engagement
         videoPlays: 0,
         mediaInteractions: 0,
         searchQueries: [],
-        
+
         // Technical
         errors: 0,
         pageLoadDuration: 0,
-        
+
         // Flags
         isReturningVisitor: false,
         exitIntentDetected: false,
         rageClickDetected: false
       };
-      
+
       // Throttled event handlers
       this.handlers = {};
       this.throttledEvents = new Set();
       this.rageClickData = { count: 0, lastTime: 0, element: null };
-      
+
       // Popover state
       this.popoverState = {
         shown: new Set(), // Track shown popover IDs
@@ -159,7 +159,7 @@
         currentPopover: null, // Currently displayed popover
         checkTimer: null
       };
-      
+
       this.log('UniversalTracker initialized', {
         sessionId: this.sessionId,
         visitorId: this.visitorId,
@@ -175,64 +175,64 @@
       if (!this.enabled) return this;
 
       this.log('Starting tracking...');
-      
+
       // Check if returning visitor
       this.state.isReturningVisitor = this.checkReturningVisitor();
-      
+
       // Track initial page view
       if (this.config.trackPageViews) {
         this.trackPageView();
       }
-      
+
       // Capture performance metrics
       if (this.config.trackPerformance) {
         this.trackPerformance();
       }
-      
+
       // Set up all event listeners
       this.setupListeners();
-      
+
       // Start batch timer
       this.startBatchTimer();
-      
+
       // Track page visibility
       this.trackVisibility();
-      
+
       // Track page exit
       this.setupExitTracking();
-      
+
       // Start activity monitoring
       this.startActivityMonitoring();
-      
+
       // Track errors
       if (this.config.trackErrors) {
         this.setupErrorTracking();
       }
-      
+
       // Start AI-powered popover suggestions
       if (this.config.enablePopovers && this.config.popoverApiKey) {
         this.startPopoverSystem();
       }
-      
+
       // Listen for chat open/close events to hide/show popover
       this.setupChatListeners();
 
       this.log('Tracking started successfully');
       return this;
     }
-    
+
     setupChatListeners() {
       // Check for chat widget periodically and add listeners
       const checkChatWidget = () => {
         const chatButton = document.getElementById('tharwah-chat-button');
         const chatWindow = document.getElementById('tharwah-chat-window');
-        
+
         if (chatButton && chatWindow) {
           // Monitor chat window visibility using MutationObserver
           const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
-              if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                const isVisible = chatWindow.style.display !== 'none';
+              if (mutation.type === 'attributes' && (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                const isVisible = chatWindow.classList.contains('active') || chatWindow.style.display !== 'none';
                 if (isVisible) {
                   // Chat is open, hide popover
                   this.hidePopover();
@@ -241,19 +241,19 @@
               }
             });
           });
-          
+
           observer.observe(chatWindow, {
             attributes: true,
-            attributeFilter: ['style']
+            attributeFilter: ['style', 'class']
           });
-          
+
           this.log('Chat listeners setup complete');
         } else {
           // Chat widget not ready yet, try again
           setTimeout(checkChatWidget, 500);
         }
       };
-      
+
       // Start checking after a short delay
       setTimeout(checkChatWidget, 1000);
     }
@@ -266,19 +266,15 @@
       this.enabled = false;
     }
 
-    // ============================================
-    // SESSION & VISITOR MANAGEMENT
-    // ============================================
-
     getOrCreateSession() {
       const key = '_ut_session';
       const timeout = 30 * 60 * 1000; // 30 minutes
-      
+
       const stored = this.getStorage(key);
       if (stored && (Date.now() - stored.timestamp < timeout)) {
         return stored.id;
       }
-      
+
       const sessionId = this.generateId('sess');
       this.setStorage(key, { id: sessionId, timestamp: Date.now() });
       return sessionId;
@@ -286,13 +282,13 @@
 
     getOrCreateVisitor() {
       const key = '_ut_visitor';
-      
+
       const stored = this.getStorage(key);
       if (stored) return stored.id;
-      
+
       const visitorId = this.generateId('vis');
-      this.setStorage(key, { 
-        id: visitorId, 
+      this.setStorage(key, {
+        id: visitorId,
         firstSeen: Date.now(),
         visits: 1
       });
@@ -302,12 +298,12 @@
     checkReturningVisitor() {
       const stored = this.getStorage('_ut_visitor');
       if (!stored) return false;
-      
+
       // Update visit count
       stored.visits = (stored.visits || 0) + 1;
       stored.lastSeen = Date.now();
       this.setStorage('_ut_visitor', stored);
-      
+
       return stored.visits > 1;
     }
 
@@ -321,7 +317,7 @@
 
     getStorage(key) {
       if (!this.config.useLocalStorage) return null;
-      
+
       try {
         const item = localStorage.getItem(`ut_${this.config.projectId}_${key}`);
         return item ? JSON.parse(item) : null;
@@ -332,7 +328,7 @@
 
     setStorage(key, value) {
       if (!this.config.useLocalStorage) return;
-      
+
       try {
         localStorage.setItem(`ut_${this.config.projectId}_${key}`, JSON.stringify(value));
       } catch (e) {
@@ -342,7 +338,7 @@
 
     clearStorage(key) {
       if (!this.config.useLocalStorage) return;
-      
+
       try {
         localStorage.removeItem(`ut_${this.config.projectId}_${key}`);
       } catch (e) {
@@ -372,7 +368,7 @@
         this.handlers.submit = (e) => this.handleFormSubmit(e);
         this.handlers.focus = (e) => this.handleFormFocus(e);
         this.handlers.blur = (e) => this.handleFormBlur(e);
-        
+
         document.addEventListener('submit', this.handlers.submit, true);
         document.addEventListener('focus', this.handlers.focus, true);
         document.addEventListener('blur', this.handlers.blur, true);
@@ -413,7 +409,7 @@
 
     trackPageView(customData = {}) {
       this.state.pageViews++;
-      
+
       this.track('page_view', {
         url: window.location.href,
         path: window.location.pathname,
@@ -429,11 +425,11 @@
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercent = scrollHeight > 0 ? Math.round((scrollTop / scrollHeight) * 100) : 0;
-      
+
       this.state.currentScrollDepth = scrollPercent;
       this.state.maxScrollDepth = Math.max(this.state.maxScrollDepth, scrollPercent);
       this.state.totalScrolls++;
-      
+
       // Track scroll milestones
       const milestones = [25, 50, 75, 90, 100];
       milestones.forEach(milestone => {
@@ -443,19 +439,19 @@
           this.track('scroll_depth', { depth: milestone });
         }
       });
-      
+
       this.updateActivity();
     }
 
     handleClick(event) {
       this.state.totalClicks++;
-      
+
       const target = event.target.closest('a, button, [role="button"], [onclick]') || event.target;
       const elementData = this.getElementData(target);
-      
+
       // Detect rage clicks (multiple clicks in same spot rapidly)
       this.detectRageClick(event, target);
-      
+
       // Track different click types
       if (target.tagName === 'A') {
         this.state.linkClicks++;
@@ -466,18 +462,18 @@
       } else {
         this.track('click', elementData);
       }
-      
+
       this.updateActivity();
     }
 
     trackLinkClick(link, elementData) {
       const href = link.href || '';
-      const isDownload = link.hasAttribute('download') || 
+      const isDownload = link.hasAttribute('download') ||
         /\.(pdf|zip|doc|docx|xls|xlsx|ppt|pptx|txt|csv)$/i.test(href);
-      const isOutbound = href && 
-        link.hostname !== window.location.hostname && 
+      const isOutbound = href &&
+        link.hostname !== window.location.hostname &&
         link.hostname !== '';
-      
+
       if (isDownload) {
         this.state.downloadClicks++;
         this.track('download', { ...elementData, file: href });
@@ -493,10 +489,10 @@
       const now = Date.now();
       const threshold = 500; // 500ms between clicks
       const countLimit = 3; // 3 rapid clicks = rage click
-      
+
       if (this.rageClickData.element === target && (now - this.rageClickData.lastTime) < threshold) {
         this.rageClickData.count++;
-        
+
         if (this.rageClickData.count >= countLimit && !this.state.rageClickDetected) {
           this.state.rageClickDetected = true;
           this.track('rage_click', {
@@ -508,17 +504,17 @@
         this.rageClickData.count = 1;
         this.rageClickData.element = target;
       }
-      
+
       this.rageClickData.lastTime = now;
     }
 
     handleFormSubmit(event) {
       const form = event.target;
       this.state.formSubmissions++;
-      
+
       // Mark form as submitted to prevent abandon tracking
       this.throttledEvents.add(`form_submit_${form.id || 'default'}`);
-      
+
       this.track('form_submit', {
         formId: form.id,
         formName: form.name,
@@ -530,14 +526,14 @@
 
     handleFormFocus(event) {
       const target = event.target;
-      
+
       if (this.isFormField(target)) {
         const fieldKey = this.getFieldKey(target);
-        
+
         if (!this.throttledEvents.has(`form_start_${fieldKey}`)) {
           this.throttledEvents.add(`form_start_${fieldKey}`);
           this.state.formStarts++;
-          
+
           this.track('form_start', {
             formId: target.form?.id,
             fieldName: target.name || target.id,
@@ -549,7 +545,7 @@
 
     handleFormBlur(event) {
       const target = event.target;
-      
+
       if (this.isFormField(target)) {
         this.track('form_field_complete', {
           formId: target.form?.id,
@@ -557,7 +553,7 @@
           fieldType: target.type,
           filled: !!target.value
         });
-        
+
         // Track form abandonment if user filled fields but hasn't submitted
         if (target.form && !this.throttledEvents.has(`form_abandon_${target.form.id || 'default'}`)) {
           setTimeout(() => {
@@ -568,7 +564,7 @@
                 formId: target.form.id,
                 formName: target.form.name,
                 formAction: target.form.action,
-                fieldsFilled: Array.from(target.form.elements).filter(el => 
+                fieldsFilled: Array.from(target.form.elements).filter(el =>
                   this.isFormField(el) && el.value
                 ).length,
                 totalFields: target.form.elements.length
@@ -613,11 +609,11 @@
           from: this.state.currentUrl,
           to: window.location.href
         });
-        
+
         this.state.currentUrl = window.location.href;
         this.state.currentPath = window.location.pathname;
         this.pageLoadTime = Date.now();
-        
+
         // Track as new page view
         if (this.config.trackPageViews) {
           this.trackPageView({ type: 'spa_navigation' });
@@ -636,7 +632,7 @@
         setTimeout(() => {
           const timing = window.performance.timing;
           const navigation = window.performance.navigation;
-          
+
           const metrics = {
             // Page load timing
             dnsLookup: timing.domainLookupEnd - timing.domainLookupStart,
@@ -645,15 +641,15 @@
             domProcessing: timing.domComplete - timing.domLoading,
             pageLoad: timing.loadEventEnd - timing.navigationStart,
             domContentLoaded: timing.domContentLoadedEventEnd - timing.navigationStart,
-            
+
             // Navigation type
             navigationType: ['navigate', 'reload', 'back_forward', 'prerender'][navigation.type] || 'unknown',
             redirectCount: navigation.redirectCount
           };
-          
+
           this.state.pageLoadDuration = metrics.pageLoad;
           this.track('performance', metrics);
-          
+
           // Track resources
           if (window.performance.getEntriesByType) {
             const resources = window.performance.getEntriesByType('resource');
@@ -669,11 +665,11 @@
 
     getSlowestResource(resources) {
       if (!resources.length) return null;
-      
-      const slowest = resources.reduce((max, r) => 
+
+      const slowest = resources.reduce((max, r) =>
         r.duration > max.duration ? r : max
       );
-      
+
       return {
         name: slowest.name,
         duration: Math.round(slowest.duration),
@@ -712,7 +708,7 @@
 
     trackVisibility() {
       let hiddenTime = null;
-      
+
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           hiddenTime = Date.now();
@@ -729,13 +725,13 @@
         if (!document.hidden) {
           const now = Date.now();
           const inactiveTime = now - this.lastActivityTime;
-          
+
           if (inactiveTime < 5000) { // Active if interaction within 5 seconds
             this.state.activeTime += 1;
           } else {
             this.state.idleTime += 1;
           }
-          
+
           this.state.timeOnPage = this.getTimeOnPage();
         }
       }, 1000);
@@ -758,19 +754,19 @@
           interactions: this.state.totalClicks,
           engagement: this.calculateEngagement()
         });
-        
+
         this.sendBeacon();
       });
     }
 
     sendBeacon() {
       if (!this.config.apiEndpoint || this.eventQueue.length === 0) return;
-      
+
       const payload = JSON.stringify({
         events: this.eventQueue,
         meta: this.getMetadata()
       });
-      
+
       navigator.sendBeacon(this.config.apiEndpoint, payload);
       this.log('Beacon sent:', this.eventQueue.length, 'events');
     }
@@ -786,22 +782,22 @@
         // Event info
         event: eventName,
         data: eventData,
-        
+
         // Session info
         sessionId: this.sessionId,
         visitorId: this.visitorId,
         userId: this.userId,
         projectId: this.config.projectId,
-        
+
         // Timestamps
         timestamp: Date.now(),
         timeOnPage: this.getTimeOnPage(),
-        
+
         // Context
         url: window.location.href,
         path: window.location.pathname,
         referrer: document.referrer,
-        
+
         // Device context
         screenWidth: this.state.screenWidth,
         screenHeight: this.state.screenHeight,
@@ -827,26 +823,26 @@
 
       // Emit custom event for external listeners
       this.emit('track', event);
-      
+
       // Check if this event should trigger immediate popover request
       if (this.config.immediatePopoverEvents.includes(eventName)) {
         this.log('Event is in immediate trigger list:', eventName);
-        
+
         if (!this.config.enablePopovers) {
           this.log('⚠️ Popover system is disabled. Set enablePopovers: true');
           return;
         }
-        
+
         if (!this.config.popoverApiKey) {
           this.log('⚠️ No popover API key configured. Please set popoverApiKey');
           return;
         }
-        
+
         this.log('✅ Event triggers immediate popover check:', eventName);
-        
+
         // Flush tracking data immediately to ensure backend has latest data
         this.flush();
-        
+
         // Request popover suggestion immediately
         setTimeout(() => {
           this.log('⚡ Requesting popover for event:', eventName);
@@ -905,14 +901,14 @@
 
       } catch (error) {
         this.log('Error sending events:', error);
-        
+
         // Re-queue events on failure
         this.eventQueue.unshift(...events);
-        
+
         if (this.config.onError) {
           this.config.onError(error, events);
         }
-        
+
         this.emit('flush', { success: false, error, count: events.length });
       }
     }
@@ -949,20 +945,20 @@
 
     calculateEngagement() {
       let score = 0;
-      
+
       // Time weight (max 30)
       score += Math.min(this.getTimeOnPage() / 10, 30);
-      
+
       // Scroll weight (max 25)
       score += (this.state.maxScrollDepth / 100) * 25;
-      
+
       // Interaction weight (max 25)
       score += Math.min(this.state.totalClicks * 2, 25);
-      
+
       // Active time weight (max 20)
       const activeRatio = this.state.activeTime / (this.state.activeTime + this.state.idleTime || 1);
       score += activeRatio * 20;
-      
+
       return Math.min(100, Math.round(score));
     }
 
@@ -983,7 +979,7 @@
 
     throttle(func, wait) {
       let timeout;
-      return function(...args) {
+      return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
       };
@@ -1069,17 +1065,17 @@
     isMobileDevice() {
       // Check if device is mobile using multiple detection methods
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      
+
       // Check user agent for mobile devices
       const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i;
       const isMobileUserAgent = mobileRegex.test(userAgent.toLowerCase());
-      
+
       // Check screen size (mobile devices typically < 768px width)
       const isMobileScreen = window.innerWidth <= 768;
-      
+
       // Check for touch capability (not definitive but helpful)
       const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-      
+
       // Return true if any mobile indicator is detected
       return isMobileUserAgent || (isMobileScreen && isTouchDevice);
     }
@@ -1090,28 +1086,28 @@
         this.log('📱 Popover system disabled on mobile devices');
         return;
       }
-      
+
       if (!this.config.popoverEnablePeriodicChecks) {
         this.log('⏸️ Periodic popover checks disabled. Only event-based checks will run.');
         return;
       }
-      
+
       // Wait before first check (give user time to interact)
       setTimeout(() => {
         this.checkForPopover('periodic');
-        
+
         // Set up periodic checks
         this.popoverState.checkTimer = setInterval(() => {
           this.checkForPopover('periodic');
         }, this.config.popoverCheckInterval);
-        
+
         this.log('🔄 Popover system started with periodic checks every', this.config.popoverCheckInterval / 1000, 'seconds');
       }, this.config.popoverMinDelay);
     }
 
     async checkForPopover(trigger = 'manual') {
       this.log(`🔍 checkForPopover() called [trigger: ${trigger}]`);
-      
+
       // Don't check if max popovers reached
       if (this.popoverState.count >= this.config.popoverMaxPerSession) {
         this.log('❌ Max popovers reached for session:', this.popoverState.count, '/', this.config.popoverMaxPerSession);
@@ -1131,14 +1127,14 @@
         const baseUrl = this.config.apiEndpoint.replace(/\/track\/?$/, '');
         const endpoint = this.config.popoverUseFastEndpoint ? 'suggest-popover/' : 'suggest-popover/';
         const apiEndpoint = baseUrl + '/' + endpoint;
-        
+
         this.log('📡 Requesting popover from:', apiEndpoint);
         this.log('📦 Request data:', {
           session_id: this.sessionId,
           current_page: window.location.pathname,
           language_code: navigator.language.split('-')[0] || 'en'
         });
-        
+
         const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: {
@@ -1153,14 +1149,14 @@
         });
 
         const data = await response.json();
-        
+
         this.log('📥 Popover response:', data);
-        
+
         if (data.success && data.popover_suggestion && data.popover_suggestion.suggested) {
           const popover = data.popover_suggestion.popover;
-          
+
           this.log('✅ Popover suggested:', popover.title, 'Score:', data.popover_suggestion.score);
-          
+
           // Check if already shown this session
           if (this.popoverState.shown.has(popover.id)) {
             if (popover.show_once_per_session) {
@@ -1168,7 +1164,7 @@
               return;
             }
           }
-          
+
           // Show the popover
           this.showPopover(popover, data.popover_suggestion);
         } else {
@@ -1189,7 +1185,7 @@
         this.log('📱 Popover not shown - mobile device detected');
         return;
       }
-      
+
       // Don't show popover if chat is open
       if (this.isChatOpen()) {
         this.log('Popover not shown - chat is currently open');
@@ -1198,7 +1194,7 @@
 
       // Apply delay if configured
       const delay = popover.delay_seconds * 1000;
-      
+
       setTimeout(() => {
         // Check again after delay in case chat was opened while waiting
         if (this.isChatOpen()) {
@@ -1206,22 +1202,22 @@
           return;
         }
 
-          this.renderPopover(popover, suggestion);
-          this.popoverState.currentPopover = popover;
-          this.popoverState.shown.add(popover.id);
-          this.popoverState.count++;
-          
-          // Track view
-          this.trackPopoverInteraction(popover.id, 'view');
-          
-          // Auto dismiss if configured
-          if (popover.auto_dismiss_seconds) {
-            setTimeout(() => {
-              this.hidePopover();
-            }, popover.auto_dismiss_seconds * 1000);
-          }
-          
-          this.log('Popover displayed:', popover.title);
+        this.renderPopover(popover, suggestion);
+        this.popoverState.currentPopover = popover;
+        this.popoverState.shown.add(popover.id);
+        this.popoverState.count++;
+
+        // Track view
+        this.trackPopoverInteraction(popover.id, 'view');
+
+        // Auto dismiss if configured
+        if (popover.auto_dismiss_seconds) {
+          setTimeout(() => {
+            this.hidePopover();
+          }, popover.auto_dismiss_seconds * 1000);
+        }
+
+        this.log('Popover displayed:', popover.title);
       }, delay);
     }
 
@@ -1237,7 +1233,7 @@
       container.id = 'tharwah-chat-popover';
       container.className = 'tharwah-popover';
       container.dataset.popoverId = popover.id;
-      
+
       // Build modern horizontal popover HTML
       container.innerHTML = `
         <div class="tharwah-popover-card">
@@ -1267,25 +1263,25 @@
           </div>
         </div>
       `;
-      
+
       // Inject styles if not already present
       if (!document.getElementById('tharwah-chat-popover-styles')) {
         this.injectPopoverStyles();
       }
-      
+
       // Apply custom CSS if provided
       if (popover.custom_css) {
         const style = document.createElement('style');
         style.textContent = popover.custom_css;
         container.appendChild(style);
       }
-      
+
       // Add to page
       document.body.appendChild(container);
-      
+
       // Animate in
       setTimeout(() => container.classList.add('tharwah-popover-visible'), 10);
-      
+
       // Event listeners
       const closeBtn = container.querySelector('.tharwah-popover-close');
       if (closeBtn) {
@@ -1294,14 +1290,14 @@
           this.hidePopover();
         });
       }
-      
+
       // Handle "Start chat" button
       const ctaBtn = container.querySelector('.tharwah-popover-cta');
       if (ctaBtn) {
         ctaBtn.addEventListener('click', () => {
           this.trackPopoverInteraction(popover.id, 'click');
           this.hidePopover();
-          
+
           // Open chat widget if available
           if (window.tharwahChatWidget && typeof window.tharwahChatWidget.open === 'function') {
             window.tharwahChatWidget.open();
@@ -1314,12 +1310,12 @@
           }
         });
       }
-      
+
       // Track other button clicks
       container.addEventListener('click', (e) => {
-        if ((e.target.tagName === 'A' || e.target.tagName === 'BUTTON') && 
-            !e.target.classList.contains('tharwah-popover-close') &&
-            !e.target.classList.contains('tharwah-popover-action')) {
+        if ((e.target.tagName === 'A' || e.target.tagName === 'BUTTON') &&
+          !e.target.classList.contains('tharwah-popover-close') &&
+          !e.target.classList.contains('tharwah-popover-action')) {
           this.trackPopoverInteraction(popover.id, 'click');
         }
       });
@@ -1338,12 +1334,12 @@
 
     trackPopoverInteraction(popoverId, action) {
       if (!this.config.apiEndpoint || !this.config.popoverApiKey) return;
-      
+
       try {
         // Construct popover endpoint: http://localhost:8000/api/track/ -> http://localhost:8000/api/popover-interaction/
         const baseUrl = this.config.apiEndpoint.replace(/\/track\/?$/, '');
         const apiEndpoint = baseUrl + '/popover-interaction/';
-        
+
         fetch(apiEndpoint, {
           method: 'POST',
           headers: {
@@ -1357,7 +1353,7 @@
             url: window.location.href
           })
         });
-        
+
         this.log('Popover interaction tracked:', action, popoverId);
       } catch (error) {
         this.log('Error tracking popover interaction:', error);

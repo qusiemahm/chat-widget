@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Markdown Tables</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .markdown-input {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .rendered-output {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2>🧪 Markdown Table Rendering Test</h2>
+        <p>This tests if the widget's <code>convertMarkdownTables()</code> function works correctly.</p>
+        
+        <h3>Input (Markdown):</h3>
+        <div class="markdown-input">| Aspect | SHRM CP/SCP | SHRM ACHRM |
+|--------|-------------|------------|
+| Price | 11,000 SAR | 25,000 SAR |
+| Duration | 20 days | 44 days |
+| Training Hours | 60 hours | 129 hours |
+| Level | Advanced | Advanced |
+| Certification | SHRM-CP or SHRM-SCP | SHRM Advanced Certificate |</div>
+
+        <button onclick="testTable()">🚀 Render Table</button>
+        
+        <h3>Output (HTML):</h3>
+        <div class="rendered-output" id="output">
+            Click the button above to render the table
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Test Results</h2>
+        <div id="test-results" style="font-family: monospace; background: #f9fafb; padding: 15px; border-radius: 8px;">
+            Waiting for test...
+        </div>
+    </div>
+
+    <script src="dist/TharwahChat-V1.js"></script>
+    
+    <script>
+        // Test the convertMarkdownTables function
+        function testTable() {
+            const testResults = document.getElementById('test-results');
+            const output = document.getElementById('output');
+            
+            testResults.innerHTML = '';
+            
+            // Create a test instance
+            try {
+                const chat = new TharwahChat({ 
+                    apiKey: 'test-key',
+                    debug: true 
+                });
+                
+                testResults.innerHTML += '✅ TharwahChat instance created<br>';
+                
+                // Test markdown
+                const markdown = `| Aspect | SHRM CP/SCP | SHRM ACHRM |
+|--------|-------------|------------|
+| Price | 11,000 SAR | 25,000 SAR |
+| Duration | 20 days | 44 days |
+| Training Hours | 60 hours | 129 hours |
+| Level | Advanced | Advanced |
+| Certification | SHRM-CP or SHRM-SCP | SHRM Advanced Certificate |`;
+                
+                testResults.innerHTML += '✅ Markdown prepared<br>';
+                
+                // Convert table
+                const converted = chat.convertMarkdownTables(markdown);
+                
+                testResults.innerHTML += '✅ convertMarkdownTables() executed<br>';
+                
+                // Check if table was found
+                if (converted.includes('<table')) {
+                    testResults.innerHTML += '✅ Table HTML generated!<br>';
+                    testResults.innerHTML += `📏 Output length: ${converted.length} characters<br>`;
+                    testResults.innerHTML += '<br><strong style="color: green;">SUCCESS! Tables are rendering correctly.</strong>';
+                } else {
+                    testResults.innerHTML += '❌ No table HTML found in output<br>';
+                    testResults.innerHTML += '⚠️ Regex may not be matching<br>';
+                    testResults.innerHTML += '<br><strong style="color: red;">FAILED: Tables not rendering</strong>';
+                    console.error('Converted output:', converted);
+                }
+                
+                // Display result
+                output.innerHTML = converted;
+                
+            } catch (error) {
+                testResults.innerHTML += `<br>❌ ERROR: ${error.message}<br>`;
+                console.error('Test error:', error);
+            }
+        }
+        
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, ready for testing');
+        });
+    </script>
+</body>
+</html>
