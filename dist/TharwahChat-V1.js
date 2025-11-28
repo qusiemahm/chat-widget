@@ -1301,6 +1301,11 @@
                   this.showQuickReplies(quickReplies);
                 }
 
+                // Show B2B request button if B2B agent response
+                if (routingInfo?.selected_agent?.type === 'b2b') {
+                  this.showB2BRequestButton();
+                }
+
                 this.trackEvent('chat_response_received_streaming', {
                   agent: routingInfo?.selected_agent?.name,
                   agent_type: routingInfo?.selected_agent?.type,
@@ -4013,6 +4018,403 @@
         });
       }
     }
+
+    // ============================================
+    // B2B SERVICE REQUEST
+    // ============================================
+
+    showB2BRequestButton() {
+      const buttonHtml = `
+        <div class="tharwah-chat-message bot" style="margin-bottom: 8px;">
+          <button
+            onclick="window.tharwahChatWidget.showB2BRequestForm()"
+            style="
+              padding: 10px 8px;
+              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+              color: white;
+              border: none;
+              border-radius: 2px;
+              font-size: 14px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.2s;
+              box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 6px;
+            "
+            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(37, 99, 235, 0.4)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(37, 99, 235, 0.3)'"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            ${this.config.language === 'ar' ? 'إرسال طلب استشارة' : 'Submit Service Request'}
+          </button>
+        </div>
+      `;
+
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = buttonHtml;
+      const buttonElement = tempDiv.firstElementChild;
+
+      this.elements.messages.appendChild(buttonElement);
+      this.scrollToBottom();
+    }
+
+    showB2BRequestForm() {
+      // Get user email from session if available
+      const userEmail = sessionStorage.getItem('tharwah_user_email') || '';
+
+      const formHtml = `
+        <div class="tharwah-chat-message bot b2b-request-form-message" style="margin-bottom: 12px;">
+          <div style="
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+          ">
+            <h4 style="
+              font-size: 16px;
+              font-weight: 600;
+              color: #1f2937;
+              margin: 0 0 4px 0;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <path d="M9 11l3 3L22 4"></path>
+              </svg>
+              ${this.config.language === 'ar' ? 'نموذج طلب الخدمة' : 'Service Request Form'}
+            </h4>
+            <p style="font-size: 12px; color: #6b7280; margin: 0 0 16px 0;">
+              ${this.config.language === 'ar' ? 'يرجى ملء التفاصيل الخاصة بك' : 'Please fill in your details'}
+            </p>
+
+            <form id="b2bRequestForm">
+              <!-- First Name -->
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">
+                  ${this.config.language === 'ar' ? 'الاسم الأول' : 'First Name'}
+                  <span style="color: #ef4444;">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="first-name"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 8px 10px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                  "
+                  placeholder="${this.config.language === 'ar' ? 'أحمد' : 'Ahmad'}"
+                />
+              </div>
+
+              <!-- Last Name -->
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">
+                  ${this.config.language === 'ar' ? 'اسم العائلة' : 'Last Name'}
+                  <span style="color: #ef4444;">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="last-name"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 8px 10px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                  "
+                  placeholder="${this.config.language === 'ar' ? 'محمد' : 'Mohamed'}"
+                />
+              </div>
+
+              <!-- Email -->
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">
+                  ${this.config.language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                  <span style="color: #ef4444;">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="your-email"
+                  required
+                  value="${userEmail}"
+                  style="
+                    width: 100%;
+                    padding: 8px 10px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                  "
+                  placeholder="your@email.com"
+                />
+              </div>
+
+              <!-- Phone -->
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">
+                  ${this.config.language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}
+                  <span style="color: #ef4444;">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 8px 10px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                  "
+                  placeholder="${this.config.language === 'ar' ? '٠٥٠١٢٣٤٥٦٧' : '0501234567'}"
+                />
+              </div>
+
+              <!-- Organization -->
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">
+                  ${this.config.language === 'ar' ? 'اسم المنظمة' : 'Organization Name'}
+                  <span style="color: #ef4444;">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="organization"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 8px 10px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                  "
+                  placeholder="${this.config.language === 'ar' ? 'اسم شركتك' : 'Your Company Name'}"
+                />
+              </div>
+
+              <!-- Service Needed -->
+              <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px;">
+                  ${this.config.language === 'ar' ? 'الخدمة المطلوبة' : 'Service Needed'}
+                </label>
+                <select
+                  name="service-needed"
+                  style="
+                    width: 100%;
+                    padding: 8px 10px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    color: #374151;
+                    background: white;
+                  "
+                >
+                  <option value="">${this.config.language === 'ar' ? 'اختر خدمة' : 'Select a service'}</option>
+                  <option value="Training Consulting">${this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting'}</option>
+                  <option value="Leadership Development">${this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development'}</option>
+                  <option value="HR Development">${this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development'}</option>
+                  <option value="Professional Skills Development">${this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development'}</option>
+                  <option value="Fresh Graduates Development">${this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development'}</option>
+                  <option value="Coaching Services">${this.config.language === 'ar' ? 'خدمات التدريب' : 'Coaching Services'}</option>
+                  <option value="General">${this.config.language === 'ar' ? 'عام' : 'General'}</option>
+                </select>
+              </div>
+
+              <!-- Hidden fields -->
+              <input type="hidden" name="page-url" value="${window.location.href}" />
+              <input type="hidden" name="page-title" value="${document.title}" />
+              <input type="hidden" name="language" value="${this.config.language}" />
+              <input type="hidden" name="custom-thank-you" value="yes" />
+
+              <!-- Buttons -->
+              <div style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+              ">
+                <button
+                  type="button"
+                  onclick="this.closest('.b2b-request-form-message').remove()"
+                  style="
+                    padding: 10px;
+                    border: 1px solid #d1d5db;
+                    background: white;
+                    color: #6b7280;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    font-weight: 500;
+                    cursor: pointer;
+                  "
+                >
+                  ${this.config.language === 'ar' ? 'إلغاء' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  style="
+                    padding: 10px;
+                    border: 1px solid #2563eb;
+                    background: #2563eb;
+                    color: white;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                  "
+                  onmouseover="this.style.background='#1d4ed8'"
+                  onmouseout="this.style.background='#2563eb'"
+                >
+                  📨 ${this.config.language === 'ar' ? 'إرسال' : 'Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = formHtml;
+      const formElement = tempDiv.firstElementChild;
+
+      this.elements.messages.appendChild(formElement);
+      this.scrollToBottom();
+
+      // Attach form submit handler
+      const form = formElement.querySelector('#b2bRequestForm');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.submitB2BRequest(e.target, formElement);
+      });
+    }
+
+    async submitB2BRequest(form, messageDiv) {
+      const formData = new FormData(form);
+
+      // Validate required fields
+      const requiredFields = ['first-name', 'last-name', 'your-email', 'phone', 'organization'];
+      for (const field of requiredFields) {
+        if (!formData.get(field)) {
+          this.addMessage(
+            this.config.language === 'ar'
+              ? `⚠️ يرجى ملء جميع الحقول المطلوبة`
+              : `⚠️ Please fill in all required fields`,
+            'bot'
+          );
+          return;
+        }
+      }
+
+      // Disable submit button
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalHTML = submitBtn.innerHTML;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = this.config.language === 'ar' ? '⏳ جاري الإرسال...' : '⏳ Submitting...';
+      }
+
+      try {
+        // Build form data for CF7
+        const cf7Data = new FormData();
+
+        // Add all form fields
+        for (const [key, value] of formData.entries()) {
+          cf7Data.append(key, value);
+        }
+
+        // Add CF7 specific fields
+        cf7Data.append('_wpcf7', '5229');
+        cf7Data.append('_wpcf7_version', '6.1.2');
+        cf7Data.append('_wpcf7_locale', this.config.language === 'ar' ? 'ar' : 'en_GB');
+        cf7Data.append('_wpcf7_unit_tag', 'wpcf7-f5229-chatbot');
+        cf7Data.append('_wpcf7_container_post', '0');
+        cf7Data.append('_wpcf7_posted_data_hash', '');
+        cf7Data.append('tharwah_service', formData.get('service-needed') || 'General');
+        cf7Data.append('cf7_form_id', '5229');
+        cf7Data.append('current_page_url', window.location.href);
+
+        // Add tracking fields
+        cf7Data.append('utm_source', '');
+        cf7Data.append('utm_medium', '');
+        cf7Data.append('utm_campaign', '');
+        cf7Data.append('gclid', '');
+        cf7Data.append('fbclid', '');
+        cf7Data.append('main-line', '');
+        cf7Data.append('subline', '');
+
+        this.log('Submitting B2B service request:', Object.fromEntries(cf7Data));
+
+        // Submit to chatbot endpoint
+        const response = await fetch('https://academy.tharwah.net/mystaging01/wp-json/contact-form-7/v1/contact-forms/5229/feedback', {
+          method: 'POST',
+          body: cf7Data
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        this.log('B2B request response:', result);
+
+        // Remove form from chat
+        if (messageDiv) {
+          messageDiv.remove();
+        }
+
+        // Show success message
+        if (result.status === 'mail_sent') {
+          const successMessage = this.config.language === 'ar'
+            ? '✅ شكراً لك! تم إرسال طلبك بنجاح. سنتواصل معك قريباً.'
+            : '✅ Thank you! Your request has been submitted successfully. We\'ll get back to you soon.';
+          this.addMessage(successMessage, 'bot');
+        } else {
+          throw new Error(result.message || 'Submission failed');
+        }
+
+        // Track successful submission
+        this.trackEvent('b2b_service_request_submitted', {
+          service: formData.get('service-needed'),
+          organization: formData.get('organization'),
+          email: formData.get('your-email')
+        });
+
+      } catch (error) {
+        this.log('B2B service request error:', error);
+
+        const errorMessage = this.config.language === 'ar'
+          ? '❌ فشل إرسال الطلب. يرجى المحاولة مرة أخرى أو الاتصال بنا مباشرة.'
+          : '❌ Failed to submit request. Please try again or contact us directly.';
+        this.addMessage(errorMessage, 'bot');
+
+        // Re-enable button
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHTML;
+        }
+
+        // Track error
+        this.trackEvent('b2b_service_request_error', {
+          error: error.message
+        });
+      }
+    }
+
   }
 
   // ============================================
