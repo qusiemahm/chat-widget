@@ -21,13 +21,13 @@
         apiKey: config.apiKey, // REQUIRED
         botId: config.botId || 1,
         organizationId: config.organizationId || null,
-        welcomeMessage: config.language === 'ar' ? 'مرحباً! 👋 كيف يمكنني مساعدتك اليوم؟' : ' Hi! 👋 How can I help you today?',
+        welcomeMessage: '',
         position: config.position || 'bottom-right',
         primaryColor: config.primaryColor || '#667eea',
         secondaryColor: config.secondaryColor || '#764ba2',
         buttonIcon: config.buttonIcon || '💬',
-        title: config.title || 'Chat with us',
-        subtitle: config.subtitle || 'We reply instantly',
+        title: '',
+        subtitle: '',
         debug: config.debug || false,
         autoOpen: config.autoOpen || false,
         autoOpenDelay: config.autoOpenDelay || 3000,
@@ -97,10 +97,10 @@
           startConversationDesc: 'Ask us anything about our programs',
 
           // Email capture screen
-          emailScreenTitle: 'Chat with Tharwah Academy',
+          emailScreenTitle: 'Chat with our AI Agent',
           emailScreenSubtitle: 'To get started, please share your email address:',
           emailPlaceholder: 'your@email.com',
-          termsText: "I agree to Tharwah Academy's Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.",
+          termsText: "I agree to The Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.",
           submitButton: 'Submit',
 
           // Alert messages
@@ -160,10 +160,10 @@
           startConversationDesc: 'اسألنا أي شيء عن برامجنا',
 
           // Email capture screen
-          emailScreenTitle: 'الدردشة مع أكاديمية ثروة',
+          emailScreenTitle: 'الدردشة مع الذكاء الاصطناعي',
           emailScreenSubtitle: 'للبدء، يرجى مشاركة عنوان بريدك الإلكتروني:',
           emailPlaceholder: 'your@email.com',
-          termsText: 'أوافق على شروط وأحكام أكاديمية ثروة وأقر بأنه ستتم معالجة معلوماتي الشخصية وفقاً للوائح حماية البيانات.',
+          termsText: 'أوافق على الشروط والأحكام وأقر بأنه ستتم معالجة معلوماتي الشخصية وفقاً للوائح حماية البيانات.',
           submitButton: 'إرسال',
 
           // Alert messages
@@ -249,7 +249,7 @@
           this.showWelcomeScreen();
         } else {
           this.showingWelcome = false;
-          this.addMessage(this.config.welcomeMessage, 'bot', null, true);
+          this.addMessage(this.getWelcomeMessage(), 'bot', null, true);
         }
       }, 500);
 
@@ -296,7 +296,7 @@
 
     showWelcomeScreen() {
       if (!this.suggestions || this.suggestions.length === 0) {
-        this.addMessage(this.config.welcomeMessage, 'bot', null, true);
+        this.addMessage(this.getWelcomeMessage(), 'bot', null, true);
         return;
       }
 
@@ -781,10 +781,22 @@
       this.showingWelcome = false;
 
       // Add welcome message
-      this.addMessage(this.config.welcomeMessage, 'bot', null, true);
+      this.addMessage(this.getWelcomeMessage(), 'bot', null, true);
 
       // Focus on input
       this.elements.input.focus();
+    }
+
+    getWelcomeMessage() {
+      return this.config.language === 'ar' ? 'مرحباً! 👋 كيف يمكنني مساعدتك اليوم؟' : 'Hi! 👋 How can I help you today?';
+    }
+
+    getTitle() {
+      return this.config.language === 'ar' ? 'الدردشة مع الذكاء الاصطناعي' : 'Chat with Our AI Agent';
+    }
+
+    getSubtitle() {
+      return this.config.language === 'ar' ? 'الرد فوري' : 'We reply instantly';
     }
 
     async handleSuggestionClick(suggestionId, actionText) {
@@ -1305,9 +1317,9 @@
                   this.showQuickReplies(quickReplies);
                 }
 
-                // Show B2B request button if B2B agent response
+                // Show B2B service cards if B2B agent response
                 if (routingInfo?.selected_agent?.type === 'b2b') {
-                  this.showB2BRequestButton();
+                  this.showB2BServiceCards();
                 }
 
                 this.trackEvent('chat_response_received_streaming', {
@@ -2420,7 +2432,7 @@
         }
 
         .tharwah-chat-message.bot {
-          text-align: left;
+          text-align: ${this.config.language === 'ar' ? 'right' : 'left'};
         }
 
         .tharwah-chat-message-content {
@@ -2835,7 +2847,7 @@
         
         <div class="tharwah-chat-window" id="tharwah-chat-window">
           <div class="tharwah-chat-header" id="tharwah-chat-header">
-            <h2>${this.config.title}</h2>
+            <h2>${this.getTitle()}</h2>
             <div style="display: flex; align-items: center; gap: 8px;">
               <button class="tharwah-chat-menu" id="tharwah-chat-menu" aria-label="Menu">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2860,7 +2872,7 @@
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                 <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
               </svg>
-              <span>Sound Notifications</span>
+              <span>${this.config.language === 'ar' ? 'إشعارات الصوت' : 'Sound Notifications'}</span>
               <div class="tharwah-toggle-switch" id="tharwah-chat-toggle-switch">
                 <input type="checkbox" id="tharwah-chat-sound-checkbox" checked>
                 <span class="tharwah-toggle-slider" id="tharwah-chat-toggle-slider"></span>
@@ -4039,53 +4051,230 @@
     // B2B SERVICE REQUEST
     // ============================================
 
-    showB2BRequestButton() {
-      const buttonHtml = `
-        <div class="tharwah-chat-message bot" style="margin-bottom: 8px;">
-          <button
-            onclick="window.tharwahChatWidget.showB2BRequestForm()"
-            style="
-              padding: 10px 8px;
-              background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-              color: white;
-              border: none;
-              border-radius: 2px;
-              font-size: 14px;
-              font-weight: 600;
-              cursor: pointer;
-              transition: all 0.2s;
-              box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-            "
-            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(37, 99, 235, 0.4)'"
-            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(37, 99, 235, 0.3)'"
+    showB2BServiceCards() {
+      // Sample B2B services data (you'll update this from backend)
+      const b2bServices = [
+        {
+          id: 'training-consulting',
+          name: this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting',
+          description: this.config.language === 'ar'
+            ? 'نقدم استشارات متخصصة في تطوير وتصميم برامج تدريبية مخصصة لتناسب احتياجات شركتك'
+            : 'Specialized consulting in developing and designing customized training programs to meet your company\'s needs',
+          icon: '🎓',
+          image: null
+        },
+        {
+          id: 'leadership-development',
+          name: this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development',
+          description: this.config.language === 'ar'
+            ? 'برامج متطورة لتنمية المهارات القيادية وبناء فرق عمل فعالة وقوية'
+            : 'Advanced programs for developing leadership skills and building effective, strong teams',
+          icon: '👥',
+          image: null
+        },
+        {
+          id: 'hr-development',
+          name: this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development',
+          description: this.config.language === 'ar'
+            ? 'حلول متكاملة لتطوير قسم الموارد البشرية وتحسين أداء ورضا الموظفين'
+            : 'Integrated solutions for HR department development and improving employee performance and satisfaction',
+          icon: '📊',
+          image: null
+        },
+        {
+          id: 'professional-skills',
+          name: this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development',
+          description: this.config.language === 'ar'
+            ? 'دورات تدريبية متخصصة لتطوير المهارات المهنية الأساسية والمتقدمة للموظفين'
+            : 'Specialized training courses for developing essential and advanced professional skills for employees',
+          icon: '💼',
+          image: null
+        },
+        {
+          id: 'fresh-graduates',
+          name: this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development',
+          description: this.config.language === 'ar'
+            ? 'برامج إعداد وتأهيل الخريجين الجدد لسوق العمل وتطوير مهاراتهم الوظيفية'
+            : 'Programs for preparing and qualifying fresh graduates for the job market and developing their professional skills',
+          icon: '🚀',
+          image: null
+        },
+        {
+          id: 'coaching-services',
+          name: this.config.language === 'ar' ? 'خدمات التدريب الفردي' : 'Coaching Services',
+          description: this.config.language === 'ar'
+            ? 'جلسات تدريب وتوجيه فردي لتحقيق الأهداف المهنية والشخصية'
+            : 'Individual training and coaching sessions to achieve professional and personal goals',
+          icon: '🎯',
+          image: null
+        }
+      ];
+
+      // Create horizontal scrollable container for B2B services
+      const servicesHtml = b2bServices.map(service => {
+        const imageUrl = service.image ? `${this.config.apiEndpoint.replace(/\/api\/?$/, '')}${service.image}` : null;
+
+        return `
+          <div style="
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            width: 200px;
+            cursor: pointer;
+          "
+          onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'"
+          onclick="window.tharwahChatWidget.showB2BRequestForm('${service.id}')"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            ${this.config.language === 'ar' ? 'إرسال طلب استشارة' : 'Submit Service Request'}
-          </button>
+            <!-- Image/Icon -->
+            <div style="position: relative;">
+              ${imageUrl ?
+            `<img src="${imageUrl}" alt="${this.escapeHtml(service.name)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); display: flex; align-items: center; justify-content: center; font-size: 2rem;\\'>${service.icon}</div>';" />` :
+            `<div style="width: 100%; height: 96px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                ${service.icon}
+              </div>`
+          }
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 12px;">
+              <!-- Title -->
+              <h4 style="
+                font-size: 13px;
+                font-weight: 600;
+                color: #111827;
+                margin: 0 0 6px 0;
+                line-height: 1.3;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                height: 32px;
+              ">${this.escapeHtml(service.name)}</h4>
+
+              <!-- Description -->
+              <p style="
+                font-size: 11px;
+                color: #6b7280;
+                margin: 0 0 8px 0;
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                height: 46px;
+              ">${this.escapeHtml(service.description)}</p>
+
+              <!-- Request Button -->
+              <button
+                style="
+                  width: 100%;
+                  padding: 6px 12px;
+                  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  font-size: 11px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                "
+                onmouseover="this.style.background='#1d4ed8'"
+                onmouseout="this.style.background='#2563eb'"
+                onclick="event.stopPropagation(); window.tharwahChatWidget.showB2BRequestForm('${service.id}')"
+              >
+                ${this.config.language === 'ar' ? 'طلب الخدمة' : 'Request Service'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const messageHtml = `
+        <div class="tharwah-chat-message bot" style="margin-bottom: 12px;">
+          <div class="tharwah-chat-message-content" style="max-width: 100%; padding: 0; background: transparent; box-shadow: none;">
+            <div style="background: #f8fafc; border-radius: 8px; padding: 8px;">
+              <div style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin-bottom: 8px;
+                padding: 0 4px;
+              ">
+                <span style="color: #2563eb;">🏢</span>
+                <h4 style="
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin: 0;
+                ">
+                  ${this.config.language === 'ar' ? 'خدماتنا المتخصصة للشركات' : 'Our Specialized B2B Services'}
+                </h4>
+              </div>
+
+              <div style="
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 #f1f5f9;
+              ">
+                ${servicesHtml}
+              </div>
+
+              <p style="
+                font-size: 11px;
+                color: #6b7280;
+                margin: 8px 4px 0 0;
+                text-align: center;
+                font-style: italic;
+              ">
+                ${this.config.language === 'ar'
+                  ? '💡 انقر على أي خدمة للحصول على استشارة متخصصة'
+                  : '💡 Click on any service to get specialized consultation'}
+              </p>
+            </div>
+          </div>
         </div>
       `;
 
       const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = buttonHtml;
-      const buttonElement = tempDiv.firstElementChild;
+      tempDiv.innerHTML = messageHtml;
+      const messageElement = tempDiv.firstElementChild;
 
-      this.elements.messages.appendChild(buttonElement);
+      this.elements.messages.appendChild(messageElement);
       this.scrollToBottom();
     }
 
-    showB2BRequestForm() {
+    showB2BRequestForm(serviceId = null) {
+      // Close any existing B2B request form first
+      const existingForm = document.querySelector('.b2b-request-form-message');
+      if (existingForm) {
+        existingForm.remove();
+      }
+
       // Get user email from session if available
       const userEmail = sessionStorage.getItem('tharwah_user_email') || '';
 
-      const formHtml = `
+      // Service name mapping for pre-selection
+  const serviceNames = {
+    'training-consulting': this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting',
+    'leadership-development': this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development',
+    'hr-development': this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development',
+    'professional-skills': this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development',
+    'fresh-graduates': this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development',
+    'coaching-services': this.config.language === 'ar' ? 'خدمات التدريب' : 'Coaching Services'
+  };
+
+  const selectedServiceName = serviceId ? serviceNames[serviceId] : '';
+
+  const formHtml = `
         <div class="tharwah-chat-message bot b2b-request-form-message" style="margin-bottom: 12px;">
           <div style="
             background: white;
@@ -4269,12 +4458,12 @@
                   "
                 >
                   <option value="">${this.config.language === 'ar' ? 'اختر خدمة' : 'Select a service'}</option>
-                  <option value="Training Consulting">${this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting'}</option>
-                  <option value="Leadership Development">${this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development'}</option>
-                  <option value="HR Development">${this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development'}</option>
-                  <option value="Professional Skills Development">${this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development'}</option>
-                  <option value="Fresh Graduates Development">${this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development'}</option>
-                  <option value="Coaching Services">${this.config.language === 'ar' ? 'خدمات التدريب' : 'Coaching Services'}</option>
+                  <option value="Training Consulting" ${selectedServiceName === (this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting') ? 'selected' : ''}>${this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting'}</option>
+                  <option value="Leadership Development" ${selectedServiceName === (this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development') ? 'selected' : ''}>${this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development'}</option>
+                  <option value="HR Development" ${selectedServiceName === (this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development') ? 'selected' : ''}>${this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development'}</option>
+                  <option value="Professional Skills Development" ${selectedServiceName === (this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development') ? 'selected' : ''}>${this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development'}</option>
+                  <option value="Fresh Graduates Development" ${selectedServiceName === (this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development') ? 'selected' : ''}>${this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development'}</option>
+                  <option value="Coaching Services" ${selectedServiceName === (this.config.language === 'ar' ? 'خدمات التدريب' : 'Coaching Services') ? 'selected' : ''}>${this.config.language === 'ar' ? 'خدمات التدريب' : 'Coaching Services'}</option>
                   <option value="General">${this.config.language === 'ar' ? 'عام' : 'General'}</option>
                 </select>
               </div>
