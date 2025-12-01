@@ -2030,6 +2030,11 @@
           overflow: hidden;
           z-index: 999998;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          /* iOS touch handling */
+          -webkit-overflow-scrolling: touch;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          user-select: none;
         }
 
         .tharwah-chat-window.active {
@@ -2670,6 +2675,19 @@
             border-radius: 0 !important;
             max-height: 100vh !important;
             margin: 0 !important;
+            /* Enhanced iOS touch handling for fullscreen */
+            position: fixed;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+          }
+
+          /* Prevent body scroll when chat is open on iOS */
+          body.tharwah-chat-open {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
           }
           
           .tharwah-chat-window.active {
@@ -3028,6 +3046,13 @@
       this.elements.button.textContent = '×';
       this.elements.input.focus();
 
+      // Prevent body scroll on iOS when chat opens
+      if (window.innerWidth <= 768) {
+        document.body.classList.add('tharwah-chat-open');
+        // Save scroll position
+        this.scrollPosition = window.pageYOffset;
+      }
+
       // Hide popover when chat opens
       this.hidePopover();
 
@@ -3040,6 +3065,15 @@
       this.elements.window.classList.remove('active');
       this.elements.button.classList.remove('open');
       this.elements.button.textContent = this.config.buttonIcon;
+
+      // Restore body scroll on iOS when chat closes
+      if (window.innerWidth <= 768) {
+        document.body.classList.remove('tharwah-chat-open');
+        // Restore scroll position
+        if (this.scrollPosition !== undefined) {
+          window.scrollTo(0, this.scrollPosition);
+        }
+      }
 
       this.trackEvent('chat_closed');
       this.log('Chat closed');
