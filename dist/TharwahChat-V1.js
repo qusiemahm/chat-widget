@@ -503,6 +503,10 @@
                   font-size: 14px;
                   outline: none;
                   transition: border-color 0.2s;
+                  /* Prevent iOS zoom */
+                  font-size: 16px;
+                  transform-origin: left;
+                  transform: scale(0.875);
                 "
                 onfocus="this.style.borderColor='#2563eb'"
                 onblur="this.style.borderColor='#e5e7eb'"
@@ -2568,6 +2572,18 @@
           font-size: 14px;
           outline: none;
           transition: border-color 0.2s;
+          /* Prevent iOS zoom */
+          font-size: 16px;
+          transform-origin: left;
+          transform: scale(0.875);
+        }
+
+        /* Adjust font size for desktop */
+        @media (min-width: 768px) {
+          .tharwah-chat-input {
+            font-size: 14px;
+            transform: scale(1);
+          }
         }
 
         .tharwah-chat-input:focus {
@@ -4114,6 +4130,10 @@
                     border-radius: 6px;
                     font-size: 13px;
                     color: #374151;
+                    /* Prevent iOS zoom */
+                    font-size: 16px;
+                    transform-origin: left;
+                    transform: scale(0.8125);
                   "
                   placeholder="${this.config.language === 'ar' ? 'أحمد' : 'Ahmad'}"
                 />
@@ -4136,6 +4156,10 @@
                     border-radius: 6px;
                     font-size: 13px;
                     color: #374151;
+                    /* Prevent iOS zoom */
+                    font-size: 16px;
+                    transform-origin: left;
+                    transform: scale(0.8125);
                   "
                   placeholder="${this.config.language === 'ar' ? 'محمد' : 'Mohamed'}"
                 />
@@ -4159,6 +4183,10 @@
                     border-radius: 6px;
                     font-size: 13px;
                     color: #374151;
+                    /* Prevent iOS zoom */
+                    font-size: 16px;
+                    transform-origin: left;
+                    transform: scale(0.8125);
                   "
                   placeholder="your@email.com"
                 />
@@ -4174,6 +4202,9 @@
                   type="tel"
                   name="phone"
                   required
+                  pattern="05[0-9]{8}"
+                  maxlength="10"
+                  title="${this.config.language === 'ar' ? 'يرجى إدخال رقم هاتف صحيح يبدأ بـ 05' : 'Please enter a valid mobile number starts with 05'}"
                   style="
                     width: 100%;
                     padding: 8px 10px;
@@ -4181,6 +4212,10 @@
                     border-radius: 6px;
                     font-size: 13px;
                     color: #374151;
+                    /* Prevent iOS zoom */
+                    font-size: 16px;
+                    transform-origin: left;
+                    transform: scale(0.8125);
                   "
                   placeholder="${this.config.language === 'ar' ? '٠٥٠١٢٣٤٥٦٧' : '0501234567'}"
                 />
@@ -4203,6 +4238,10 @@
                     border-radius: 6px;
                     font-size: 13px;
                     color: #374151;
+                    /* Prevent iOS zoom */
+                    font-size: 16px;
+                    transform-origin: left;
+                    transform: scale(0.8125);
                   "
                   placeholder="${this.config.language === 'ar' ? 'اسم شركتك' : 'Your Company Name'}"
                 />
@@ -4223,6 +4262,10 @@
                     font-size: 13px;
                     color: #374151;
                     background: white;
+                    /* Prevent iOS zoom */
+                    font-size: 16px;
+                    transform-origin: left;
+                    transform: scale(0.8125);
                   "
                 >
                   <option value="">${this.config.language === 'ar' ? 'اختر خدمة' : 'Select a service'}</option>
@@ -4316,10 +4359,13 @@
               : `⚠️ Please fill in all required fields`,
             'bot'
           );
+          // Scroll to bottom to show the validation error
+          this.scrollToBottom();
           return;
         }
       }
 
+  
       // Disable submit button
       const submitBtn = form.querySelector('button[type="submit"]');
       const originalHTML = submitBtn.innerHTML;
@@ -4383,6 +4429,8 @@
             ? '✅ شكراً لك! تم إرسال طلبك بنجاح. سنتواصل معك قريباً.'
             : '✅ Thank you! Your request has been submitted successfully. We\'ll get back to you soon.';
           this.addMessage(successMessage, 'bot');
+          // Scroll to bottom to show the success message
+          this.scrollToBottom();
         } else {
           throw new Error(result.message || 'Submission failed');
         }
@@ -4401,6 +4449,8 @@
           ? '❌ فشل إرسال الطلب. يرجى المحاولة مرة أخرى أو الاتصال بنا مباشرة.'
           : '❌ Failed to submit request. Please try again or contact us directly.';
         this.addMessage(errorMessage, 'bot');
+        // Scroll to bottom to show the error message
+        this.scrollToBottom();
 
         // Re-enable button
         if (submitBtn) {
