@@ -21,7 +21,7 @@
         apiKey: config.apiKey, // REQUIRED
         botId: config.botId || 1,
         organizationId: config.organizationId || null,
-        welcomeMessage: config.welcomeMessage || '👋 Hi! How can I help you today?',
+        welcomeMessage: config.language === 'ar' ? 'مرحباً! 👋 كيف يمكنني مساعدتك اليوم؟' : ' Hi! 👋 How can I help you today?',
         position: config.position || 'bottom-right',
         primaryColor: config.primaryColor || '#667eea',
         secondaryColor: config.secondaryColor || '#764ba2',
