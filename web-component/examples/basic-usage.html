@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TharwahChat Web Component - Basic Usage</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .demo-section {
+            margin: 40px 0;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .demo-section h2 {
+            margin-top: 0;
+            color: #007bff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .controls button:hover {
+            background: #0056b3;
+        }
+
+        .controls input, .controls select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TharwahChat Web Component Demo</h1>
+
+        <!-- Basic Usage -->
+        <div class="demo-section">
+            <h2>Basic Usage</h2>
+            <p>This is the simplest way to use TharwahChat Web Component:</p>
+            <div class="code-block">
+&lt;tharwah-chat
+  api-key="your-api-key-here"
+  bot-id="1"
+  title="Chat Support"&gt;
+&lt;/tharwah-chat&gt;
+            </div>
+        </div>
+
+        <!-- Live Demo Chat -->
+        <div class="demo-section">
+            <h2>Live Chat Demo</h2>
+            <div id="status" class="status info">Loading chat widget...</div>
+
+            <!-- This is the actual chat widget -->
+            <tharwah-chat
+                id="demo-chat"
+                api-key="demo-api-key"
+                bot-id="1"
+                title="Tharwah Support"
+                subtitle="We're here to help!"
+                position="bottom-right"
+                primary-color="#007bff"
+                secondary-color="#0056b3"
+                debug="true">
+            </tharwah-chat>
+        </div>
+
+        <!-- Programmatic Controls -->
+        <div class="demo-section">
+            <h2>Programmatic Controls</h2>
+            <p>You can control the chat widget programmatically:</p>
+
+            <div class="controls">
+                <button onclick="openChat()">Open Chat</button>
+                <button onclick="closeChat()">Close Chat</button>
+                <button onclick="toggleChat()">Toggle Chat</button>
+                <button onclick="sendMessage()">Send Test Message</button>
+            </div>
+
+            <div class="controls">
+                <input type="text" id="messageInput" placeholder="Type a message..." value="Hello! I need help with your services.">
+            </div>
+
+            <div class="code-block">
+const chat = document.getElementById('demo-chat');
+chat.open();
+chat.close();
+chat.toggle();
+chat.sendMessage('Hello!');
+            </div>
+        </div>
+
+        <!-- Event Listening -->
+        <div class="demo-section">
+            <h2>Event Handling</h2>
+            <p>Listen to chat events:</p>
+
+            <div id="eventLog" class="code-block" style="height: 200px; overflow-y: auto;">
+                Events will appear here...
+            </div>
+        </div>
+
+        <!-- Configuration Options -->
+        <div class="demo-section">
+            <h2>Configuration Options</h2>
+            <p>Try different configurations:</p>
+
+            <div class="controls">
+                <label>Position:</label>
+                <select id="positionSelect" onchange="updatePosition()">
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="top-left">Top Left</option>
+                </select>
+            </div>
+
+            <div class="controls">
+                <label>Theme:</label>
+                <select id="themeSelect" onchange="updateTheme()">
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="purple">Purple</option>
+                    <option value="red">Red</option>
+                </select>
+            </div>
+
+            <div class="controls">
+                <label>
+                    <input type="checkbox" id="autoOpenCheck" onchange="updateAutoOpen()">
+                    Auto-open on load
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the Web Component and dependencies -->
+    <script>
+        // Load core dependencies first
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = callback;
+            script.onerror = () => console.error(`Failed to load: ${src}`);
+            document.head.appendChild(script);
+        }
+
+        // Load in correct order
+        loadScript('../core/TharwahChatCore.js', () => {
+            loadScript('../renderers/VanillaRenderer.js', () => {
+                loadScript('../renderers/AssistantUIRenderer.js', () => {
+                    loadScript('../TharwahChatWebComponent.js', () => {
+                        initializeDemo();
+                    });
+                });
+            });
+        });
+
+        function initializeDemo() {
+            const statusEl = document.getElementById('status');
+
+            if (window.customElements && window.customElements.get('tharwah-chat')) {
+                statusEl.className = 'status success';
+                statusEl.textContent = 'Chat widget loaded successfully!';
+                setupEventListeners();
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = 'Failed to load chat widget';
+            }
+        }
+
+        function setupEventListeners() {
+            const chat = document.getElementById('demo-chat');
+            const eventLog = document.getElementById('eventLog');
+
+            if (!chat) return;
+
+            // Listen to chat events
+            const events = [
+                'chatOpened',
+                'chatClosed',
+                'messageReceived',
+                'messageStreaming',
+                'typingChanged',
+                'error',
+                'conversationStarted'
+            ];
+
+            events.forEach(eventName => {
+                chat.addEventListener(eventName, (event) => {
+                    const timestamp = new Date().toLocaleTimeString();
+                    const logEntry = `[${timestamp}] ${eventName}: ${JSON.stringify(event.detail)}\n`;
+                    eventLog.textContent += logEntry;
+                    eventLog.scrollTop = eventLog.scrollHeight;
+                });
+            });
+        }
+
+        // Control functions
+        function openChat() {
+            const chat = document.getElementById('demo-chat');
+            if (chat) chat.open();
+        }
+
+        function closeChat() {
+            const chat = document.getElementById('demo-chat');
+            if (chat) chat.close();
+        }
+
+        function toggleChat() {
+            const chat = document.getElementById('demo-chat');
+            if (chat) chat.toggle();
+        }
+
+        function sendMessage() {
+            const chat = document.getElementById('demo-chat');
+            const messageInput = document.getElementById('messageInput');
+            if (chat && messageInput.value) {
+                chat.sendMessage(messageInput.value);
+            }
+        }
+
+        function updatePosition() {
+            const chat = document.getElementById('demo-chat');
+            const position = document.getElementById('positionSelect').value;
+            if (chat) {
+                chat.setAttribute('position', position);
+            }
+        }
+
+        function updateTheme() {
+            const chat = document.getElementById('demo-chat');
+            const theme = document.getElementById('themeSelect').value;
+
+            const themes = {
+                blue: { primary: '#007bff', secondary: '#0056b3' },
+                green: { primary: '#28a745', secondary: '#1e7e34' },
+                purple: { primary: '#6f42c1', secondary: '#5a32a3' },
+                red: { primary: '#dc3545', secondary: '#c82333' }
+            };
+
+            if (chat && themes[theme]) {
+                chat.setAttribute('primary-color', themes[theme].primary);
+                chat.setAttribute('secondary-color', themes[theme].secondary);
+            }
+        }
+
+        function updateAutoOpen() {
+            const chat = document.getElementById('demo-chat');
+            const autoOpen = document.getElementById('autoOpenCheck').checked;
+            if (chat) {
+                chat.setAttribute('auto-open', autoOpen.toString());
+            }
+        }
+    </script>
+</body>
+</html>

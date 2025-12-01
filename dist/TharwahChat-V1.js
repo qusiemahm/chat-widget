@@ -1817,6 +1817,10 @@
 
     injectStyles() {
       const styles = `
+        /* ============================================
+           UPGRADED STYLES (Better design from external CSS)
+           ============================================ */
+
         /* Base styles */
         .tharwah-chat-widget * {
           box-sizing: border-box;
@@ -1824,7 +1828,18 @@
           padding: 0;
         }
 
-        /* Chat button */
+        /* Chat Widget Container - UPGRADED */
+        .tharwah-chat-widget {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+
+        /* Chat Button - UPGRADED with gradient and better animation */
         .tharwah-chat-button {
           position: fixed;
           ${this.config.position.includes('right') ? 'right: 24px;' : 'left: 24px;'}
@@ -1832,17 +1847,38 @@
           width: 60px;
           height: 60px;
           border-radius: 50%;
-          background: #2563eb;
+          background: linear-gradient(135deg, #007bff, #0056b3);
           color: white;
           border: none;
           cursor: pointer;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           transition: all 0.3s ease;
           z-index: 999999;
           display: flex;
           align-items: center;
           justify-content: center;
           animation: bounce-subtle 2s ease-in-out infinite;
+        }
+
+        .tharwah-chat-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+          background: linear-gradient(135deg, #0056b3, #004085);
+          animation: none;
+        }
+
+        .tharwah-chat-button:focus {
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .tharwah-chat-button.open {
+          background: linear-gradient(135deg, #0056b3, #004085);
+          animation: none;
+        }
+
+        .tharwah-chat-button svg {
+          width: 28px;
+          height: 28px;
         }
 
         @keyframes bounce-subtle {
@@ -1854,24 +1890,279 @@
           }
         }
 
-        .tharwah-chat-button:hover {
-          background: #1d4ed8;
-          transform: scale(1.1);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
-          animation: none;
+        /* Chat Window - UPGRADED with better shadows and animation */
+        .tharwah-chat-window {
+          position: fixed;
+          ${this.config.position.includes('right') ? 'right: 20px;' : 'left: 20px;'}
+          bottom: 90px;
+          width: 380px;
+          height: 600px;
+          background: white;
+          border-radius: 20px;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+          display: none;
+          flex-direction: column;
+          overflow: hidden;
+          border: 1px solid #e9ecef;
+          z-index: 999998;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
 
-        .tharwah-chat-button.open {
-          background: #1d4ed8;
-          animation: none;
+        .tharwah-chat-window.active {
+          display: flex;
+          animation: slideInUp 0.3s ease-out;
         }
 
-        .tharwah-chat-button svg {
-          width: 28px;
-          height: 28px;
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
 
-        /* Notification badge */
+        /* Chat Header - UPGRADED with gradient */
+        .tharwah-chat-header {
+          background: linear-gradient(135deg, #007bff, #0056b3);
+          color: white;
+          padding: 1rem 1.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .tharwah-chat-header h2 {
+          font-size: 15px;
+          font-weight: 600;
+          color: white;
+          margin: 0;
+        }
+
+        .tharwah-chat-close {
+          background: none;
+          border: none;
+          color: white !important;
+          padding: 0.25rem !important;
+          opacity: 0.8;
+          transition: opacity 0.2s ease;
+          cursor: pointer;
+          padding: 6px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+        }
+
+        .tharwah-chat-close:hover {
+          opacity: 1;
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Menu Button - UPGRADED */
+        .tharwah-chat-menu {
+          background: none;
+          border: none;
+          color: white !important;
+          padding: 0.25rem !important;
+          opacity: 0.8;
+          transition: opacity 0.2s ease;
+          cursor: pointer;
+          padding: 6px;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+        }
+
+        .tharwah-chat-menu:hover {
+          opacity: 1;
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Chat Messages - UPGRADED */
+        .tharwah-chat-messages {
+          flex: 1;
+          overflow-y: auto;
+          padding: 1rem;
+          background: #f8f9fa;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .tharwah-chat-message {
+          display: flex;
+          animation: fadeInUp 0.3s ease-out;
+        }
+
+        .tharwah-chat-message.user {
+          justify-content: flex-end;
+        }
+
+        .tharwah-chat-message.bot {
+          justify-content: flex-start;
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .tharwah-chat-message-content {
+          max-width: 80%;
+          padding: 0.75rem 1rem;
+          border-radius: 18px;
+          position: relative;
+          word-wrap: break-word;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .tharwah-chat-message.user .tharwah-chat-message-content {
+          background: linear-gradient(135deg, #007bff, #0056b3);
+          color: white;
+          border-bottom-right-radius: 6px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tharwah-chat-message.bot .tharwah-chat-message-content {
+          background: white;
+          color: #333;
+          border: 1px solid #e9ecef;
+          border-bottom-left-radius: 6px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Chat Input - UPGRADED */
+        .tharwah-chat-input-container {
+          background: white;
+          border-top: 1px solid #e9ecef;
+          padding: 1rem;
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+        }
+
+        .tharwah-chat-input {
+          flex: 1;
+          border-radius: 20px !important;
+          border: 1px solid #ced4da !important;
+          padding: 0.5rem 1rem !important;
+          font-size: 0.875rem;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .tharwah-chat-input:focus {
+          border-color: #007bff !important;
+          box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+        }
+
+        .tharwah-chat-send {
+          border-radius: 50% !important;
+          width: 36px !important;
+          height: 36px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+          min-width: 36px !important;
+          background: linear-gradient(135deg, #007bff, #0056b3);
+          color: white;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .tharwah-chat-send:hover {
+          background: linear-gradient(135deg, #0056b3, #004085);
+          transform: translateY(-1px);
+        }
+
+        /* Scrollbar styling - UPGRADED */
+        .tharwah-chat-messages::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .tharwah-chat-messages::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .tharwah-chat-messages::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 2px;
+        }
+
+        .tharwah-chat-messages::-webkit-scrollbar-thumb:hover {
+          background: #a8a8a8;
+        }
+
+        /* Loading spinner animation - UPGRADED */
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* Mobile Responsive Design - UPGRADED */
+        @media (max-width: 768px) {
+          .tharwah-chat-widget {
+            bottom: 15px;
+            right: 15px;
+          }
+
+          .tharwah-chat-window {
+            width: 300px;
+            height: 400px;
+          }
+
+          .tharwah-chat-button {
+            width: 70px;
+            height: 70px;
+          }
+
+          .tharwah-chat-message-content {
+            max-width: 90%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .tharwah-chat-window {
+            width: calc(100vw - 30px);
+            height: 350px;
+            right: 15px;
+          }
+
+          .tharwah-chat-widget {
+            right: 15px;
+          }
+        }
+
+        /* ============================================
+           NEW FEATURES (Keep from current implementation)
+           ============================================ */
+
+        /* Notification Badge System */
         .tharwah-notification-badge {
           position: absolute;
           top: -4px;
@@ -1907,97 +2198,6 @@
           background-color: #ef4444;
         }
 
-        /* Chat window */
-        .tharwah-chat-window {
-          position: fixed;
-          ${this.config.position.includes('right') ? 'right: 20px;' : 'left: 20px;'}
-          bottom: 90px;
-          width: 380px;
-          height: 600px;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-          display: none;
-          flex-direction: column;
-          overflow: hidden;
-          z-index: 999998;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-
-        .tharwah-chat-window.active {
-          display: flex;
-          animation: slideInUp 0.3s ease-out;
-        }
-
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* Header */
-        .tharwah-chat-header {
-          background: white;
-          border-bottom: 1px solid #e5e7eb;
-          padding: 12px 16px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .tharwah-chat-header h2 {
-          font-size: 15px;
-          font-weight: 600;
-          color: #111827;
-          margin: 0;
-        }
-
-        .tharwah-chat-close {
-          background: none;
-          border: none;
-          color: #6b7280;
-          cursor: pointer;
-          padding: 6px;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-
-        .tharwah-chat-close:hover {
-          background: #f3f4f6;
-          color: #374151;
-        }
-
-        /* Menu Button (3-dots) */
-        .tharwah-chat-menu {
-          background: none;
-          border: none;
-          color: #6b7280;
-          cursor: pointer;
-          padding: 6px;
-          width: 32px;
-          height: 32px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-
-        .tharwah-chat-menu:hover {
-          background: #f3f4f6;
-          color: #374151;
-        }
-
         /* Menu Dropdown */
         .tharwah-chat-menu-dropdown {
           position: absolute;
@@ -2010,6 +2210,11 @@
           min-width: 240px;
           z-index: 1000;
           animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         .tharwah-menu-item {
@@ -2029,17 +2234,9 @@
           background: #f9fafb;
         }
 
-        .tharwah-menu-item:active {
-          background: #f3f4f6;
-        }
-
         .tharwah-menu-item svg {
           flex-shrink: 0;
           color: #6b7280;
-        }
-
-        .tharwah-menu-item span {
-          flex: 1;
         }
 
         /* Toggle Switch */
@@ -2089,7 +2286,7 @@
           transform: translateX(20px);
         }
 
-        /* Feedback trigger line under input */
+        /* Feedback System */
         .tharwah-feedback-section {
           padding: 0px 16px;
           background: white;
@@ -2117,7 +2314,7 @@
           color: #374151;
         }
 
-        /* Feedback dialog overlay */
+        /* Feedback Dialog */
         .tharwah-feedback-overlay {
           position: fixed;
           top: 0;
@@ -2132,21 +2329,41 @@
           animation: fadeIn 0.2s ease;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        /* Feedback dialog content */
         .tharwah-feedback-dialog-content {
           background: white;
           border-radius: 16px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
           max-width: 480px;
           width: 90%;
           max-height: 80vh;
           overflow-y: auto;
           animation: slideUp 0.3s ease;
+          border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+
+        /* Feedback Dialog Header and Body */
+        .tharwah-feedback-header {
+          padding: 24px 24px 16px;
+          text-align: center;
+          border-bottom: 1px solid #f3f4f6;
+        }
+
+        .tharwah-feedback-header h3 {
+          margin: 0 0 8px 0;
+          font-size: 20px;
+          font-weight: 700;
+          color: #111827;
+        }
+
+        .tharwah-feedback-header p {
+          margin: 0;
+          font-size: 14px;
+          color: #6b7280;
+          line-height: 1.5;
+        }
+
+        .tharwah-feedback-body {
+          padding: 24px;
         }
 
         @keyframes slideUp {
@@ -2160,59 +2377,39 @@
           }
         }
 
-        .tharwah-feedback-header {
-          padding: 24px 24px 16px;
-          text-align: center;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        .tharwah-feedback-header h3 {
-          font-size: 20px;
-          font-weight: 600;
-          color: #111827;
-          margin: 0 0 8px 0;
-        }
-
-        .tharwah-feedback-header p {
-          font-size: 14px;
-          color: #6b7280;
-          margin: 0;
-        }
-
-        .tharwah-feedback-body {
-          padding: 24px;
-        }
-
-        /* Star rating */
+        /* Star Rating - Enhanced */
         .tharwah-star-rating {
           display: flex;
           justify-content: center;
-          gap: 8px;
-          margin-bottom: 24px;
+          gap: 12px;
+          margin-bottom: 32px;
         }
 
         .tharwah-star {
           background: none;
           border: none;
-          padding: 4px;
+          padding: 6px;
           cursor: pointer;
-          transition: transform 0.2s ease;
+          transition: all 0.2s ease;
+          border-radius: 8px;
         }
 
         .tharwah-star:hover {
-          transform: scale(1.15);
-        }
-
-        .tharwah-star:active {
-          transform: scale(0.95);
+          transform: scale(1.1);
+          background: rgba(251, 191, 36, 0.1);
         }
 
         .tharwah-star svg {
           stroke: #d1d5db;
           transition: all 0.2s ease;
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
         }
 
-        /* Feedback form fields */
+        .tharwah-star:hover svg {
+          stroke: #fbbf24;
+        }
+
+        /* Feedback Form Fields */
         .tharwah-feedback-field {
           margin-bottom: 16px;
         }
@@ -2248,16 +2445,17 @@
           min-height: 80px;
         }
 
-        /* Feedback actions */
+        /* Feedback Actions */
         .tharwah-feedback-actions {
-          padding: 16px 24px 24px;
+          padding: 24px;
           display: flex;
           gap: 12px;
           justify-content: center;
           align-items: center;
         }
 
-        .tharwah-feedback-btn {
+        /* Feedback Dialog Buttons - Separate from message feedback buttons */
+        .tharwah-feedback-dialog-btn {
           padding: 12px 32px;
           border-radius: 8px;
           font-size: 14px;
@@ -2269,86 +2467,130 @@
           white-space: nowrap;
         }
 
-        .tharwah-feedback-btn:disabled {
+        .tharwah-feedback-dialog-btn:disabled {
           cursor: not-allowed;
         }
 
-        .tharwah-feedback-btn-primary {
-          background: #2563eb !important;
+        .tharwah-feedback-dialog-btn-primary {
+          background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
           color: white !important;
+          box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
 
-        .tharwah-feedback-btn-primary:disabled {
-          background: #93c5fd !important;
-          color: white !important;
+        .tharwah-feedback-dialog-btn-primary:disabled {
+          background: #d1d5db !important;
+          color: #9ca3af !important;
           opacity: 1;
+          box-shadow: none;
         }
 
-        .tharwah-feedback-btn-primary:hover:not(:disabled) {
-          background: #1d4ed8 !important;
+        .tharwah-feedback-dialog-btn-primary:hover:not(:disabled) {
+          background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
-        .tharwah-feedback-btn-secondary {
-          background: #f3f4f6;
+        .tharwah-feedback-dialog-btn-secondary {
+          background: white;
           color: #6b7280;
           border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
-        .tharwah-feedback-btn-secondary:hover {
-          background: #e5e7eb;
-          color: #374151;
-        }
-
-        /* Messages */
-        .tharwah-chat-messages {
-          flex: 1;
-          overflow-y: auto;
-          padding: 16px;
+        .tharwah-feedback-dialog-btn-secondary:hover {
           background: #f9fafb;
+          color: #374151;
+          border-color: #d1d5db;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .tharwah-chat-message {
-          margin-bottom: 12px;
-          animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+        /* Message Feedback Buttons - FIXED */
+        .tharwah-chat-message.bot {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
         }
 
         .tharwah-chat-message.user {
-          text-align: right;
-        }
-
-        .tharwah-chat-message.bot {
-          text-align: left;
+          display: flex;
+          justify-content: flex-end;
         }
 
         .tharwah-chat-message-content {
-          display: inline-block;
-          padding: 10px 16px;
-          border-radius: 16px;
-          max-width: 85%;
-          word-wrap: break-word;
-          font-size: 14px;
-          line-height: 1.6;
+          position: relative;
         }
 
-        .tharwah-chat-message.bot .tharwah-chat-message-content {
-          background: #f3f4f6;
-          color: #1f2937;
-          box-shadow: none;
+        .tharwah-feedback-buttons {
+          display: flex;
+          gap: 6px;
+          opacity: 0;
+          transition: opacity 0.2s;
+          margin-left: 8px;
+          margin-top: 4px;
         }
 
-        .tharwah-chat-message.user .tharwah-chat-message-content {
-          background: #2563eb;
-          color: white;
+        .tharwah-chat-message.bot:hover .tharwah-feedback-buttons {
+          opacity: 1;
         }
 
-        /* Typing indicator */
+        .tharwah-chat-message.bot.last-message .tharwah-feedback-buttons {
+          opacity: 1;
+        }
+
+        .tharwah-feedback-btn {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 6px;
+          padding: 4px 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 32px;
+          height: 28px;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .tharwah-feedback-btn svg {
+          width: 14px;
+          height: 14px;
+        }
+
+        .tharwah-feedback-btn:hover {
+          background: #f8f9fa;
+          border-color: #d1d5db;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tharwah-feedback-btn:hover svg {
+          stroke: #374151;
+        }
+
+        .tharwah-feedback-btn.active {
+          background: #eff6ff;
+          border-color: #3b82f6;
+        }
+
+        .tharwah-feedback-btn.active.thumbs-up svg {
+          stroke: #3b82f6;
+          fill: none;
+        }
+
+        .tharwah-feedback-btn.active.thumbs-down svg {
+          stroke: #3b82f6;
+          fill: none;
+        }
+
+        .tharwah-feedback-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.4;
+        }
+
+        /* Typing Indicator */
         .tharwah-chat-typing {
           display: inline-flex;
           gap: 4px;
@@ -2384,133 +2626,7 @@
           }
         }
 
-        /* Message Feedback Buttons */
-        .tharwah-chat-message.bot {
-          display: flex;
-          align-items: flex-end;
-          gap: 8px;
-        }
-
-        .tharwah-feedback-buttons {
-          display: flex;
-          gap: 6px;
-          opacity: 0;
-          transition: opacity 0.2s;
-          flex-shrink: 0;
-          margin-bottom: 2px;
-        }
-
-        .tharwah-chat-message.bot:hover .tharwah-feedback-buttons {
-          opacity: 1;
-        }
-
-        .tharwah-chat-message.bot.last-message .tharwah-feedback-buttons {
-          opacity: 1;
-        }
-
-        .tharwah-feedback-btn {
-          background: transparent;
-          border: 1px solid #d1d5db;
-          border-radius: 4px;
-          padding: 3px 6px;
-          cursor: pointer;
-          transition: all 0.15s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 28px;
-          height: 24px;
-        }
-
-        .tharwah-feedback-btn svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        .tharwah-feedback-btn:hover {
-          background: #f3f4f6;
-          border-color: #9ca3af;
-        }
-
-        .tharwah-feedback-btn:hover svg path,
-        .tharwah-feedback-btn:hover svg {
-          stroke: #374151;
-        }
-
-        .tharwah-feedback-btn.active {
-          background: #f3f4f6;
-          border-color: #6b7280;
-        }
-
-        .tharwah-feedback-btn.active.thumbs-up svg path,
-        .tharwah-feedback-btn.active.thumbs-up svg {
-          stroke: #374151;
-          fill: none;
-        }
-
-        .tharwah-feedback-btn.active.thumbs-down svg path,
-        .tharwah-feedback-btn.active.thumbs-down svg {
-          stroke: #374151;
-          fill: none;
-        }
-
-        .tharwah-feedback-btn:disabled {
-          cursor: not-allowed;
-          opacity: 0.3;
-        }
-
-        /* Input */
-        .tharwah-chat-input-container {
-          padding: 16px;
-          background: white;
-          border-top: 1px solid #e2e8f0;
-          display: flex;
-          gap: 8px;
-        }
-
-        .tharwah-chat-input {
-          flex: 1;
-          padding: 10px 16px;
-          border: 2px solid #e2e8f0;
-          border-radius: 20px;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.2s;
-        }
-
-        .tharwah-chat-input:focus {
-          border-color: ${this.config.primaryColor};
-        }
-
-        .tharwah-chat-send {
-          background: #2563eb;
-          color: white;
-          border: none;
-          padding: 8px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background 0.2s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-        }
-
-        .tharwah-chat-send:hover {
-          background: #1d4ed8;
-        }
-
-        .tharwah-chat-send:disabled {
-          background: #d1d5db;
-          cursor: not-allowed;
-        }
-
-        .tharwah-chat-send svg {
-          width: 16px;
-          height: 16px;
-        }
-
-        /* Streaming cursor */
+        /* Streaming Cursor */
         .streaming-cursor {
           display: inline-block;
           animation: smoothBlink 1.2s ease-in-out infinite;
@@ -2538,17 +2654,7 @@
           display: inline-block;
         }
 
-        /* Mobile */
-        @media (max-width: 768px) {
-          .tharwah-chat-window {
-            width: calc(100vw - 40px);
-            height: calc(100vh - 140px);
-          }
-        }
-
-        /* ========================================
-           ENROLLMENT FORM MODAL
-           ======================================== */
+        /* Enrollment Form Modal */
         .tharwah-enrollment-modal {
           position: fixed;
           top: 0;
@@ -2687,6 +2793,19 @@
           font-weight: 700;
           color: #2563eb;
         }
+
+        /* Tool indicator */
+        .tharwah-chat-message.tool-indicator {
+          justify-content: flex-start;
+        }
+
+        /* Additional responsive improvements for mobile */
+        @media (max-width: 768px) {
+          .tharwah-chat-window {
+            width: calc(100vw - 40px);
+            height: calc(100vh - 140px);
+          }
+        }
       `;
 
       const styleSheet = document.createElement('style');
@@ -2712,7 +2831,12 @@
         
         <div class="tharwah-chat-window" id="tharwah-chat-window">
           <div class="tharwah-chat-header" id="tharwah-chat-header">
-            <h2>${this.config.title}</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white" style="flex-shrink: 0;">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+              </svg>
+              <h2>${this.config.title}</h2>
+            </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <button class="tharwah-chat-menu" id="tharwah-chat-menu" aria-label="Menu">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2723,8 +2847,7 @@
               </button>
               <button class="tharwah-chat-close" id="tharwah-chat-close" aria-label="Close chat">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 6 6 18"></path>
-                  <path d="m6 6 12 12"></path>
+                  <path d="M5 12h14"></path>
                 </svg>
               </button>
             </div>
@@ -3143,10 +3266,10 @@
           </div>
 
           <div class="tharwah-feedback-actions" id="tharwah-chat-feedback-actions">
-            <button type="button" id="tharwah-chat-feedback-cancel" class="tharwah-feedback-btn tharwah-feedback-btn-secondary">
+            <button type="button" id="tharwah-chat-feedback-cancel" class="tharwah-feedback-dialog-btn tharwah-feedback-dialog-btn-secondary">
               Cancel
             </button>
-            <button type="button" id="tharwah-chat-feedback-submit" class="tharwah-feedback-btn tharwah-feedback-btn-primary" disabled>
+            <button type="button" id="tharwah-chat-feedback-submit" class="tharwah-feedback-dialog-btn tharwah-feedback-dialog-btn-primary" disabled>
               Submit Feedback
             </button>
           </div>

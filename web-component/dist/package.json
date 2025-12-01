@@ -1,0 +1,29 @@
+{
+  "name": "tharwah-chat-webcomponent",
+  "version": "1.0.0",
+  "description": "Universal chat widget Web Component for Tharwah",
+  "main": "tharwah-chat-webcomponent.js",
+  "files": [
+    "tharwah-chat-webcomponent.js",
+    "tharwah-chat-webcomponent.min.js",
+    "TharwahChat-V1.js",
+    "TharwahChat-V1.min.js"
+  ],
+  "keywords": [
+    "chat",
+    "web-component",
+    "tharwah",
+    "universal",
+    "widget",
+    "css",
+    "styles"
+  ],
+  "author": "Tharwah",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tharwah/chat-widget"
+  },
+  "homepage": "https://tharwah.com",
+  "style": "styles/main.css"
+}

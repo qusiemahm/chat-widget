@@ -1,0 +1,232 @@
+/**
+ * TharwahChat Web Component - CSS Variables
+ * Design system variables for consistent theming
+ */
+
+:root {
+  /* Primary Colors */
+  --tharwah-primary: #007bff;
+  --tharwah-primary-hover: #0056b3;
+  --tharwah-primary-light: #e3f2fd;
+  --tharwah-secondary: #0056b3;
+  --tharwah-secondary-hover: #004085;
+
+  /* Neutral Colors */
+  --tharwah-white: #ffffff;
+  --tharwah-black: #000000;
+  --tharwah-gray-50: #f8f9fa;
+  --tharwah-gray-100: #e9ecef;
+  --tharwah-gray-200: #dee2e6;
+  --tharwah-gray-300: #ced4da;
+  --tharwah-gray-400: #adb5bd;
+  --tharwah-gray-500: #6c757d;
+  --tharwah-gray-600: #495057;
+  --tharwah-gray-700: #343a40;
+  --tharwah-gray-800: #212529;
+  --tharwah-gray-900: #000000;
+
+  /* Status Colors */
+  --tharwah-success: #28a745;
+  --tharwah-success-hover: #1e7e34;
+  --tharwah-warning: #ffc107;
+  --tharwah-warning-hover: #d39e00;
+  --tharwah-danger: #dc3545;
+  --tharwah-danger-hover: #c82333;
+  --tharwah-info: #17a2b8;
+  --tharwah-info-hover: #138496;
+
+  /* Typography */
+  --tharwah-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --tharwah-font-size-xs: 0.75rem;    /* 12px */
+  --tharwah-font-size-sm: 0.875rem;   /* 14px */
+  --tharwah-font-size-base: 1rem;     /* 16px */
+  --tharwah-font-size-lg: 1.125rem;   /* 18px */
+  --tharwah-font-size-xl: 1.25rem;    /* 20px */
+  --tharwah-font-size-2xl: 1.5rem;    /* 24px */
+  --tharwah-font-size-3xl: 1.875rem;  /* 30px */
+
+  --tharwah-font-weight-normal: 400;
+  --tharwah-font-weight-medium: 500;
+  --tharwah-font-weight-semibold: 600;
+  --tharwah-font-weight-bold: 700;
+
+  --tharwah-line-height-tight: 1.25;
+  --tharwah-line-height-normal: 1.5;
+  --tharwah-line-height-relaxed: 1.75;
+
+  /* Spacing */
+  --tharwah-spacing-xs: 0.25rem;  /* 4px */
+  --tharwah-spacing-sm: 0.5rem;   /* 8px */
+  --tharwah-spacing-md: 0.75rem;  /* 12px */
+  --tharwah-spacing-lg: 1rem;     /* 16px */
+  --tharwah-spacing-xl: 1.5rem;   /* 24px */
+  --tharwah-spacing-2xl: 2rem;    /* 32px */
+  --tharwah-spacing-3xl: 3rem;    /* 48px */
+
+  /* Border Radius */
+  --tharwah-radius-none: 0;
+  --tharwah-radius-sm: 0.25rem;    /* 4px */
+  --tharwah-radius-md: 0.5rem;     /* 8px */
+  --tharwah-radius-lg: 0.75rem;    /* 12px */
+  --tharwah-radius-xl: 1rem;       /* 16px */
+  --tharwah-radius-2xl: 1.25rem;   /* 20px */
+  --tharwah-radius-3xl: 1.5rem;    /* 24px */
+  --tharwah-radius-full: 50%;
+
+  /* Shadows */
+  --tharwah-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --tharwah-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --tharwah-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --tharwah-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --tharwah-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --tharwah-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Transitions */
+  --tharwah-transition-fast: 0.15s ease;
+  --tharwah-transition-normal: 0.3s ease;
+  --tharwah-transition-slow: 0.5s ease;
+
+  /* Z-Index Scale */
+  --tharwah-z-dropdown: 1000;
+  --tharwah-z-sticky: 1020;
+  --tharwah-z-fixed: 1030;
+  --tharwah-z-modal-backdrop: 1040;
+  --tharwah-z-modal: 1050;
+  --tharwah-z-popover: 1060;
+  --tharwah-z-tooltip: 1070;
+  --tharwah-z-chat-widget: 999999;
+
+  /* Component Specific */
+  --tharwah-chat-width: 380px;
+  --tharwah-chat-height: 600px;
+  --tharwah-chat-button-size: 60px;
+  --tharwah-chat-message-max-width: 80%;
+  --tharwah-chat-border-radius: 20px;
+  --tharwah-chat-message-border-radius: 18px;
+  --tharwah-chat-button-border-radius: 50%;
+
+  /* Animations */
+  --tharwah-animation-bounce-subtle: bounce-subtle 2s ease-in-out infinite;
+  --tharwah-animation-slide-in-up: slideInUp 0.3s ease-out;
+  --tharwah-animation-fade-in-up: fadeInUp 0.3s ease-out;
+  --tharwah-animation-bounce: bounce 1.4s infinite ease-in-out;
+  --tharwah-animation-blink: smoothBlink 1.2s ease-in-out infinite;
+}
+
+/* Color Theme Variants */
+[data-theme="blue"] {
+  --tharwah-primary: #007bff;
+  --tharwah-primary-hover: #0056b3;
+  --tharwah-secondary: #0056b3;
+  --tharwah-secondary-hover: #004085;
+}
+
+[data-theme="green"] {
+  --tharwah-primary: #28a745;
+  --tharwah-primary-hover: #1e7e34;
+  --tharwah-secondary: #1e7e34;
+  --tharwah-secondary-hover: #155724;
+}
+
+[data-theme="purple"] {
+  --tharwah-primary: #6f42c1;
+  --tharwah-primary-hover: #5a32a3;
+  --tharwah-secondary: #5a32a3;
+  --tharwah-secondary-hover: #4c2a8f;
+}
+
+[data-theme="red"] {
+  --tharwah-primary: #dc3545;
+  --tharwah-primary-hover: #c82333;
+  --tharwah-secondary: #c82333;
+  --tharwah-secondary-hover: #a71e2a;
+}
+
+[data-theme="orange"] {
+  --tharwah-primary: #fd7e14;
+  --tharwah-primary-hover: #e8590c;
+  --tharwah-secondary: #e8590c;
+  --tharwah-secondary-hover: #d64806;
+}
+
+[data-theme="teal"] {
+  --tharwah-primary: #20c997;
+  --tharwah-primary-hover: #12b886;
+  --tharwah-secondary: #12b886;
+  --tharwah-secondary-hover: #0f7c66;
+}
+
+/* Dark Mode Variables */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tharwah-white: #1a1a1a;
+    --tharwah-black: #ffffff;
+    --tharwah-gray-50: #212529;
+    --tharwah-gray-100: #343a40;
+    --tharwah-gray-200: #495057;
+    --tharwah-gray-300: #6c757d;
+    --tharwah-gray-400: #adb5bd;
+    --tharwah-gray-500: #ced4da;
+    --tharwah-gray-600: #dee2e6;
+    --tharwah-gray-700: #e9ecef;
+    --tharwah-gray-800: #f8f9fa;
+    --tharwah-gray-900: #ffffff;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  --tharwah-direction: rtl;
+  --tharwah-text-align: right;
+}
+
+[dir="ltr"] {
+  --tharwah-direction: ltr;
+  --tharwah-text-align: left;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --tharwah-shadow: 0 0 0 2px var(--tharwah-black);
+    --tharwah-shadow-md: 0 0 0 3px var(--tharwah-black);
+    --tharwah-shadow-lg: 0 0 0 4px var(--tharwah-black);
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --tharwah-transition-fast: 0s;
+    --tharwah-transition-normal: 0s;
+    --tharwah-transition-slow: 0s;
+  }
+}
+
+/* Small Screen Adjustments */
+@media (max-width: 768px) {
+  :root {
+    --tharwah-chat-width: calc(100vw - 30px);
+    --tharwah-chat-height: calc(100vh - 140px);
+    --tharwah-chat-button-size: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tharwah-chat-width: calc(100vw - 20px);
+    --tharwah-chat-height: calc(100vh - 120px);
+    --tharwah-chat-button-size: 50px;
+    --tharwah-font-size-base: 1rem; /* 16px to prevent iOS zoom */
+  }
+}
+
+/* Landscape Mode */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --tharwah-chat-height: calc(100vh - 100px);
+    --tharwah-spacing-xl: 1rem;
+    --tharwah-spacing-lg: 0.75rem;
+    --tharwah-spacing-md: 0.5rem;
+  }
+}

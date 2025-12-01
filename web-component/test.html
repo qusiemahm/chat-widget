@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TharwahChat Web Component Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TharwahChat Web Component Test</h1>
+
+        <div id="status" class="status">Loading...</div>
+
+        <div class="controls">
+            <button onclick="testComponentExists()">Test Component Exists</button>
+            <button onclick="testComponentCreation()">Test Component Creation</button>
+            <button onclick="testAttributes()">Test Attributes</button>
+            <button onclick="testMethods()">Test Methods</button>
+            <button onclick="testEvents()">Test Events</button>
+        </div>
+
+        <!-- Test chat widget -->
+        <tharwah-chat
+            id="test-chat"
+            api-key="test-api-key-12345"
+            bot-id="1"
+            title="Test Support"
+            subtitle="Testing the Web Component"
+            position="bottom-right"
+            primary-color="#007bff"
+            secondary-color="#0056b3"
+            debug="true">
+        </tharwah-chat>
+    </div>
+
+    <!-- Load the Web Component -->
+    <script src="./dist/tharwah-chat-webcomponent.js"></script>
+
+    <script>
+        let testChat = null;
+        let statusElement = document.getElementById('status');
+
+        function updateStatus(message, isError = false) {
+            statusElement.textContent = message;
+            statusElement.className = isError ? 'status error' : 'status success';
+        }
+
+        function logTest(testName, passed, message = '') {
+            const status = passed ? '✅' : '❌';
+            console.log(`${status} ${testName}: ${message}`);
+        }
+
+        // Test 1: Check if component is defined
+        function testComponentExists() {
+            try {
+                const componentExists = customElements.get('tharwah-chat');
+                const passed = !!componentExists;
+
+                logTest('Component Registration', passed, passed ? 'Component is registered' : 'Component not found');
+                updateStatus(passed ? '✅ Component is registered and available' : '❌ Component registration failed', !passed);
+
+                return passed;
+            } catch (error) {
+                logTest('Component Registration', false, error.message);
+                updateStatus(`❌ Error: ${error.message}`, true);
+                return false;
+            }
+        }
+
+        // Test 2: Test component creation
+        function testComponentCreation() {
+            try {
+                testChat = document.getElementById('test-chat');
+
+                if (!testChat) {
+                    logTest('Component Creation', false, 'Element not found');
+                    updateStatus('❌ Test chat element not found', true);
+                    return false;
+                }
+
+                // Wait a moment for component to initialize
+                setTimeout(() => {
+                    const isInitialized = testChat.isInitialized;
+                    logTest('Component Initialization', isInitialized, isInitialized ? 'Component initialized' : 'Component not initialized');
+
+                    if (isInitialized) {
+                        updateStatus('✅ Component created and initialized successfully');
+                    } else {
+                        updateStatus('⏳ Component is still initializing...');
+                    }
+                }, 2000);
+
+                updateStatus('⏳ Testing component creation...');
+                return true;
+            } catch (error) {
+                logTest('Component Creation', false, error.message);
+                updateStatus(`❌ Error: ${error.message}`, true);
+                return false;
+            }
+        }
+
+        // Test 3: Test attributes
+        function testAttributes() {
+            try {
+                testChat = testChat || document.getElementById('test-chat');
+
+                if (!testChat) {
+                    logTest('Attribute Testing', false, 'Component not available');
+                    return false;
+                }
+
+                // Test getting attributes
+                const apiKey = testChat.getAttribute('api-key');
+                const botId = testChat.getAttribute('bot-id');
+                const title = testChat.getAttribute('title');
+
+                const apiKeyPassed = apiKey === 'test-api-key-12345';
+                const botIdPassed = botId === '1';
+                const titlePassed = title === 'Test Support';
+
+                logTest('API Key Attribute', apiKeyPassed, `Got: ${apiKey}`);
+                logTest('Bot ID Attribute', botIdPassed, `Got: ${botId}`);
+                logTest('Title Attribute', titlePassed, `Got: ${title}`);
+
+                // Test setting attributes
+                testChat.setAttribute('title', 'Modified Title');
+                const newTitle = testChat.getAttribute('title');
+                const titleUpdatePassed = newTitle === 'Modified Title';
+                logTest('Title Update', titleUpdatePassed, `New title: ${newTitle}`);
+
+                // Reset title
+                testChat.setAttribute('title', 'Test Support');
+
+                const allPassed = apiKeyPassed && botIdPassed && titlePassed && titleUpdatePassed;
+                updateStatus(allPassed ? '✅ All attribute tests passed' : '❌ Some attribute tests failed', !allPassed);
+
+                return allPassed;
+            } catch (error) {
+                logTest('Attribute Testing', false, error.message);
+                updateStatus(`❌ Error: ${error.message}`, true);
+                return false;
+            }
+        }
+
+        // Test 4: Test methods
+        function testMethods() {
+            try {
+                testChat = testChat || document.getElementById('test-chat');
+
+                if (!testChat) {
+                    logTest('Method Testing', false, 'Component not available');
+                    return false;
+                }
+
+                // Test method existence
+                const openExists = typeof testChat.open === 'function';
+                const closeExists = typeof testChat.close === 'function';
+                const toggleExists = typeof testChat.toggle === 'function';
+                const sendMessageExists = typeof testChat.sendMessage === 'function';
+
+                logTest('Open Method', openExists);
+                logTest('Close Method', closeExists);
+                logTest('Toggle Method', toggleExists);
+                logTest('SendMessage Method', sendMessageExists);
+
+                // Test toggle method
+                const initialOpenState = testChat.isOpen;
+                testChat.toggle();
+                setTimeout(() => {
+                    const toggledState = testChat.isOpen;
+                    const togglePassed = toggledState !== initialOpenState;
+                    logTest('Toggle Functionality', togglePassed, `State changed: ${initialOpenState} → ${toggledState}`);
+
+                    // Toggle back
+                    testChat.toggle();
+                }, 500);
+
+                const allPassed = openExists && closeExists && toggleExists && sendMessageExists;
+                updateStatus(allPassed ? '✅ All method tests passed' : '❌ Some method tests failed', !allPassed);
+
+                return allPassed;
+            } catch (error) {
+                logTest('Method Testing', false, error.message);
+                updateStatus(`❌ Error: ${error.message}`, true);
+                return false;
+            }
+        }
+
+        // Test 5: Test events
+        function testEvents() {
+            try {
+                testChat = testChat || document.getElementById('test-chat');
+
+                if (!testChat) {
+                    logTest('Event Testing', false, 'Component not available');
+                    return false;
+                }
+
+                let eventReceived = false;
+                let eventDetail = null;
+
+                // Set up event listener
+                function eventHandler(event) {
+                    eventReceived = true;
+                    eventDetail = event.detail;
+                }
+
+                testChat.addEventListener('chatOpened', eventHandler);
+                testChat.addEventListener('chatClosed', eventHandler);
+
+                // Trigger events
+                testChat.open();
+                setTimeout(() => {
+                    logTest('Chat Opened Event', eventReceived, eventDetail ? 'Event received with detail' : 'Event received');
+
+                    eventReceived = false;
+                    testChat.close();
+
+                    setTimeout(() => {
+                        logTest('Chat Closed Event', eventReceived, eventDetail ? 'Event received with detail' : 'Event received');
+
+                        // Clean up
+                        testChat.removeEventListener('chatOpened', eventHandler);
+                        testChat.removeEventListener('chatClosed', eventHandler);
+
+                        updateStatus('✅ Event tests completed');
+                    }, 500);
+                }, 500);
+
+                updateStatus('⏳ Testing events...');
+                return true;
+            } catch (error) {
+                logTest('Event Testing', false, error.message);
+                updateStatus(`❌ Error: ${error.message}`, true);
+                return false;
+            }
+        }
+
+        // Run initial test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🧪 Running TharwahChat Web Component Tests...');
+                testComponentExists();
+            }, 1000);
+        });
+
+        // Log component initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('📄 DOM loaded, waiting for component initialization...');
+        });
+    </script>
+</body>
+</html>

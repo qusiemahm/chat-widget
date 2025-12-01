@@ -1,0 +1,92 @@
+/**
+ * TharwahChat Web Component - Styles Index
+ * Main entry point for all styles
+ */
+
+/* Import CSS Variables First */
+@import './variables.css';
+
+/* Import Base Styles */
+@import './base2.css';
+
+/* Import Unified Theme Base */
+@import './theme-base.css';
+
+/* Import Utility Classes */
+@import './utilities.css';
+
+/* Component-specific styles that don't fit in themes */
+.tharwah-chat-component {
+  font-family: var(--tharwah-font-family);
+}
+
+/* Additional component-specific overrides */
+.tharwah-chat-component .loading {
+  background: var(--tharwah-gray-50);
+  color: var(--tharwah-gray-600);
+}
+
+/* Animation keyframes that might not be defined elsewhere */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Ensure proper z-index stacking */
+.tharwah-chat-component {
+  z-index: var(--tharwah-z-chat-widget);
+}
+
+/* Custom scrollbar styling for all components */
+.tharwah-chat-component ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tharwah-chat-component ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tharwah-chat-component ::-webkit-scrollbar-thumb {
+  background: var(--tharwah-gray-400);
+  border-radius: 3px;
+}
+
+.tharwah-chat-component ::-webkit-scrollbar-thumb:hover {
+  background: var(--tharwah-gray-500);
+}
+
+/* Focus styles for better accessibility */
+.tharwah-chat-component *:focus {
+  outline: 2px solid var(--tharwah-primary);
+  outline-offset: 2px;
+}
+
+.tharwah-chat-component *:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .tharwah-chat-component {
+    border: 2px solid var(--tharwah-black);
+  }
+}
+
+/* Print styles */
+@media print {
+  .tharwah-chat-component {
+    display: none !important;
+  }
+}
