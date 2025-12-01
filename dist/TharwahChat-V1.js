@@ -404,8 +404,8 @@
             onmouseout="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
             onclick="window.tharwahChatWidget.startConversation()"
           >
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <div style="text-align: left; flex: 1;">
+            <div style="display: flex; align-items: center; justify-content: space-between;" dir="ltr">
+              <div style="text-align: ${this.config.language === 'ar' ? 'right' : 'left'}; flex: 1;">
                 <h3 style="font-size: 15px; font-weight: 600; color: #1f2937; margin: 0 0 4px 0;">${this.t('startConversation')}</h3>
                 <p style="font-size: 13px; color: #6b7280; margin: 0;">${this.t('startConversationDesc')}</p>
               </div>
