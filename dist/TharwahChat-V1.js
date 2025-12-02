@@ -500,11 +500,8 @@
                   padding: 12px 16px;
                   border: 2px solid #e5e7eb;
                   border-radius: 8px;
-                  font-size: 14px;
                   outline: none;
                   transition: border-color 0.2s;
-                  /* Prevent iOS zoom */
-                  font-size: 16px;
                   transform-origin: left;
                   transform: scale(0.875);
                 "
