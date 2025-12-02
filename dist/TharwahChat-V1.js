@@ -1944,11 +1944,15 @@
 
     injectStyles() {
       const styles = `
+        /* Import Tajawal font from Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap');
+
         /* Base styles */
         .tharwah-chat-widget * {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
+          font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
         /* Chat button */
