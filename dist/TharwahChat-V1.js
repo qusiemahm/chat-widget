@@ -1274,77 +1274,77 @@
                   // Store B2B services to show after text
                   b2bServices = data.b2b_services;
                 }
-              else if (eventType === 'done') {
-                this.log('Streaming complete. Message ID:', data.message_id);
+                else if (eventType === 'done') {
+                  this.log('Streaming complete. Message ID:', data.message_id);
 
-                // Wait for text display to complete
-                while (textQueue.length > 0 || isDisplaying) {
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                }
-
-                // Remove cursor from final message
-                this.updateStreamingMessage(messageId, fullText, true);
-
-                // Update the message with the real backend message ID
-                const messageDiv = document.getElementById(messageId);
-                if (messageDiv && data.message_id) {
-                  // Update the message div ID to the real message ID
-                  messageDiv.id = 'msg-' + data.message_id;
-                  messageDiv.setAttribute('data-message-id', data.message_id);
-
-                  // Update feedback buttons data-message-id attribute
-                  const feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
-                  if (feedbackDiv) {
-                    feedbackDiv.setAttribute('data-message-id', data.message_id);
+                  // Wait for text display to complete
+                  while (textQueue.length > 0 || isDisplaying) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
                   }
 
-                  this.log('Updated streaming message ID from', messageId, 'to', data.message_id);
+                  // Remove cursor from final message
+                  this.updateStreamingMessage(messageId, fullText, true);
+
+                  // Update the message with the real backend message ID
+                  const messageDiv = document.getElementById(messageId);
+                  if (messageDiv && data.message_id) {
+                    // Update the message div ID to the real message ID
+                    messageDiv.id = 'msg-' + data.message_id;
+                    messageDiv.setAttribute('data-message-id', data.message_id);
+
+                    // Update feedback buttons data-message-id attribute
+                    const feedbackDiv = messageDiv.querySelector('.tharwah-feedback-buttons');
+                    if (feedbackDiv) {
+                      feedbackDiv.setAttribute('data-message-id', data.message_id);
+                    }
+
+                    this.log('Updated streaming message ID from', messageId, 'to', data.message_id);
+                  }
+
+                  // Make sure tool indicator is hidden
+                  this.hideToolIndicator();
+
+                  // Update last-message class for streaming messages
+                  const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
+                  allBotMessages.forEach(msg => msg.classList.remove('last-message'));
+                  const currentMessage = document.getElementById('msg-' + data.message_id);
+                  if (currentMessage) {
+                    currentMessage.classList.add('last-message');
+                  }
+
+                  // Show feedback button after streaming response completes
+                  this.showFeedbackButton();
+
+                  // Play notification sound when streaming response is complete
+                  this.playNotificationSound();
+
+                  // Show products if any
+                  if (products.length > 0) {
+                    this.showProducts(products);
+                  }
+
+                  // Show quick replies if any
+                  if (quickReplies.length > 0) {
+                    this.showQuickReplies(quickReplies);
+                  }
+
+                  // Show B2B service cards if B2B services data is available
+                  if (b2bServices.length > 0) {
+                    this.showB2BServiceCards(b2bServices);
+                  }
+
+                  this.trackEvent('chat_response_received_streaming', {
+                    agent: routingInfo?.selected_agent?.name,
+                    agent_type: routingInfo?.selected_agent?.type,
+                    had_products: products.length > 0,
+                    had_quick_replies: quickReplies.length > 0,
+                    had_b2b_services: b2bServices.length > 0,
+                    streaming: true
+                  });
                 }
-
-                // Make sure tool indicator is hidden
-                this.hideToolIndicator();
-
-                // Update last-message class for streaming messages
-                const allBotMessages = this.elements.messages.querySelectorAll('.tharwah-chat-message.bot');
-                allBotMessages.forEach(msg => msg.classList.remove('last-message'));
-                const currentMessage = document.getElementById('msg-' + data.message_id);
-                if (currentMessage) {
-                  currentMessage.classList.add('last-message');
+                else if (eventType === 'error') {
+                  throw new Error(data.error);
                 }
-
-                // Show feedback button after streaming response completes
-                this.showFeedbackButton();
-
-                // Play notification sound when streaming response is complete
-                this.playNotificationSound();
-
-                // Show products if any
-                if (products.length > 0) {
-                  this.showProducts(products);
-                }
-
-                // Show quick replies if any
-                if (quickReplies.length > 0) {
-                  this.showQuickReplies(quickReplies);
-                }
-
-                // Show B2B service cards if B2B services data is available
-                if (b2bServices.length > 0) {
-                  this.showB2BServiceCards(b2bServices);
-                }
-
-                this.trackEvent('chat_response_received_streaming', {
-                  agent: routingInfo?.selected_agent?.name,
-                  agent_type: routingInfo?.selected_agent?.type,
-                  had_products: products.length > 0,
-                  had_quick_replies: quickReplies.length > 0,
-                  had_b2b_services: b2bServices.length > 0,
-                  streaming: true
-                });
-              }
-              else if (eventType === 'error') {
-                throw new Error(data.error);
-              }
               } catch (parseError) {
                 // Skip invalid JSON parts (could be incomplete data)
                 // Silent error handling for malformed streaming data
@@ -4034,8 +4034,10 @@
           'virtual_date': virtualDate
         };
 
-        // Add location if provided
-        if (location) {
+        // Add location only if the location field exists in the form (i.e., product has multiple locations)
+        // If product has 0-1 locations, the location field won't be shown in the form
+        const locationField = form.querySelector('#location');
+        if (locationField && location) {
           fields['location'] = location;
         }
 
@@ -4233,8 +4235,8 @@
                 font-style: italic;
               ">
                 ${this.config.language === 'ar'
-                  ? '💡 انقر على أي خدمة للحصول على استشارة متخصصة'
-                  : '💡 Click on any service to get specialized consultation'}
+          ? '💡 انقر على أي خدمة للحصول على استشارة متخصصة'
+          : '💡 Click on any service to get specialized consultation'}
               </p>
             </div>
           </div>
@@ -4260,9 +4262,9 @@
       const userEmail = sessionStorage.getItem('tharwah_user_email') || '';
 
       // Use the provided service name for pre-selection
-  const selectedServiceName = serviceName || '';
+      const selectedServiceName = serviceName || '';
 
-  const formHtml = `
+      const formHtml = `
         <div class="tharwah-chat-message bot b2b-request-form-message" style="margin-bottom: 12px;">
           <div style="
             background: white;
@@ -4542,7 +4544,7 @@
         }
       }
 
-  
+
       // Disable submit button
       const submitBtn = form.querySelector('button[type="submit"]');
       const originalHTML = submitBtn.innerHTML;
