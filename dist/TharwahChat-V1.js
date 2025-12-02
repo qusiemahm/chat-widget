@@ -792,11 +792,11 @@
     }
 
     getTitle() {
-      return this.config.language === 'ar' ? 'الدردشة مع الذكاء الاصطناعي' : 'Chat with Our AI Agent';
+      return this.config.title ? this.config.title : this.config.language === 'ar' ? 'الدردشة مع الذكاء الاصطناعي' : 'Chat with Our AI Agent';
     }
 
     getSubtitle() {
-      return this.config.language === 'ar' ? 'الرد فوري' : 'We reply instantly';
+      return this.config.subtitle ? this.config.subtitle : this.config.language === 'ar' ? 'الرد فوري' : 'We reply instantly';
     }
 
     async handleSuggestionClick(suggestionId, actionText) {
