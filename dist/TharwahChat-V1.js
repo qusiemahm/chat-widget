@@ -1188,6 +1188,7 @@
         let fullText = '';
         let products = [];
         let quickReplies = [];
+        let b2bServices = [];
         let routingInfo = null;
         let textQueue = []; // Queue for gradual text display
         let isDisplaying = false; // Flag to prevent concurrent displays
@@ -1228,41 +1229,51 @@
           buffer = lines.pop(); // Keep incomplete line in buffer
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = JSON.parse(line.slice(6));
-              const eventType = data.type;
+            // Split by "data:" to handle multiple data objects on same line
+            const dataParts = line.split('data:').filter(part => part.trim());
 
-              this.log('Stream event:', eventType, data);
+            for (const part of dataParts) {
+              try {
+                // Clean the JSON string - remove trailing characters after the last closing brace
+                let cleanJsonStr = part.trim();
 
-              if (eventType === 'routing') {
-                routingInfo = data.routing_info;
-                this.log('Routing to agent:', routingInfo.selected_agent.name);
-              }
-              else if (eventType === 'text') {
-                // Add text to queue for gradual display
-                textQueue.push(data.content);
-                displayTextGradually();
-              }
-              // else if (eventType === 'tool_start') {
-              //   // Show tool indicator
-              //   this.showToolIndicator(data.tool_name);
-              // }
-              // else if (eventType === 'tool_executing') {
-              //   // Update tool indicator
-              //   this.updateToolIndicator(data.tool_name, 'executing');
-              // }
-              else if (eventType === 'tool_complete') {
-                // Hide tool indicator
-                this.hideToolIndicator();
-              }
-              else if (eventType === 'products') {
-                // Store products to show after text
-                products = data.products;
-              }
-              else if (eventType === 'quick_replies') {
-                // Store quick replies to show after text
-                quickReplies = data.quick_replies;
-              }
+                // Find the position of the last closing brace
+                const lastBraceIndex = cleanJsonStr.lastIndexOf('}');
+                if (lastBraceIndex !== -1) {
+                  // Keep only the JSON part, remove any trailing characters
+                  cleanJsonStr = cleanJsonStr.substring(0, lastBraceIndex + 1);
+                }
+
+                const data = JSON.parse(cleanJsonStr);
+                const eventType = data.type;
+
+                this.log('Stream event:', eventType, data);
+
+                if (eventType === 'routing') {
+                  routingInfo = data.routing_info;
+                  this.log('Routing to agent:', routingInfo.selected_agent.name);
+                }
+                else if (eventType === 'text') {
+                  // Add text to queue for gradual display
+                  textQueue.push(data.content);
+                  displayTextGradually();
+                }
+                else if (eventType === 'tool_complete') {
+                  // Hide tool indicator
+                  this.hideToolIndicator();
+                }
+                else if (eventType === 'products') {
+                  // Store products to show after text
+                  products = data.products;
+                }
+                else if (eventType === 'quick_replies') {
+                  // Store quick replies to show after text
+                  quickReplies = data.quick_replies;
+                }
+                else if (eventType === 'b2b_services') {
+                  // Store B2B services to show after text
+                  b2bServices = data.b2b_services;
+                }
               else if (eventType === 'done') {
                 this.log('Streaming complete. Message ID:', data.message_id);
 
@@ -1317,9 +1328,9 @@
                   this.showQuickReplies(quickReplies);
                 }
 
-                // Show B2B service cards if B2B agent response
-                if (routingInfo?.selected_agent?.type === 'b2b') {
-                  this.showB2BServiceCards();
+                // Show B2B service cards if B2B services data is available
+                if (b2bServices.length > 0) {
+                  this.showB2BServiceCards(b2bServices);
                 }
 
                 this.trackEvent('chat_response_received_streaming', {
@@ -1327,11 +1338,16 @@
                   agent_type: routingInfo?.selected_agent?.type,
                   had_products: products.length > 0,
                   had_quick_replies: quickReplies.length > 0,
+                  had_b2b_services: b2bServices.length > 0,
                   streaming: true
                 });
               }
               else if (eventType === 'error') {
                 throw new Error(data.error);
+              }
+              } catch (parseError) {
+                // Skip invalid JSON parts (could be incomplete data)
+                // Silent error handling for malformed streaming data
               }
             }
           }
@@ -4085,69 +4101,12 @@
     // B2B SERVICE REQUEST
     // ============================================
 
-    showB2BServiceCards() {
-      // Sample B2B services data (you'll update this from backend)
-      const b2bServices = [
-        {
-          id: 'training-consulting',
-          name: this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting',
-          description: this.config.language === 'ar'
-            ? 'نقدم استشارات متخصصة في تطوير وتصميم برامج تدريبية مخصصة لتناسب احتياجات شركتك'
-            : 'Specialized consulting in developing and designing customized training programs to meet your company\'s needs',
-          icon: '🎓',
-          image: null
-        },
-        {
-          id: 'leadership-development',
-          name: this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development',
-          description: this.config.language === 'ar'
-            ? 'برامج متطورة لتنمية المهارات القيادية وبناء فرق عمل فعالة وقوية'
-            : 'Advanced programs for developing leadership skills and building effective, strong teams',
-          icon: '👥',
-          image: null
-        },
-        {
-          id: 'hr-development',
-          name: this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development',
-          description: this.config.language === 'ar'
-            ? 'حلول متكاملة لتطوير قسم الموارد البشرية وتحسين أداء ورضا الموظفين'
-            : 'Integrated solutions for HR department development and improving employee performance and satisfaction',
-          icon: '📊',
-          image: null
-        },
-        {
-          id: 'professional-skills',
-          name: this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development',
-          description: this.config.language === 'ar'
-            ? 'دورات تدريبية متخصصة لتطوير المهارات المهنية الأساسية والمتقدمة للموظفين'
-            : 'Specialized training courses for developing essential and advanced professional skills for employees',
-          icon: '💼',
-          image: null
-        },
-        {
-          id: 'fresh-graduates',
-          name: this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development',
-          description: this.config.language === 'ar'
-            ? 'برامج إعداد وتأهيل الخريجين الجدد لسوق العمل وتطوير مهاراتهم الوظيفية'
-            : 'Programs for preparing and qualifying fresh graduates for the job market and developing their professional skills',
-          icon: '🚀',
-          image: null
-        },
-        {
-          id: 'coaching-services',
-          name: this.config.language === 'ar' ? 'خدمات التدريب الفردي' : 'Coaching Services',
-          description: this.config.language === 'ar'
-            ? 'جلسات تدريب وتوجيه فردي لتحقيق الأهداف المهنية والشخصية'
-            : 'Individual training and coaching sessions to achieve professional and personal goals',
-          icon: '🎯',
-          image: null
-        }
-      ];
-
+    showB2BServiceCards(services) {
       // Create horizontal scrollable container for B2B services
-      const servicesHtml = b2bServices.map(service => {
-        const imageUrl = service.image ? `${this.config.apiEndpoint.replace(/\/api\/?$/, '')}${service.image}` : null;
-
+      const servicesHtml = services.map(service => {
+        const serviceName = this.escapeHtml(service.name).replace(/'/g, "\\'");
+        const imageUrl = service.attachment_url ? `${this.config.apiEndpoint.replace(/\/api\/?$/, '')}${service.attachment_url}` : null;
+        console.log('[TharwahChat] Rendering B2B service:', serviceName, imageUrl);
         return `
           <div style="
             background: white;
@@ -4162,14 +4121,14 @@
           "
           onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'"
           onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'"
-          onclick="window.tharwahChatWidget.showB2BRequestForm('${service.id}')"
+          onclick="window.tharwahChatWidget.showB2BRequestForm('${service.id}', '${serviceName}')"
           >
             <!-- Image/Icon -->
             <div style="position: relative;">
               ${imageUrl ?
-            `<img src="${imageUrl}" alt="${this.escapeHtml(service.name)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); display: flex; align-items: center; justify-content: center; font-size: 2rem;\\'>${service.icon}</div>';" />` :
+            `<img src="${imageUrl}" alt="${this.escapeHtml(service.name)}" style="width: 100%; height: 96px; object-fit: cover;" onerror="this.parentElement.innerHTML='<div style=\\'width: 100%; height: 96px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); display: flex; align-items: center; justify-content: center; font-size: 2rem;\\'>🏢</div>';" />` :
             `<div style="width: 100%; height: 96px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
-                ${service.icon}
+                🏢
               </div>`
           }
             </div>
@@ -4201,7 +4160,7 @@
                 -webkit-box-orient: vertical;
                 overflow: hidden;
                 height: 46px;
-              ">${this.escapeHtml(service.description)}</p>
+              ">${this.escapeHtml(service.description || (this.config.language === 'ar' ? 'احصل على استشارة متخصصة في هذه الخدمة' : 'Get specialized consultation for this service'))}</p>
 
               <!-- Request Button -->
               <button
@@ -4219,7 +4178,7 @@
                 "
                 onmouseover="this.style.background='#1d4ed8'"
                 onmouseout="this.style.background='#2563eb'"
-                onclick="event.stopPropagation(); window.tharwahChatWidget.showB2BRequestForm('${service.id}')"
+                onclick="event.stopPropagation(); window.tharwahChatWidget.showB2BRequestForm('${service.id}', '${serviceName}')"
               >
                 ${this.config.language === 'ar' ? 'طلب الخدمة' : 'Request Service'}
               </button>
@@ -4286,7 +4245,7 @@
       this.scrollToBottom();
     }
 
-    showB2BRequestForm(serviceId = null) {
+    showB2BRequestForm(serviceName = null) {
       // Close any existing B2B request form first
       const existingForm = document.querySelector('.b2b-request-form-message');
       if (existingForm) {
@@ -4296,17 +4255,8 @@
       // Get user email from session if available
       const userEmail = sessionStorage.getItem('tharwah_user_email') || '';
 
-      // Service name mapping for pre-selection
-  const serviceNames = {
-    'training-consulting': this.config.language === 'ar' ? 'استشارات التدريب' : 'Training Consulting',
-    'leadership-development': this.config.language === 'ar' ? 'تطوير القيادة' : 'Leadership Development',
-    'hr-development': this.config.language === 'ar' ? 'تطوير الموارد البشرية' : 'HR Development',
-    'professional-skills': this.config.language === 'ar' ? 'تطوير المهارات المهنية' : 'Professional Skills Development',
-    'fresh-graduates': this.config.language === 'ar' ? 'تطوير الخريجين الجدد' : 'Fresh Graduates Development',
-    'coaching-services': this.config.language === 'ar' ? 'خدمات التدريب' : 'Coaching Services'
-  };
-
-  const selectedServiceName = serviceId ? serviceNames[serviceId] : '';
+      // Use the provided service name for pre-selection
+  const selectedServiceName = serviceName || '';
 
   const formHtml = `
         <div class="tharwah-chat-message bot b2b-request-form-message" style="margin-bottom: 12px;">
