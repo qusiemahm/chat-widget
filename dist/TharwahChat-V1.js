@@ -3770,7 +3770,8 @@
       });
 
       const wpId = metadata.wp_id || product.id;
-      const price = metadata.price || product.price || 0;
+      let price = metadata.price || product.price || 0;
+      price = Math.round(price * 1.15)
       const currency = metadata.currency || product.currency || 'SAR';
       const productName = product.name || 'Course';
       const enrollLink = product.enroll_link || product.product_link || '';
