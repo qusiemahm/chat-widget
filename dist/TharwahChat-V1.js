@@ -1756,7 +1756,7 @@
       // Check if audio URL is available
       if (!audioUrl || audioUrl === 'null' || audioUrl === '') {
         alert(this.t('audioFeature'));
-        return;
+        return
       }
 
       // If clicking the same button that's currently playing, stop it
