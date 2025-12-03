@@ -1749,17 +1749,11 @@
       `;
 
       this.elements.messages.appendChild(messageDiv);
-      // Don't auto-scroll for products - let user scroll to see them
     }
-
     playProductAudio(audioUrl,buttonElement){if(!audioUrl||audioUrl==='null'||audioUrl===''){alert(this.t('audioFeature'));return}
-
-      // If clicking the same button that's currently playing, stop it
       if (this.currentAudioButton === buttonElement && this.currentAudio && !this.currentAudio.paused) {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
-
-        // Reset button icon to speaker
         buttonElement.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
@@ -1772,13 +1766,9 @@
         this.currentAudioButton = null;
         return;
       }
-
-      // Stop any OTHER currently playing audio
       if (this.currentAudio) {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
-
-        // Reset previous button icon
         if (this.currentAudioButton) {
           this.currentAudioButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1789,12 +1779,8 @@
           `;
         }
       }
-
-      // Create new audio element
       this.currentAudio = new Audio(audioUrl);
       this.currentAudioButton = buttonElement;
-
-      // Change button icon to pause/loading
       buttonElement.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="6" y="4" width="4" height="16"></rect>
