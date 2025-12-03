@@ -1766,12 +1766,7 @@
       // Don't auto-scroll for products - let user scroll to see them
     }
 
-    playProductAudio(audioUrl, buttonElement) {
-      // Check if audio URL is available
-      if (!audioUrl || audioUrl === 'null' || audioUrl === '') {
-        alert(this.t('audioFeature'));
-        return;
-      }
+    playProductAudio(audioUrl,buttonElement){if(!audioUrl||audioUrl==='null'||audioUrl===''){alert(this.t('audioFeature'));return}
 
       // If clicking the same button that's currently playing, stop it
       if (this.currentAudioButton === buttonElement && this.currentAudio && !this.currentAudio.paused) {
