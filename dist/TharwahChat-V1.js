@@ -97,7 +97,7 @@
           startConversationDesc: 'Ask us anything about our programs',
 
           // Email capture screen
-          emailScreenTitle: 'Chat with our AI Agent',
+          emailScreenTitle: 'Chat with Our Tharwah Bot',
           emailScreenSubtitle: 'To get started, please share your email address:',
           emailPlaceholder: 'your@email.com',
           termsText: "I agree to The Terms & Conditions and acknowledge that my personal information will be processed in accordance with data protection regulations.",
@@ -160,7 +160,7 @@
           startConversationDesc: 'اسألنا أي شيء عن برامجنا',
 
           // Email capture screen
-          emailScreenTitle: 'الدردشة مع الذكاء الاصطناعي',
+          emailScreenTitle: 'الدردشة مع ثروة بوت',
           emailScreenSubtitle: 'للبدء، يرجى مشاركة عنوان بريدك الإلكتروني:',
           emailPlaceholder: 'your@email.com',
           termsText: 'أوافق على الشروط والأحكام وأقر بأنه ستتم معالجة معلوماتي الشخصية وفقاً للوائح حماية البيانات.',
