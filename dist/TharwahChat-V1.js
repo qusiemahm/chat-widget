@@ -984,13 +984,22 @@
         this.abortController = null;
         this.log('Generation stopped by user');
 
+        // 2. Instantly stop gradual displaying of the message
+        this.isDisplaying = false;
+        // Clear the text queue to stop any remaining text from being displayed
+        if (this.textQueue) {
+          this.textQueue.length = 0; // Clear the array immediately
+        }
+
         // Add a system message or visual indicator that generation was stopped
         if (this.currentStreamingMessage) {
           const contentDiv = this.currentStreamingMessage.querySelector('.tharwah-chat-message-content');
           if (contentDiv) {
-            // Remove cursor
-            const cursor = contentDiv.querySelector('.streaming-cursor');
-            if (cursor) cursor.remove();
+            // Remove cursor and finalize the message display
+            const messageId = this.currentStreamingMessage.id;
+            const currentText = contentDiv.textContent || '';
+            // Update message to remove cursor
+            this.updateStreamingMessage(messageId, currentText, true);
 
             // Add "Stopped" indicator
             const stoppedSpan = document.createElement('span');
@@ -1183,23 +1192,23 @@
         const decoder = new TextDecoder();
         let buffer = '';
         let fullText = '';
+        this.textQueue = []; // Queue for gradual text display
+        this.isDisplaying = false; // Flag to prevent concurrent displays
         let products = [];
         let quickReplies = [];
         let b2bServices = [];
         let routingInfo = null;
-        let textQueue = []; // Queue for gradual text display
-        let isDisplaying = false; // Flag to prevent concurrent displays
 
         // Function to gradually display text character-by-character (ChatGPT-like)
         const displayTextGradually = async () => {
-          if (isDisplaying) return;
-          isDisplaying = true;
+          if (this.isDisplaying) return;
+          this.isDisplaying = true;
 
-          while (textQueue.length > 0) {
-            const chunk = textQueue.shift();
+          while (this.textQueue.length > 0) {
+            const chunk = this.textQueue.shift();
 
             // Display character by character for smooth effect
-            for (let i = 0; i < chunk.length; i++) {
+            for (let i = 0; i < chunk.length && this.isWaitingForResponse && this.isDisplaying; i++) {
               fullText += chunk[i];
               this.updateStreamingMessage(messageId, fullText, false);
 
@@ -1211,7 +1220,12 @@
             }
           }
 
-          isDisplaying = false;
+          this.isDisplaying = false;
+
+          // If we stopped early, finalize the message
+          if (fullText.length > 0) {
+            this.updateStreamingMessage(messageId, fullText, true);
+          }
         };
 
         while (true) {
@@ -1252,7 +1266,7 @@
                 }
                 else if (eventType === 'text') {
                   // Add text to queue for gradual display
-                  textQueue.push(data.content);
+                  this.textQueue.push(data.content);
                   displayTextGradually();
                 }
                 else if (eventType === 'tool_complete') {
@@ -1275,7 +1289,7 @@
                   this.log('Streaming complete. Message ID:', data.message_id);
 
                   // Wait for text display to complete
-                  while (textQueue.length > 0 || isDisplaying) {
+                  while (this.textQueue.length > 0 || this.isDisplaying) {
                     await new Promise(resolve => setTimeout(resolve, 50));
                   }
 
@@ -1409,7 +1423,7 @@
           }
 
           // Add text with or without cursor
-          if (isComplete) {
+          if (isComplete || !this.isWaitingForResponse) {
             // Remove cursor when complete and apply full formatting
             contentDiv.innerHTML = this.formatMessage(text);
 
