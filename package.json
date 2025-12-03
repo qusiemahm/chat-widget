@@ -10,7 +10,9 @@
     "README.md"
   ],
   "scripts": {
-    "minify": "terser dist/TharwahChat-V1.js -o dist/TharwahChat-V1.min.js -c -m && terser dist/TharwahTracker-V2.js -o dist/TharwahTracker-V2.min.js -c -m"
+    "test": "node -c dist/TharwahChat-V1.js && node -c dist/TharwahTracker-V2.js && echo All source files validated successfully!",
+    "minify": "terser dist/TharwahChat-V1.js -o dist/TharwahChat-V1.min.js -c -m && terser dist/TharwahTracker-V2.js -o dist/TharwahTracker-V2.min.js -c -m",
+    "build": "npm test && npm run minify && echo Build complete! Minified files ready for production."
   },
   "keywords": [
     "chatbot",

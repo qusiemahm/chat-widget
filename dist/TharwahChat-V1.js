@@ -1530,12 +1530,9 @@
         const fullImageUrl = imageUrl ? `${baseUrl}${imageUrl}` : null;
         const imageAlt = product.image_alt || name;
         const productLink = product.product_link || product.enroll_link || product.external_link || product.link || null;
-        let price = product.metadata?.price || product.price || null;
-        price = Math.round(price * 1.15)
-        let regularPrice = product.metadata?.regular_price || 0;
-        regularPrice = Math.round(regularPrice * 1.15)
-        let salePrice = product.metadata?.sale_price || 0;
-        salePrice = Math.round(salePrice * 1.15)
+        const price = product.metadata?.price || product.price || null;
+        const regularPrice = product.metadata?.regular_price || 0;
+        const salePrice = product.metadata?.sale_price || 0;
         const hasDiscount = product.metadata?.has_discount || false;
         const discountPercentage = product.metadata?.discount_percentage || 0;
         const onSale = product.metadata?.on_sale || false;
@@ -3770,8 +3767,7 @@
       });
 
       const wpId = metadata.wp_id || product.id;
-      let price = metadata.price || product.price || 0;
-      price = Math.round(price * 1.15)
+      const price = metadata.price || product.price || 0;
       const currency = metadata.currency || product.currency || 'SAR';
       const productName = product.name || 'Course';
       const enrollLink = product.enroll_link || product.product_link || '';
