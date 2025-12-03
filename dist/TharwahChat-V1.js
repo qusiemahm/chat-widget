@@ -1804,7 +1804,9 @@
 
       // Play audio
       this.currentAudio.play().catch(error => {
-        console.error('Audio playback error:', error);
+        if (this.config.debug) {
+          console.error('[TharwahChat] Audio playback error:', error);
+        }
         alert('Failed to play audio. Please try again.');
 
         // Reset button
@@ -3679,7 +3681,9 @@
       const tableRegex = /^\s*\|(.+)\|\s*\n\s*\|(?:[\s\-:]+\|)+\s*\n((?:\s*\|.+\|\s*\n?)+)/gm;
 
       return text.replace(tableRegex, (match, headerRow, bodyRows) => {
-        console.log('[TharwahChat] Found markdown table!', { headerRow, bodyRows });
+        if (this.config.debug) {
+          console.log('[TharwahChat] Found markdown table!', { headerRow, bodyRows });
+        }
 
         // Parse header
         const headers = headerRow.split('|')
@@ -4108,7 +4112,9 @@
       const servicesHtml = services.map(service => {
         const serviceName = this.escapeHtml(service.name).replace(/'/g, "\\'");
         const imageUrl = service.attachment_url ? `${this.config.apiEndpoint.replace(/\/api\/?$/, '')}${service.attachment_url}` : null;
-        console.log('[TharwahChat] Rendering B2B service:', serviceName, imageUrl);
+        if (this.config.debug) {
+          console.log('[TharwahChat] Rendering B2B service:', serviceName, imageUrl);
+        }
         return `
           <div style="
             background: white;
