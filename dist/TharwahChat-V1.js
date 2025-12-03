@@ -2462,7 +2462,7 @@
         }
 
         .tharwah-chat-message.user {
-          text-align: right;
+          text-align: ${this.config.language === 'ar' ? 'left' : 'right'};
         }
 
         .tharwah-chat-message.bot {
