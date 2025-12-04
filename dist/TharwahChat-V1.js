@@ -4583,7 +4583,7 @@
         this.log('Submitting B2B service request:', Object.fromEntries(cf7Data));
 
         // Submit to chatbot endpoint
-        const response = await fetch('https://academy.tharwah.net/mystaging01/wp-json/contact-form-7/v1/contact-forms/5229/feedback', {
+        const response = await fetch('https://academy.tharwah.net/wp-json/contact-form-7/v1/contact-forms/5229/feedback', {
           method: 'POST',
           body: cf7Data
         });
