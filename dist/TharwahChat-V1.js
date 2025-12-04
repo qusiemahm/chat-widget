@@ -4561,14 +4561,14 @@
         }
 
         // Add CF7 specific fields
-        cf7Data.append('_wpcf7', '5229');
+        cf7Data.append('_wpcf7', '9011');
         cf7Data.append('_wpcf7_version', '6.1.2');
         cf7Data.append('_wpcf7_locale', this.config.language === 'ar' ? 'ar' : 'en_GB');
-        cf7Data.append('_wpcf7_unit_tag', 'wpcf7-f5229-chatbot');
+        cf7Data.append('_wpcf7_unit_tag', 'wpcf7-f9011-chatbot');
         cf7Data.append('_wpcf7_container_post', '0');
         cf7Data.append('_wpcf7_posted_data_hash', '');
         cf7Data.append('tharwah_service', formData.get('service-needed') || 'General');
-        cf7Data.append('cf7_form_id', '5229');
+        cf7Data.append('cf7_form_id', '9011');
         cf7Data.append('current_page_url', window.location.href);
 
         // Add tracking fields
@@ -4583,7 +4583,7 @@
         this.log('Submitting B2B service request:', Object.fromEntries(cf7Data));
 
         // Submit to chatbot endpoint
-        const response = await fetch('https://academy.tharwah.net/wp-json/contact-form-7/v1/contact-forms/5229/feedback', {
+        const response = await fetch('https://academy.tharwah.net/wp-json/contact-form-7/v1/contact-forms/9011/feedback', {
           method: 'POST',
           body: cf7Data
         });
